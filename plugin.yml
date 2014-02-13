@@ -1,0 +1,9 @@
+name: ZombieInvasion
+main: io.github.gustav9797.ZombieInvasion.ZombieInvasion
+version: 0.1
+commands:
+   zombie:
+      description: Spawns custom zombie.
+      usage: /zombie
+      permission: zombieinvasion.zombie
+      permission-message: You don't have zombieinvasion.zombie

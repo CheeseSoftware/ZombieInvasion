@@ -26,7 +26,9 @@ public final class ZombieInvasion extends JavaPlugin
 	public void onEnable()
 	{
 		entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityFastZombie.class));
+		getServer().getPluginManager().registerEvents(new EventListener(this), this);
 		registerEntities();
+		
 	}
 
 	@Override

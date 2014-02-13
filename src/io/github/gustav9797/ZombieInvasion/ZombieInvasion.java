@@ -4,13 +4,13 @@ import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.logging.Level;
 
-import net.minecraft.server.v1_6_R3.EntityInsentient;
-import net.minecraft.server.v1_6_R3.EntityZombie;
-import net.minecraft.server.v1_6_R3.EntityTypes;
+import net.minecraft.server.v1_7_R1.EntityTypes;
+import net.minecraft.server.v1_7_R1.EntityZombie;
+import net.minecraft.server.v1_7_R1.World;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_6_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -40,7 +40,7 @@ public final class ZombieInvasion extends JavaPlugin
 			Player player = (Player) sender;
 			if (cmd.getName().equals("zombie"))
 			{
-				 net.minecraft.server.v1_6_R3.World mcWorld = ((CraftWorld)player.getWorld()).getHandle(); 
+				 World mcWorld = ((CraftWorld)player.getWorld()).getHandle(); 
 				 EntityFastZombie zombie = new EntityFastZombie(mcWorld);
 				 zombie.setPosition(player.getLocation().getX(),
 				 player.getLocation().getY(), player.getLocation().getZ());

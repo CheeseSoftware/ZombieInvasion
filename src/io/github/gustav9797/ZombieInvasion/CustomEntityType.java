@@ -1,8 +1,8 @@
 package io.github.gustav9797.ZombieInvasion;
 
-import org.bukkit.entity.EntityType;
+import net.minecraft.server.v1_7_R1.EntityInsentient;
 
-import net.minecraft.server.v1_6_R3.EntityInsentient;
+import org.bukkit.entity.EntityType;
 
 public class CustomEntityType
 {

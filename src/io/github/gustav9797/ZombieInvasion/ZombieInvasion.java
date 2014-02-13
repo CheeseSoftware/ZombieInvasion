@@ -1,4 +1,4 @@
-package src.io.github.gustav9797.ZombieInvasion;
+package io.github.gustav9797.ZombieInvasion;
 
 import io.github.gustav9797.ZombieInvasion.CustomEntityType;
 

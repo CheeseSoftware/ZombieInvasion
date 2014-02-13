@@ -8,6 +8,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import net.minecraft.server.v1_6_R3.EntityZombie;
+import net.minecraft.server.v1_6_R3.PathfinderGoalRandomStroll;
 import net.minecraft.server.v1_6_R3.World;
 
 public class EntityFastZombie extends EntityZombie
@@ -31,7 +32,8 @@ public class EntityFastZombie extends EntityZombie
 			e.printStackTrace();
 		}
 		
-		this.goalSelector.a(0, new PathfinderGoalBreakBlock(this));
+		this.goalSelector.a(0, new PathfinderGoalRandomStroll(this, 10));
+		
 	}
 
 }

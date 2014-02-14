@@ -7,3 +7,8 @@ commands:
       usage: /zombie
       permission: zombieinvasion.zombie
       permission-message: You don't have zombieinvasion.zombie
+   startwave:
+      description: Spawns cusatom zombie.
+      usage: /zombaie
+      permission: zombieinvasaion.zombie
+      permission-message: You don't have zombieinvaasion.zombie

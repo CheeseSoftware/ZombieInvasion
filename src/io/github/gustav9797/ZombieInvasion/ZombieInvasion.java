@@ -24,8 +24,8 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 {
 	LinkedList<CustomEntityType> entityTypes = new LinkedList<CustomEntityType>();
 	Random r = new Random();
-	Location middle = new Location(null, 0, 80, 0);
-	int widthheight = 128;
+	public static Location middle = new Location(null, 0, 80, 0);
+	public static int widthheight = 128;
 
 	@Override
 	public void onEnable()
@@ -69,6 +69,10 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 						}
 					}
 				}
+			}
+			else if(cmd.getName().equals("setmiddle"))
+			{
+				middle = player.getLocation();
 			}
 		}
 		return false;

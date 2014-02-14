@@ -65,7 +65,7 @@ public class EntityFastZombie extends EntityZombie
 		this.targetSelector.a(1, new PathfinderGoalHurtByTarget(this, true));
 		this.targetSelector.a(2, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0, true));
 		//this.targetSelector.a(2, new PathfinderGoalNearestAttackableTarget(this, EntityVillager.class, 0, false));
-		this.targetSelector.a(0, new PathfinderGoalWalkToTile(this, 1.0F, new Location(null, 0, 68, 0)));
+		this.targetSelector.a(0, new PathfinderGoalWalkToTile(this, 1.0F, ZombieInvasion.middle));
 		this.a(0.6F, 1.8F);
 	}
 

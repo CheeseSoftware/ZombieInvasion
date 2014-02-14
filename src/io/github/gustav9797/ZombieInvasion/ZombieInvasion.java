@@ -18,6 +18,7 @@ import net.minecraft.server.v1_7_R1.Vec3D;
 import net.minecraft.server.v1_7_R1.World;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
@@ -30,7 +31,7 @@ public final class ZombieInvasion extends JavaPlugin
 	LinkedList<CustomEntityType> entityTypes = new LinkedList<CustomEntityType>();
 	Random r = new Random();
 	Location middle = new Location(null, 0, 80, 0);
-	int widthheight = 64;
+	int widthheight = 128;
 
 	@Override
 	public void onEnable()
@@ -68,9 +69,9 @@ public final class ZombieInvasion extends JavaPlugin
 						for (int i = 0; i < 10; i++)
 						{
 							SpawnZombies(new Location(player.getWorld(), 
-									r.nextInt(widthheight) + middle.getBlockX(), 
+									r.nextInt(widthheight) + middle.getBlockX() - 64, 
 									r.nextInt(widthheight) + middle.getBlockY(), 
-									r.nextInt(widthheight) + middle.getBlockZ()), wave);
+									r.nextInt(widthheight) + middle.getBlockZ() - 64), wave);
 						}
 					}
 				}
@@ -92,6 +93,9 @@ public final class ZombieInvasion extends JavaPlugin
 		{
 			Location pos = new Location(l.getWorld(), r.nextInt(11) - 5 + l.getBlockX(), l.getBlockY(), r.nextInt(11) - 5 + l.getBlockZ());
 			World mcWorld = ((CraftWorld) l.getWorld()).getHandle();
+			while(pos.getWorld().getBlockAt(pos).getType() == Material.AIR)
+				pos.setY(pos.getBlockY() - 1);
+			pos.setY(pos.getBlockY() + 2);
 			EntityFastZombie zombie = new EntityFastZombie(mcWorld);
 			zombie.setPosition(pos.getBlockX(), pos.getBlockY(), pos.getBlockZ());
 			mcWorld.addEntity(zombie);

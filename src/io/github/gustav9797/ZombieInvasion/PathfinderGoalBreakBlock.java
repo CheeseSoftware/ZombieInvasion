@@ -1,23 +1,16 @@
 package io.github.gustav9797.ZombieInvasion;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.Random;
+
+import net.minecraft.server.v1_7_R1.Block;
+import net.minecraft.server.v1_7_R1.EntityInsentient;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
-
-import net.minecraft.server.v1_7_R1.Block;
-import net.minecraft.server.v1_7_R1.EntityInsentient;
-import net.minecraft.server.v1_7_R1.EnumDifficulty;
 
 public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 {

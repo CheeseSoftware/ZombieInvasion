@@ -1,11 +1,7 @@
 package io.github.gustav9797.ZombieInvasion;
 
-import io.github.gustav9797.ZombieInvasion.CustomEntityType;
-
-import java.lang.reflect.Method;
 import java.util.LinkedList;
 
-import net.minecraft.server.v1_7_R1.EntityTypes;
 import net.minecraft.server.v1_7_R1.EntityZombie;
 import net.minecraft.server.v1_7_R1.World;
 
@@ -14,9 +10,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class ZombieInvasion extends JavaPlugin
+public final class ZombieInvasion extends JavaPlugin implements Listener
 {
 	LinkedList<CustomEntityType> entityTypes = new LinkedList<CustomEntityType>();
 

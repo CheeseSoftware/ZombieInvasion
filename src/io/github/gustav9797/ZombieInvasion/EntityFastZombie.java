@@ -6,12 +6,10 @@ import net.minecraft.server.v1_7_R1.EntityHuman;
 import net.minecraft.server.v1_7_R1.EntityVillager;
 import net.minecraft.server.v1_7_R1.EntityZombie;
 import net.minecraft.server.v1_7_R1.PathfinderGoal;
-import net.minecraft.server.v1_7_R1.PathfinderGoalBreakDoor;
 import net.minecraft.server.v1_7_R1.PathfinderGoalFloat;
 import net.minecraft.server.v1_7_R1.PathfinderGoalHurtByTarget;
 import net.minecraft.server.v1_7_R1.PathfinderGoalLookAtPlayer;
 import net.minecraft.server.v1_7_R1.PathfinderGoalMeleeAttack;
-import net.minecraft.server.v1_7_R1.PathfinderGoalMoveThroughVillage;
 import net.minecraft.server.v1_7_R1.PathfinderGoalMoveTowardsRestriction;
 import net.minecraft.server.v1_7_R1.PathfinderGoalNearestAttackableTarget;
 import net.minecraft.server.v1_7_R1.PathfinderGoalRandomLookaround;
@@ -26,6 +24,7 @@ public class EntityFastZombie extends EntityZombie
 	private boolean bu = false;
 	private final PathfinderGoalBreakBlock bs = new PathfinderGoalBreakBlock(this);
 
+	@SuppressWarnings("rawtypes")
 	public EntityFastZombie(World world)
 	{
 		super(world);

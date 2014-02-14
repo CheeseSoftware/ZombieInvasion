@@ -8,7 +8,12 @@ commands:
       permission: zombieinvasion.zombie
       permission-message: You don't have zombieinvasion.zombie
    startwave:
-      description: Spawns cusatom zombie.
-      usage: /zombaie
-      permission: zombieinvasaion.zombie
-      permission-message: You don't have zombieinvaasion.zombie
+      description: Starts a wave.
+      usage: Usage: /startwave <amount>
+      permission: zombieinvasion.startwave
+      permission-message: You don't have zombieinvasion.startwave
+   setmiddle:
+      description: Sets the middle of the arena.
+      usage: Usage: /setmiddle
+      permission: zombieinvasion.setmiddle
+      permission-message: You don't have zombieinvasion.setmiddle

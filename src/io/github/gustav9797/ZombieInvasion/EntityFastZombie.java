@@ -3,9 +3,11 @@ package io.github.gustav9797.ZombieInvasion;
 import java.lang.reflect.Field;
 import java.util.Random;
 
+import net.minecraft.server.v1_7_R1.AttributeInstance;
 import net.minecraft.server.v1_7_R1.Entity;
 import net.minecraft.server.v1_7_R1.EntityHuman;
 import net.minecraft.server.v1_7_R1.EntityZombie;
+import net.minecraft.server.v1_7_R1.Navigation;
 import net.minecraft.server.v1_7_R1.PathfinderGoal;
 import net.minecraft.server.v1_7_R1.PathfinderGoalFloat;
 import net.minecraft.server.v1_7_R1.PathfinderGoalHurtByTarget;
@@ -30,7 +32,7 @@ public class EntityFastZombie extends EntityZombie
 	{
 		super(world);
 
-		/*try
+		try
 		{
 			Field field = Navigation.class.getDeclaredField("e");
 			field.setAccessible(true);
@@ -39,7 +41,7 @@ public class EntityFastZombie extends EntityZombie
 		}
 		catch (Exception ex)
 		{
-		}*/
+		}
 
 		try
 		{

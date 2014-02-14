@@ -9,11 +9,21 @@ commands:
       permission-message: You don't have zombieinvasion.zombie
    startwave:
       description: Starts a wave.
-      usage: Usage: /startwave <amount>
+      usage: Invalid wave!
       permission: zombieinvasion.startwave
       permission-message: You don't have zombieinvasion.startwave
    setmiddle:
       description: Sets the middle of the arena.
-      usage: Usage: /setmiddle
+      usage: /setmiddle
       permission: zombieinvasion.setmiddle
       permission-message: You don't have zombieinvasion.setmiddle
+   setsize:
+      description: Sets the size of the arena.
+      usage: Invalid size
+      permission: zombieinvasion.setsize
+      permission-message: You don't have zombieinvasion.setsize
+   createborder:
+      description: Creates a border around the arena.
+      usage: /createborder
+      permission: zombieinvasion.createborder
+      permission-message: You don't have zombieinvasion.createborder

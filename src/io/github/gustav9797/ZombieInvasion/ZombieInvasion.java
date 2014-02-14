@@ -8,10 +8,10 @@ import java.util.Random;
 import net.minecraft.server.v1_7_R1.BiomeBase;
 import net.minecraft.server.v1_7_R1.BiomeMeta;
 import net.minecraft.server.v1_7_R1.EntityZombie;
-import net.minecraft.server.v1_7_R1.World;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
@@ -25,7 +25,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	LinkedList<CustomEntityType> entityTypes = new LinkedList<CustomEntityType>();
 	Random r = new Random();
 	public static Location middle = new Location(null, 0, 80, 0);
-	public static int widthheight = 128;
+	public static int widthheight = 96;
 
 	@Override
 	public void onEnable()
@@ -47,7 +47,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			Player player = (Player) sender;
 			if (cmd.getName().equals("zombie"))
 			{
-				World mcWorld = ((CraftWorld) player.getWorld()).getHandle();
+				net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) player.getWorld()).getHandle();
 				EntityFastZombie zombie = new EntityFastZombie(mcWorld);
 				zombie.setPosition(player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ());
 				mcWorld.addEntity(zombie);
@@ -62,17 +62,40 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					{
 						for (int i = 0; i < 10; i++)
 						{
-							SpawnZombies(new Location(player.getWorld(), 
-									r.nextInt(widthheight) + middle.getBlockX() - 64, 
-									r.nextInt(widthheight) + middle.getBlockY(), 
-									r.nextInt(widthheight) + middle.getBlockZ() - 64), wave);
+							SpawnZombies(
+									new Location(player.getWorld(), r.nextInt(widthheight) + middle.getBlockX() - 64, r.nextInt(widthheight) + middle.getBlockY(), r.nextInt(widthheight)
+											+ middle.getBlockZ() - 64), wave);
+
 						}
+						sender.sendMessage("Wave " + wave + " has begun!");
+						return true;
 					}
 				}
 			}
-			else if(cmd.getName().equals("setmiddle"))
+			else if (cmd.getName().equals("setmiddle"))
 			{
 				middle = player.getLocation();
+				sender.sendMessage("Arena middle was set to X:" + middle.getBlockX() + " Y:" + middle.getBlockY() + " Z:" + middle.getBlockZ());
+				return true;
+			}
+			else if (cmd.getName().equals("setsize"))
+			{
+				if (args.length > 0)
+				{
+					int size = Integer.parseInt(args[0]);
+					if (size > 0 && size <= 128)
+					{
+						ZombieInvasion.widthheight = size;
+						sender.sendMessage("Size was set to " + size);
+						return true;
+					}
+				}
+			}
+			else if (cmd.getName().equals("createborder"))
+			{
+				this.CreateBorder(player.getWorld());
+				sender.sendMessage("Border created.");
+				return true;
 			}
 		}
 		return false;
@@ -85,13 +108,35 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		return field.get(null);
 	}
 
+	public void CreateBorder(World world)
+	{
+		for (int y = 0; y < 150; y++)
+		{
+			int x = 0 - widthheight / 2;
+			int z = 0 - widthheight / 2;
+
+			for (x = 0 - widthheight / 2; x < widthheight / 2; x++)
+				world.getBlockAt(x + middle.getBlockX(), y, z + middle.getBlockZ()).setType(Material.GLASS);
+			z = widthheight / 2;
+			for (x = 0 - widthheight / 2; x < widthheight / 2; x++)
+				world.getBlockAt(x + middle.getBlockX(), y, z + middle.getBlockZ()).setType(Material.GLASS);
+			
+			x = 0 - widthheight / 2;
+			for (z = 0 - widthheight / 2; z < widthheight / 2; z++)
+				world.getBlockAt(x + middle.getBlockX(), y, z + middle.getBlockZ()).setType(Material.GLASS);
+			x = widthheight / 2;
+			for (z = 0 - widthheight / 2; z < widthheight / 2; z++)
+				world.getBlockAt(x + middle.getBlockX(), y, z + middle.getBlockZ()).setType(Material.GLASS);
+		}
+	}
+
 	public void SpawnZombies(Location l, int amount)
 	{
 		for (int i = 0; i < amount; i++)
 		{
 			Location pos = new Location(l.getWorld(), r.nextInt(11) - 5 + l.getBlockX(), l.getBlockY(), r.nextInt(11) - 5 + l.getBlockZ());
-			World mcWorld = ((CraftWorld) l.getWorld()).getHandle();
-			while(pos.getWorld().getBlockAt(pos).getType() == Material.AIR)
+			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) l.getWorld()).getHandle();
+			while (pos.getWorld().getBlockAt(pos).getType() == Material.AIR)
 				pos.setY(pos.getBlockY() - 1);
 			pos.setY(pos.getBlockY() + 2);
 			EntityFastZombie zombie = new EntityFastZombie(mcWorld);

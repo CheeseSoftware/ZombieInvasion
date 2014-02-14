@@ -1,5 +1,7 @@
 package io.github.gustav9797.ZombieInvasion;
 
+import io.github.gustav9797.ZombieInvasion.CustomEntityType;
+
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 
@@ -22,7 +24,13 @@ public final class ZombieInvasion extends JavaPlugin
 	public void onEnable()
 	{
 		entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityFastZombie.class));
+<<<<<<< HEAD
 		//registerEntities();
+=======
+		getServer().getPluginManager().registerEvents(new EventListener(this), this);
+		registerEntities();
+		
+>>>>>>> 0e7146d5b8b6865fa3a164094dbf867e1b423c4c
 	}
 
 	@Override

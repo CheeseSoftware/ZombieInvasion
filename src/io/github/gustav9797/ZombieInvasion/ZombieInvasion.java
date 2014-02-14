@@ -1,26 +1,13 @@
 package io.github.gustav9797.ZombieInvasion;
 
-<<<<<<< HEAD
-=======
-import io.github.gustav9797.ZombieInvasion.CustomEntityType;
-
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
->>>>>>> 739569ab4247e5a56238ec5b34ffcf7ea04d837d
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-<<<<<<< HEAD
-=======
 import net.minecraft.server.v1_7_R1.BiomeBase;
-import net.minecraft.server.v1_7_R1.BiomeForest;
 import net.minecraft.server.v1_7_R1.BiomeMeta;
-import net.minecraft.server.v1_7_R1.EntityTypes;
->>>>>>> 739569ab4247e5a56238ec5b34ffcf7ea04d837d
 import net.minecraft.server.v1_7_R1.EntityZombie;
-import net.minecraft.server.v1_7_R1.Vec3D;
 import net.minecraft.server.v1_7_R1.World;
 
 import org.bukkit.Location;
@@ -87,7 +74,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		return false;
 	}
 
-	private static Object getPrivateStatic(Class clazz, String f) throws Exception
+	private static Object getPrivateStatic(@SuppressWarnings("rawtypes") Class clazz, String f) throws Exception
 	{
 		Field field = clazz.getDeclaredField(f);
 		field.setAccessible(true);

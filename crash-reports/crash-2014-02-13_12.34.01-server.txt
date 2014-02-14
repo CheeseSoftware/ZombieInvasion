@@ -1,0 +1,41 @@
+---- Minecraft Crash Report ----
+// Quite honestly, I wouldn't worry myself about that.
+
+Time: 2014-02-13 12:34
+Description: Exception in server tick loop
+
+java.lang.NoSuchMethodError: org.bukkit.command.SimpleCommandMap.getFallbackCommands()Ljava/util/Set;
+	at org.bukkit.craftbukkit.v1_7_R1.help.SimpleHelpMap.initializeCommands(SimpleHelpMap.java:141)
+	at org.bukkit.craftbukkit.v1_7_R1.CraftServer.enablePlugins(CraftServer.java:288)
+	at net.minecraft.server.v1_7_R1.MinecraftServer.m(MinecraftServer.java:342)
+	at net.minecraft.server.v1_7_R1.MinecraftServer.g(MinecraftServer.java:319)
+	at net.minecraft.server.v1_7_R1.MinecraftServer.a(MinecraftServer.java:275)
+	at net.minecraft.server.v1_7_R1.DedicatedServer.init(DedicatedServer.java:175)
+	at net.minecraft.server.v1_7_R1.MinecraftServer.run(MinecraftServer.java:424)
+	at net.minecraft.server.v1_7_R1.ThreadServerApplication.run(SourceFile:617)
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- System Details --
+Details:
+	Minecraft Version: 1.7.2
+	Operating System: Windows 7 (amd64) version 6.1
+	Java Version: 1.7.0_25, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode), Oracle Corporation
+	Memory: 180226720 bytes (171 MB) / 391380992 bytes (373 MB) up to 954466304 bytes (910 MB)
+	JVM Flags: 0 total; 
+	AABB Pool Size: 0 (0 bytes; 0 MB) allocated, 0 (0 bytes; 0 MB) used
+	IntCache: cache: 0, tcache: 0, allocated: 13, tallocated: 95
+	CraftBukkit Information: 
+   Running: CraftBukkit version git-Bukkit-1.7.2-R0.2-b2974jnks (MC: 1.7.2) (Implementing API version 1.7.2-R0.3-SNAPSHOT) true
+   Plugins: {}
+   Warnings: DEFAULT
+   Threads: { RUNNABLE DestroyJavaVM: [], RUNNABLE Server console handler: [java.io.FileInputStream.readBytes(Native Method), java.io.FileInputStream.read(Unknown Source), java.io.BufferedInputStream.fill(Unknown Source), java.io.BufferedInputStream.read(Unknown Source), java.io.FilterInputStream.read(Unknown Source), org.bukkit.craftbukkit.libs.jline.console.ConsoleReader$1.read(ConsoleReader.java:167), org.bukkit.craftbukkit.libs.jline.internal.InputStreamReader.read(InputStreamReader.java:267), org.bukkit.craftbukkit.libs.jline.internal.InputStreamReader.read(InputStreamReader.java:204), org.bukkit.craftbukkit.libs.jline.console.ConsoleReader.readCharacter(ConsoleReader.java:995), org.bukkit.craftbukkit.libs.jline.console.ConsoleReader.readLineSimple(ConsoleReader.java:1506), org.bukkit.craftbukkit.libs.jline.console.ConsoleReader.readLine(ConsoleReader.java:1153), org.bukkit.craftbukkit.libs.jline.console.ConsoleReader.readLine(ConsoleReader.java:1117), org.bukkit.craftbukkit.libs.jline.console.ConsoleReader.readLine(ConsoleReader.java:1105), net.minecraft.server.v1_7_R1.ThreadCommandReader.run(ThreadCommandReader.java:34)], TIMED_WAITING Server Infinisleeper: [java.lang.Thread.sleep(Native Method), net.minecraft.server.v1_7_R1.ThreadSleepForever.run(SourceFile:62)], RUNNABLE Signal Dispatcher: [], RUNNABLE Netty IO #0: [sun.nio.ch.WindowsSelectorImpl$SubSelector.poll0(Native Method), sun.nio.ch.WindowsSelectorImpl$SubSelector.poll(Unknown Source), sun.nio.ch.WindowsSelectorImpl$SubSelector.access$400(Unknown Source), sun.nio.ch.WindowsSelectorImpl.doSelect(Unknown Source), sun.nio.ch.SelectorImpl.lockAndDoSelect(Unknown Source), sun.nio.ch.SelectorImpl.select(Unknown Source), net.minecraft.util.io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:591), net.minecraft.util.io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:301), net.minecraft.util.io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:101), java.lang.Thread.run(Unknown Source)], WAITING Thread-5: [sun.misc.Unsafe.park(Native Method), java.util.concurrent.locks.LockSupport.park(Unknown Source), java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(Unknown Source), java.util.concurrent.LinkedBlockingQueue.take(Unknown Source), net.minecraft.util.com.mojang.util.QueueLogAppender.getNextLogEvent(QueueLogAppender.java:73), org.bukkit.craftbukkit.v1_7_R1.util.TerminalConsoleWriterThread.run(TerminalConsoleWriterThread.java:25), java.lang.Thread.run(Unknown Source)], WAITING Reference Handler: [java.lang.Object.wait(Native Method), java.lang.Object.wait(Object.java:503), java.lang.ref.Reference$ReferenceHandler.run(Unknown Source)], RUNNABLE Attach Listener: [], WAITING Snooper Timer: [java.lang.Object.wait(Native Method), java.lang.Object.wait(Object.java:503), java.util.TimerThread.mainLoop(Unknown Source), java.util.TimerThread.run(Unknown Source)], WAITING Finalizer: [java.lang.Object.wait(Native Method), java.lang.ref.ReferenceQueue.remove(Unknown Source), java.lang.ref.ReferenceQueue.remove(Unknown Source), java.lang.ref.Finalizer$FinalizerThread.run(Unknown Source)], RUNNABLE Server thread: [java.lang.Thread.dumpThreads(Native Method), java.lang.Thread.getAllStackTraces(Unknown Source), org.bukkit.craftbukkit.v1_7_R1.CraftCrashReport.call(CraftCrashReport.java:28), net.minecraft.server.v1_7_R1.CrashReportSystemDetails.a(SourceFile:74), net.minecraft.server.v1_7_R1.CrashReport.h(CrashReport.java:45), net.minecraft.server.v1_7_R1.CrashReport.<init>(CrashReport.java:33), net.minecraft.server.v1_7_R1.MinecraftServer.run(MinecraftServer.java:474), net.minecraft.server.v1_7_R1.ThreadServerApplication.run(SourceFile:617)],}
+   Recent tasks from -31--1{}
+	Profiler Position: N/A (disabled)
+	Vec3 Pool Size: ~~ERROR~~ NullPointerException: null
+	Player Count: 0 / 20; []
+	Is Modded: Definitely; Server brand changed to 'CraftBukkit'
+	Type: Dedicated Server (map_server.txt)

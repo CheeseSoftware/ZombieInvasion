@@ -2,6 +2,21 @@ name: ZombieInvasion
 main: io.github.gustav9797.ZombieInvasion.ZombieInvasion
 version: 0.1
 commands:
+   createarena:
+      description: Creates an arena.
+      usage: /createarena name
+      permission: zombieinvasion.createarena
+      permission-message: You don't have zombieinvasion.createarena
+   removearena:
+      description: Removed an arena.
+      usage: /removearena name
+      permission: zombieinvasion.removearena
+      permission-message: You don't have zombieinvasion.removearena
+   joinarena:
+      description: Joins the specified arena.
+      usage: /joinarena name
+      permission: zombieinvasion.joinarena
+      permission-message: You don't have zombieinvasion.joinarena
    zombie:
       description: Spawns custom zombie.
       usage: /zombie
@@ -27,3 +42,8 @@ commands:
       usage: /createborder
       permission: zombieinvasion.createborder
       permission-message: You don't have zombieinvasion.createborder
+   removeborder:
+      description: Removes the border around the arena.
+      usage: /removeborder
+      permission: zombieinvasion.removeborder
+      permission-message: You don't have zombieinvasion.removeborder

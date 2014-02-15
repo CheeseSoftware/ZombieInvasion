@@ -43,23 +43,19 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 
 	public boolean b()
 	{
-		// Bukkit.getServer().broadcastMessage("b was called");
 		// double d0 = this.a.e((double) this.b, (double) this.c, (double)
-		// this.d);
 		return true;// return this.i <= 240/* && !this.e.f(this.a.world, this.b,
 					// this.c, this.d)*/ && d0 < 4.0D;
 	}
 
 	public void d()
 	{
-		// Bukkit.getServer().broadcastMessage("d was called");
 		super.d();
 		this.entityInsentient.world.d(this.entityInsentient.getId(), this.x, this.y, this.z, -1);
 	}
 
 	private Location getRandomCloseBlock()
 	{
-		//Entity entity = this.entityInsentient.getBukkitEntity();
 		if (this.entityInsentient instanceof EntityFastZombie)
 		{
 			EntityFastZombie zombie = (EntityFastZombie) this.entityInsentient;
@@ -95,7 +91,6 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 
 	public void e()
 	{
-		// Bukkit.getServer().broadcastMessage("e was called");
 		super.e();
 		Entity entity = this.entityInsentient.getBukkitEntity();
 		if (this.entityInsentient instanceof EntityFastZombie)
@@ -131,7 +126,9 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 
 			if (i != this.j)
 			{
-				this.entityInsentient.world.d(this.entityInsentient.getId(), l.getBlockX(), l.getBlockY(), l.getBlockZ(), i);
+				//this.entityInsentient.world.d(this.entityInsentient.getId(), l.getBlockX(), l.getBlockY(), l.getBlockZ(), i);
+				this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).setData((byte)(this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).getData() - 1));
+				this.i = this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).getData();
 				this.j = i;
 			}
 

@@ -10,6 +10,7 @@ public class PathfinderGoalWalkToTile extends PathfinderGoal
 	float speed;
 	private EntityCreature entityCreature;
 	private Location goal;
+	private int times = 10;
 
 	public PathfinderGoalWalkToTile(EntityCreature entitycreature, float speed, Location location)
 	{
@@ -21,9 +22,19 @@ public class PathfinderGoalWalkToTile extends PathfinderGoal
 	@Override
 	public boolean a()
 	{
-		if(entityCreature.target == null || !entityCreature.target.isAlive())
-			this.entityCreature.getNavigation().a(goal.getBlockX(), goal.getBlockY(), goal.getBlockZ(), speed);
+		if (times > 0 && this.entityCreature.isAlive())
+		{
+			//this.entityCreature.getNavigation().a(goal.getBlockX(), goal.getBlockY(), goal.getBlockZ(), speed);
+			times--;
+			return true;
+		}
 		return false;
+	}
+
+	@Override
+	public boolean b()
+	{
+		return !this.entityCreature.getNavigation().g();
 	}
 
 	@Override

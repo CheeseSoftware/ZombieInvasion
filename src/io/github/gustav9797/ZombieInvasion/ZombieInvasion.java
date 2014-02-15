@@ -1,8 +1,10 @@
 package io.github.gustav9797.ZombieInvasion;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import net.minecraft.server.v1_7_R1.BiomeBase;
@@ -18,20 +20,25 @@ import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.LazyMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ZombieInvasion extends JavaPlugin implements Listener
 {
-	LinkedList<CustomEntityType> entityTypes = new LinkedList<CustomEntityType>();
+	LinkedList<CustomEntityType> entityTypes;
 	Random r = new Random();
-	public static Location middle = new Location(null, 0, 80, 0);
-	public static int widthheight = 96;
+	Map<String, Arena> arenas;
 
 	@Override
 	public void onEnable()
 	{
+		entityTypes = new LinkedList<CustomEntityType>();
 		entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityFastZombie.class));
 		registerEntities();
+
+		arenas = new HashMap<String, Arena>();
 	}
 
 	@Override
@@ -45,56 +52,139 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		if (sender instanceof Player)
 		{
 			Player player = (Player) sender;
-			if (cmd.getName().equals("zombie"))
+			if (cmd.getName().equals("createarena"))
 			{
-				net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) player.getWorld()).getHandle();
-				EntityFastZombie zombie = new EntityFastZombie(mcWorld);
-				zombie.setPosition(player.getLocation().getX(), player.getLocation().getY(), player.getLocation().getZ());
-				mcWorld.addEntity(zombie);
+				if (args.length > 0)
+				{
+					String name = args[0];
+					if (!arenas.containsKey(name))
+					{
+						arenas.put(name, new ZombieArena(96, player.getLocation()));
+						sender.sendMessage("Arena " + name + " created!");
+					}
+					else
+						sender.sendMessage("Arena already exists.");
+				}
+				else
+					sender.sendMessage("Usage: /createarena <name>");
+				return true;
+			}
+			else if (cmd.getName().equals("removearena"))
+			{
+				if (args.length > 0)
+				{
+					String name = args[0];
+					if (arenas.containsKey(name))
+					{
+						arenas.remove(name);
+						sender.sendMessage("Arena " + name + " removed!");
+					}
+					else
+						sender.sendMessage("Arena doesn't exists.");
+				}
+				else
+					sender.sendMessage("Usage: /removearena <name>");
+				return true;
+			}
+			else if (cmd.getName().equals("joinarena"))
+			{
+				if (args.length > 0)
+				{
+					String name = args[0];
+					if (arenas.containsKey(name))
+					{
+						Arena arena = arenas.get(name);
+						player.teleport(arena.getMiddle());
+						player.setMetadata("arena", new FixedMetadataValue(this, name));
+						sender.sendMessage("Arena joined!");
+					}
+					else
+						sender.sendMessage("Arena doesn't exist.");
+				}
+				else
+					sender.sendMessage("Usage: /joinarena <name>");
 				return true;
 			}
 			else if (cmd.getName().equals("startwave"))
 			{
-				if (args.length > 0)
+				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
-					int wave = Integer.parseInt(args[0]);
-					if (wave > 0 && wave < 100)
+					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+					if (args.length > 0)
 					{
-						for (int i = 0; i < 10; i++)
+						int wave = Integer.parseInt(args[0]);
+						if (wave > 0 && wave < 100)
 						{
-							SpawnZombies(
-									new Location(player.getWorld(), r.nextInt(widthheight) + middle.getBlockX() - 64, r.nextInt(widthheight) + middle.getBlockY(), r.nextInt(widthheight)
-											+ middle.getBlockZ() - 64), wave);
-
+							arena.StartWave(wave, this);
+							sender.sendMessage("Wave " + wave + " has begun!");
 						}
-						sender.sendMessage("Wave " + wave + " has begun!");
-						return true;
+						else
+							sender.sendMessage("Wave has to be between 0 and 100.");
 					}
+					else
+						sender.sendMessage("Usage: /startwave <wave>");
 				}
+				else
+					sender.sendMessage("You have to join an arena! (/joinarena)");
+				return true;
 			}
 			else if (cmd.getName().equals("setmiddle"))
 			{
-				middle = player.getLocation();
-				sender.sendMessage("Arena middle was set to X:" + middle.getBlockX() + " Y:" + middle.getBlockY() + " Z:" + middle.getBlockZ());
+				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				{
+					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+					arena.setMiddle(player.getLocation());
+					sender.sendMessage("Arena middle was set!");
+				}
+				else
+					sender.sendMessage("You have to join an arena! (/joinarena)");
 				return true;
 			}
 			else if (cmd.getName().equals("setsize"))
 			{
-				if (args.length > 0)
+				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
-					int size = Integer.parseInt(args[0]);
-					if (size > 0 && size <= 128)
+					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+					if (args.length > 0)
 					{
-						ZombieInvasion.widthheight = size;
-						sender.sendMessage("Size was set to " + size);
-						return true;
+						int size = Integer.parseInt(args[0]);
+						if (size > 0 && size <= 128)
+						{
+							arena.setSize(size);
+							sender.sendMessage("Size was set to " + size);
+						}
+						else
+							sender.sendMessage("Size has to be between 0 and 128.");
 					}
+					else
+						sender.sendMessage("Usage: /setsize <size>");
 				}
+				else
+					sender.sendMessage("You have to join an arena! (/joinarena)");
+				return true;
 			}
 			else if (cmd.getName().equals("createborder"))
 			{
-				this.CreateBorder(player.getWorld());
-				sender.sendMessage("Border created.");
+				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				{
+					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+					arena.CreateBorder(150, Material.GLASS);
+					sender.sendMessage("Border created.");
+				}
+				else
+					sender.sendMessage("You have to join an arena! (/joinarena)");
+				return true;
+			}
+			else if (cmd.getName().equals("removeborder"))
+			{
+				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				{
+					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+					arena.RestoreBorder();
+					sender.sendMessage("Border removed.");
+				}
+				else
+					sender.sendMessage("You have to join an arena! (/joinarena)");
 				return true;
 			}
 		}
@@ -108,43 +198,6 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		return field.get(null);
 	}
 
-	public void CreateBorder(World world)
-	{
-		for (int y = 0; y < 150; y++)
-		{
-			int x = 0 - widthheight / 2;
-			int z = 0 - widthheight / 2;
-
-			for (x = 0 - widthheight / 2; x < widthheight / 2; x++)
-				world.getBlockAt(x + middle.getBlockX(), y, z + middle.getBlockZ()).setType(Material.GLASS);
-			z = widthheight / 2;
-			for (x = 0 - widthheight / 2; x < widthheight / 2; x++)
-				world.getBlockAt(x + middle.getBlockX(), y, z + middle.getBlockZ()).setType(Material.GLASS);
-			
-			x = 0 - widthheight / 2;
-			for (z = 0 - widthheight / 2; z < widthheight / 2; z++)
-				world.getBlockAt(x + middle.getBlockX(), y, z + middle.getBlockZ()).setType(Material.GLASS);
-			x = widthheight / 2;
-			for (z = 0 - widthheight / 2; z < widthheight / 2; z++)
-				world.getBlockAt(x + middle.getBlockX(), y, z + middle.getBlockZ()).setType(Material.GLASS);
-		}
-	}
-
-	public void SpawnZombies(Location l, int amount)
-	{
-		for (int i = 0; i < amount; i++)
-		{
-			Location pos = new Location(l.getWorld(), r.nextInt(11) - 5 + l.getBlockX(), l.getBlockY(), r.nextInt(11) - 5 + l.getBlockZ());
-			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) l.getWorld()).getHandle();
-			while (pos.getWorld().getBlockAt(pos).getType() == Material.AIR)
-				pos.setY(pos.getBlockY() - 1);
-			pos.setY(pos.getBlockY() + 2);
-			EntityFastZombie zombie = new EntityFastZombie(mcWorld);
-			zombie.setPosition(pos.getBlockX(), pos.getBlockY(), pos.getBlockZ());
-			mcWorld.addEntity(zombie);
-		}
-	}
-
 	public void registerEntities()
 	{
 		BiomeBase[] biomes;
@@ -154,15 +207,12 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		}
 		catch (Exception exc)
 		{
-			// Unable to fetch.
 			return;
 		}
 		for (BiomeBase biomeBase : biomes)
 		{
 			if (biomeBase == null)
 				break;
-
-			// This changed names from J, K, L and M.
 			for (String field : new String[]
 			{ "as", "at", "au", "av" })
 				try
@@ -172,7 +222,6 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					@SuppressWarnings("unchecked")
 					List<BiomeMeta> mobList = (List<BiomeMeta>) list.get(biomeBase);
 
-					// Write in our custom class.
 					for (BiomeMeta meta : mobList)
 						for (CustomEntityType entity : entityTypes)
 							if (entity.getNMSClass().equals(meta.b))
@@ -184,13 +233,5 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				}
 		}
 	}
-	/*
-	 * public void registerEntities() { for (CustomEntityType entity :
-	 * entityTypes) { try { Method reg =
-	 * EntityTypes.class.getDeclaredMethod("a", Class.class, String.class,
-	 * int.class); reg.setAccessible(true); reg.invoke(null,
-	 * entity.getCustomClass(), entity.getName(), entity.getId()); } catch
-	 * (Exception e) { e.printStackTrace(); getLogger().info("ID:" +
-	 * entity.getId() + " name:" + entity.getName()); } } }
-	 */
+
 }

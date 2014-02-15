@@ -48,8 +48,8 @@ public class EntityFastZombie extends EntityZombie
 		{
 			Field gsa = PathfinderGoalSelector.class.getDeclaredField("b");
 			gsa.setAccessible(true);
-			gsa.set(this.goalSelector, new UnsafeList());
-			gsa.set(this.targetSelector, new UnsafeList());
+			gsa.set(this.goalSelector, new UnsafeList<Object>());
+			gsa.set(this.targetSelector, new UnsafeList<Object>());
 		}
 		catch (Exception e)
 		{
@@ -90,8 +90,8 @@ public class EntityFastZombie extends EntityZombie
 		{
 			Field gsa = PathfinderGoalSelector.class.getDeclaredField("b");
 			gsa.setAccessible(true);
-			gsa.set(this.goalSelector, new UnsafeList());
-			gsa.set(this.targetSelector, new UnsafeList());
+			gsa.set(this.goalSelector, new UnsafeList<Object>());
+			gsa.set(this.targetSelector, new UnsafeList<Object>());
 		}
 		catch (Exception e)
 		{

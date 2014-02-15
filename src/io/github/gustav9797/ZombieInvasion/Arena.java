@@ -2,10 +2,6 @@ package io.github.gustav9797.ZombieInvasion;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -18,6 +14,9 @@ import org.bukkit.block.BlockState;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
@@ -28,7 +27,7 @@ import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.data.DataException;
 
-public abstract class Arena
+public abstract class Arena implements Listener
 {
 	protected int size;
 	protected Location middle;
@@ -36,8 +35,8 @@ public abstract class Arena
 	protected String name;
 	protected FileConfiguration config;
 	protected File configFile;
+	
 	protected int tickTaskId = -1;
-
 	protected int ticksPassed = -1;
 	protected int oldMinutesPassed = -1;
 	protected int ticksSinceLastWave = -1;
@@ -49,6 +48,7 @@ public abstract class Arena
 
 	public Arena(String name, JavaPlugin plugin)
 	{
+		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 		this.name = name;
 		border = new LinkedList<BlockState>();
 		File dir = new File(plugin.getDataFolder() + File.separator + name);
@@ -78,6 +78,7 @@ public abstract class Arena
 		File schematic = new File(plugin.getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
 		try
 		{
+			@SuppressWarnings("deprecation")
 			CuboidClipboard cc = CuboidClipboard.loadSchematic(schematic);
 			Vector location = new Vector(this.middle.getBlockX() + this.size / 2 - 1, this.middle.getBlockY() + cc.getHeight() - 2, this.middle.getBlockZ() + this.size / 2 - 1);
 			cc.paste(es, location, false);
@@ -221,6 +222,22 @@ public abstract class Arena
 	public Location getMiddle()
 	{
 		return this.middle;
+	}
+	
+	public void onPlayerLogin(PlayerLoginEvent event)
+	{
+		if(players.contains(event.getPlayer()))
+		{
+			players.remove(event.getPlayer());
+		}
+	}
+	
+	public void onPlayerQuit(PlayerQuitEvent event)
+	{
+		if(players.contains(event.getPlayer()))
+		{
+			players.remove(event.getPlayer());
+		}
 	}
 
 }

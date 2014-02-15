@@ -11,7 +11,6 @@ import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
-import org.bukkit.scheduler.BukkitTask;
 
 public class ZombieArena extends Arena
 {
@@ -39,7 +38,7 @@ public class ZombieArena extends Arena
 			while (pos.getWorld().getBlockAt(pos).getType() == Material.AIR)
 				pos.setY(pos.getBlockY() - 1);
 			pos.setY(pos.getBlockY() + 2);
-			new SpawnZombieTask(plugin, pos, this.middle, this).runTaskLater(plugin, delay);
+			new SpawnZombieTask(pos, this.middle, this).runTaskLater(plugin, delay);
 			delay += 20;
 		}
 	}
@@ -88,7 +87,7 @@ public class ZombieArena extends Arena
 	{
 		zombies.clear();
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-		int id = scheduler.scheduleSyncRepeatingTask(plugin, new Runnable()
+		scheduler.scheduleSyncRepeatingTask(plugin, new Runnable()
 		{
 			@Override
 			public void run()

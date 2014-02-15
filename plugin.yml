@@ -47,3 +47,8 @@ commands:
       usage: /removeborder
       permission: zombieinvasion.removeborder
       permission-message: You don't have zombieinvasion.removeborder
+   reset:
+      description: Resets the arena.
+      usage: /reset
+      permission: zombieinvasion.reset
+      permission-message: You don't have zombieinvasion.reset

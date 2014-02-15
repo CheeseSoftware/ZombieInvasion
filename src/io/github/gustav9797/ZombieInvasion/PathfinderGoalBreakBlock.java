@@ -121,14 +121,14 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 				this.entityInsentient.world.triggerEffect(1010, l.getBlockX(), l.getBlockY(), l.getBlockZ(), 0);
 			}
 
-			++this.i;
+			this.i+=2;
 			int i = (int) ((float) this.i / 240.0F * 10.0F);
 
 			if (i != this.j)
 			{
-				//this.entityInsentient.world.d(this.entityInsentient.getId(), l.getBlockX(), l.getBlockY(), l.getBlockZ(), i);
-				this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).setData((byte)(this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).getData() - 1));
-				this.i = this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).getData();
+				this.entityInsentient.world.d(this.entityInsentient.getId(), l.getBlockX(), l.getBlockY(), l.getBlockZ(), i);
+				//this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).setData((byte)(this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).getData() - 1));
+				//this.i = this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).getData();
 				this.j = i;
 			}
 

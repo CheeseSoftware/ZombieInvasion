@@ -1,5 +1,6 @@
 package io.github.gustav9797.ZombieInvasion;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -24,6 +25,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.LazyMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 public final class ZombieInvasion extends JavaPlugin implements Listener
 {
@@ -34,17 +36,27 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	@Override
 	public void onEnable()
 	{
+		this.saveDefaultConfig();
+		this.reloadConfig();
 		entityTypes = new LinkedList<CustomEntityType>();
 		entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityFastZombie.class));
 		registerEntities();
-
 		arenas = new HashMap<String, Arena>();
+		
+		List<String> arenasToLoad = this.getConfig().getStringList("zombiearenas");
+		for(String arena : arenasToLoad)
+		{
+			ZombieArena a = new ZombieArena(arena, this);
+			a.Load(this);
+			arenas.put(arena, a);
+		}
 	}
 
 	@Override
 	public void onDisable()
 	{
-
+		this.saveDefaultConfig();
+		this.saveConfig();
 	}
 
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
@@ -59,7 +71,15 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					String name = args[0];
 					if (!arenas.containsKey(name))
 					{
-						arenas.put(name, new ZombieArena(96, player.getLocation()));
+						Arena a = new ZombieArena(name, this);
+						a.setMiddle(player.getLocation(), this);
+						a.setSize(96, this);
+						a.Save(this);
+						arenas.put(name, a);
+						List<String> temp = this.getConfig().getStringList("zombiearenas");
+						temp.add(name);
+						this.getConfig().set("zombiearenas", temp);
+						this.saveConfig();
 						sender.sendMessage("Arena " + name + " created!");
 					}
 					else
@@ -77,6 +97,14 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					if (arenas.containsKey(name))
 					{
 						arenas.remove(name);
+						List<String> temp = this.getConfig().getStringList("zombiearenas");
+						temp.remove(name);
+						this.getConfig().set("zombiearenas", temp);
+						File file = new File(this.getDataFolder() + File.separator + name + File.separator + "config.yml");
+						file.delete();
+						File file2 = new File(this.getDataFolder() + File.separator + name)	;
+						file2.delete();
+						this.saveConfig();
 						sender.sendMessage("Arena " + name + " removed!");
 					}
 					else
@@ -94,6 +122,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					if (arenas.containsKey(name))
 					{
 						Arena arena = arenas.get(name);
+						arena.players.add(player);
 						player.teleport(arena.getMiddle());
 						player.setMetadata("arena", new FixedMetadataValue(this, name));
 						sender.sendMessage("Arena joined!");
@@ -110,19 +139,24 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					if (args.length > 0)
-					{
-						int wave = Integer.parseInt(args[0]);
-						if (wave > 0 && wave < 100)
+					//if (args.length > 0)
+					//{
+						//int wave = Integer.parseInt(args[0]);
+						arena.SendWaves(this);
+					//arena.StartWave(10, this);
+						//BukkitTask task = new SendWavesTask(this, 4, 30, 15, 10, arena).runTaskLater(this, 20 * 60 * 4);
+						this.getServer().broadcastMessage("Waves are coming! Hide!");
+						
+						/*if (wave > 0 && wave < 100)
 						{
 							arena.StartWave(wave, this);
 							sender.sendMessage("Wave " + wave + " has begun!");
 						}
 						else
-							sender.sendMessage("Wave has to be between 0 and 100.");
-					}
+							sender.sendMessage("Wave has to be between 0 and 100.");*/
+					/*}
 					else
-						sender.sendMessage("Usage: /startwave <wave>");
+						sender.sendMessage("Usage: /startwave <wave>");*/
 				}
 				else
 					sender.sendMessage("You have to join an arena! (/joinarena)");
@@ -133,7 +167,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.setMiddle(player.getLocation());
+					arena.setMiddle(player.getLocation(), this);
 					sender.sendMessage("Arena middle was set!");
 				}
 				else
@@ -150,7 +184,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 						int size = Integer.parseInt(args[0]);
 						if (size > 0 && size <= 128)
 						{
-							arena.setSize(size);
+							arena.setSize(size, this);
 							sender.sendMessage("Size was set to " + size);
 						}
 						else
@@ -168,7 +202,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.CreateBorder(150, Material.GLASS);
+					arena.CreateBorder(10, Material.GLASS);
 					sender.sendMessage("Border created.");
 				}
 				else
@@ -182,6 +216,18 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
 					arena.RestoreBorder();
 					sender.sendMessage("Border removed.");
+				}
+				else
+					sender.sendMessage("You have to join an arena! (/joinarena)");
+				return true;
+			}
+			else if(cmd.getName().equals("reset"))
+			{
+				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				{
+					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+					arena.Reset(this);
+					sender.sendMessage("Arena " + arena.name + " was reset!");
 				}
 				else
 					sender.sendMessage("You have to join an arena! (/joinarena)");

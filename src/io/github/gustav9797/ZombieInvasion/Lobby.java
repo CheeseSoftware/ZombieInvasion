@@ -72,7 +72,7 @@ public class Lobby implements Listener
 		{
 			config.set("location", this.l.toVector());
 			config.set("world", this.worldName);
-			config.set("signs", this.signs);
+			//config.set("signs", this.signs);
 			config.save(this.configFile);
 		}
 		catch (IOException e)
@@ -90,7 +90,7 @@ public class Lobby implements Listener
 			config.load(configFile);
 			World world = Bukkit.getServer().getWorld(config.getString("world"));
 			l = config.getVector("location").toLocation(world);
-			this.signs = (List<Location>)config.getList("signs");
+			//this.signs = (List<Location>)config.getList("signs");
 		}
 		catch (IOException | InvalidConfigurationException e)
 		{

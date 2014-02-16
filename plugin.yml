@@ -1,6 +1,7 @@
 name: ZombieInvasion
 main: io.github.gustav9797.ZombieInvasion.ZombieInvasion
 version: 0.1
+depend: [OstEconomyPlugin, WorldEdit]
 commands:
    createarena:
       description: Creates an arena.
@@ -17,6 +18,11 @@ commands:
       usage: /joinarena name
       permission: zombieinvasion.joinarena
       permission-message: You don't have zombieinvasion.joinarena
+   leavearena:
+      description: Leaves your current arena.
+      usage: /leavearena
+      permission: zombieinvasion.leavearena
+      permission-message: You don't have zombieinvasion.leavearena
    zombie:
       description: Spawns custom zombie.
       usage: /zombie
@@ -52,3 +58,8 @@ commands:
       usage: /reset
       permission: zombieinvasion.reset
       permission-message: You don't have zombieinvasion.reset
+   setlobby:
+      description: Sets the lobby's location.
+      usage: /setlobby
+      permission: zombieinvasion.setlobby
+      permission-message: You don't have zombieinvasion.setlobby

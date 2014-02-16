@@ -17,11 +17,12 @@ public class ZombieArena extends Arena
 	protected List<EntityFastZombie> zombies = new LinkedList<EntityFastZombie>();
 	protected List<Location> zombiesToSpawn = new LinkedList<Location>();
 	protected int ticksUntilNextWave = -1;
-	protected int currentWave = 5;
+	protected int currentWave = 2;
+	protected int sendWavesTaskId = -1;
 
-	public ZombieArena(String name, JavaPlugin plugin)
+	public ZombieArena(String name, JavaPlugin plugin, Lobby lobby)
 	{
-		super(name, plugin);
+		super(name, plugin, lobby);
 	}
 
 	public void SpawnZombie(Location l, Location middle)
@@ -85,9 +86,8 @@ public class ZombieArena extends Arena
 	@Override
 	public void SendWaves(JavaPlugin plugin)
 	{
-		zombies.clear();
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-		scheduler.scheduleSyncRepeatingTask(plugin, new Runnable()
+		this.sendWavesTaskId = scheduler.scheduleSyncRepeatingTask(plugin, new Runnable()
 		{
 			@Override
 			public void run()
@@ -102,7 +102,7 @@ public class ZombieArena extends Arena
 	public void TrySpawnZombies()
 	{
 		Iterator<Location> i = zombiesToSpawn.iterator();
-		while (i.hasNext() && zombies.size() < 100)
+		while (i.hasNext() && zombies.size() < 200)
 		{
 			Location l = i.next();
 			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) l.getWorld()).getHandle();
@@ -133,13 +133,13 @@ public class ZombieArena extends Arena
 			if (this.ticksUntilNextWave <= 0)
 			{
 				this.ticksSinceLastWave = 0;
-				this.StartWave(this.currentWave + 5, plugin);
+				this.currentWave += 3;
+				this.StartWave(this.currentWave, plugin);
 				this.ticksUntilNextWave = -1;
 				for (Player player : players)
 				{
-					player.sendMessage("Wave " + (int) (currentWave + 5) + " is coming!");
+					player.sendMessage("Wave " + (int) (currentWave) + " is coming!");
 				}
-				this.currentWave += 5;
 
 			}
 		}
@@ -162,5 +162,35 @@ public class ZombieArena extends Arena
 				player.sendMessage("Below 20 zombies left, prepare for the next wave in 30 seconds!");
 			}
 		}
+	}
+	
+	@Override
+	public void onPlayerLeaveArena(Player player, String reason, JavaPlugin plugin)
+	{
+		for(Object e : ((CraftWorld)this.middle.getWorld()).getHandle().entityList)
+		{
+			if(e instanceof EntityFastZombie && this.zombies.contains((EntityFastZombie)e))
+			{
+				EntityFastZombie zombie = (EntityFastZombie)e;
+				if(zombie.isAlive())
+					zombie.die();
+			}
+		}
+		this.zombies.clear();
+		super.onPlayerLeaveArena(player, reason, plugin);
+		if(this.players.size() <= 0)
+		{
+			if(this.sendWavesTaskId != -1)
+			{
+				plugin.getServer().getScheduler().cancelTask(this.sendWavesTaskId);
+				this.sendWavesTaskId = -1;
+			}
+		}
+	}
+
+	@Override
+	String getType()
+	{
+		return "ZombieArena";
 	}
 }

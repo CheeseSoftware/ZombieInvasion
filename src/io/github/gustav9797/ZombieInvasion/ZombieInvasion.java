@@ -1,6 +1,7 @@
 package io.github.gustav9797.ZombieInvasion;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -12,37 +13,107 @@ import net.minecraft.server.v1_7_R1.BiomeBase;
 import net.minecraft.server.v1_7_R1.BiomeMeta;
 import net.minecraft.server.v1_7_R1.EntityZombie;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class ZombieInvasion extends JavaPlugin
+import ostkaka34.OstEconomyPlugin.IOstEconomy;
+
+public final class ZombieInvasion extends JavaPlugin implements Listener
 {
 	LinkedList<CustomEntityType> entityTypes;
 	Random r = new Random();
 	Map<String, Arena> arenas;
+	Lobby lobby;
+	File configFile;
+	public static IOstEconomy economyPlugin;
+
+	public void Save()
+	{
+		YamlConfiguration config = new YamlConfiguration();
+		List<String> temp = new LinkedList<String>();
+		for (Arena a : arenas.values())
+			temp.add(a.name);
+		config.set("zombiearenas", temp);
+		try
+		{
+			config.save(configFile);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	public void Load()
+	{
+		YamlConfiguration config = new YamlConfiguration();
+		try
+		{
+			config.load(configFile);
+		}
+		catch (IOException | InvalidConfigurationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		@SuppressWarnings("unchecked")
+		List<String> temp = (List<String>) config.getList("zombiearenas");
+		for (String arena : temp)
+		{
+			ZombieArena a = new ZombieArena(arena, this, lobby);
+			a.Load(this);
+			arenas.put(arena, a);
+		}
+	}
 
 	@Override
 	public void onEnable()
 	{
-		this.saveDefaultConfig();
-		this.reloadConfig();
+		configFile = new File(this.getDataFolder() + File.separator + "config.yml");
 		entityTypes = new LinkedList<CustomEntityType>();
 		entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityFastZombie.class));
 		registerEntities();
 		arenas = new HashMap<String, Arena>();
+		lobby = new Lobby(arenas, this);
 		
-		List<String> arenasToLoad = this.getConfig().getStringList("zombiearenas");
-		for(String arena : arenasToLoad)
+		if(!configFile.exists())
 		{
-			ZombieArena a = new ZombieArena(arena, this);
-			a.Load(this);
-			arenas.put(arena, a);
+			try
+			{
+				configFile.createNewFile();
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+			this.Save();
 		}
+		this.Load();
+
+		Plugin[] plugins = getServer().getPluginManager().getPlugins();
+		for (int i = 0; i < plugins.length; i++)
+		{
+			if (plugins[i] instanceof IOstEconomy)
+			{
+				economyPlugin = (IOstEconomy) plugins[i];
+				break;
+			}
+		}
+		
+		getServer().getPluginManager().registerEvents(this, this);
 	}
 
 	@Override
@@ -64,15 +135,12 @@ public final class ZombieInvasion extends JavaPlugin
 					String name = args[0];
 					if (!arenas.containsKey(name))
 					{
-						Arena a = new ZombieArena(name, this);
+						Arena a = new ZombieArena(name, this, this.lobby);
 						a.setMiddle(player.getLocation(), this);
 						a.setSize(96, this);
 						a.Save(this);
 						arenas.put(name, a);
-						List<String> temp = this.getConfig().getStringList("zombiearenas");
-						temp.add(name);
-						this.getConfig().set("zombiearenas", temp);
-						this.saveConfig();
+						this.Save();
 						sender.sendMessage("Arena " + name + " created!");
 					}
 					else
@@ -90,14 +158,11 @@ public final class ZombieInvasion extends JavaPlugin
 					if (arenas.containsKey(name))
 					{
 						arenas.remove(name);
-						List<String> temp = this.getConfig().getStringList("zombiearenas");
-						temp.remove(name);
-						this.getConfig().set("zombiearenas", temp);
 						File file = new File(this.getDataFolder() + File.separator + name + File.separator + "config.yml");
 						file.delete();
-						File file2 = new File(this.getDataFolder() + File.separator + name)	;
+						File file2 = new File(this.getDataFolder() + File.separator + name);
 						file2.delete();
-						this.saveConfig();
+						this.Save();
 						sender.sendMessage("Arena " + name + " removed!");
 					}
 					else
@@ -115,10 +180,7 @@ public final class ZombieInvasion extends JavaPlugin
 					if (arenas.containsKey(name))
 					{
 						Arena arena = arenas.get(name);
-						arena.players.add(player);
-						player.teleport(arena.getMiddle());
-						player.setMetadata("arena", new FixedMetadataValue(this, name));
-						sender.sendMessage("Arena joined!");
+						arena.onPlayerJoinArena(player, this);
 					}
 					else
 						sender.sendMessage("Arena doesn't exist.");
@@ -127,29 +189,24 @@ public final class ZombieInvasion extends JavaPlugin
 					sender.sendMessage("Usage: /joinarena <name>");
 				return true;
 			}
+			else if (cmd.getName().equals("leavearena"))
+			{
+				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				{
+					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+					arena.onPlayerLeaveArena(player, "left the arena", this);
+				}
+				else
+					sender.sendMessage("You haven't joined any arena!");
+				return true;
+			}
 			else if (cmd.getName().equals("startwave"))
 			{
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					//if (args.length > 0)
-					//{
-						//int wave = Integer.parseInt(args[0]);
-						arena.SendWaves(this);
-					//arena.StartWave(10, this);
-						//BukkitTask task = new SendWavesTask(this, 4, 30, 15, 10, arena).runTaskLater(this, 20 * 60 * 4);
-						this.getServer().broadcastMessage("Waves are coming! Hide!");
-						
-						/*if (wave > 0 && wave < 100)
-						{
-							arena.StartWave(wave, this);
-							sender.sendMessage("Wave " + wave + " has begun!");
-						}
-						else
-							sender.sendMessage("Wave has to be between 0 and 100.");*/
-					/*}
-					else
-						sender.sendMessage("Usage: /startwave <wave>");*/
+					arena.SendWaves(this);
+					this.getServer().broadcastMessage("Waves are coming! Hide!");
 				}
 				else
 					sender.sendMessage("You have to join an arena! (/joinarena)");
@@ -195,7 +252,7 @@ public final class ZombieInvasion extends JavaPlugin
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.CreateBorder(10, Material.GLASS);
+					arena.CreateBorder(150, Material.GLASS);
 					sender.sendMessage("Border created.");
 				}
 				else
@@ -214,7 +271,7 @@ public final class ZombieInvasion extends JavaPlugin
 					sender.sendMessage("You have to join an arena! (/joinarena)");
 				return true;
 			}
-			else if(cmd.getName().equals("reset"))
+			else if (cmd.getName().equals("reset"))
 			{
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
@@ -224,6 +281,12 @@ public final class ZombieInvasion extends JavaPlugin
 				}
 				else
 					sender.sendMessage("You have to join an arena! (/joinarena)");
+				return true;
+			}
+			else if (cmd.getName().equals("setlobby"))
+			{
+				lobby.setLocation(player.getLocation());
+				sender.sendMessage("Lobby set!");
 				return true;
 			}
 		}
@@ -271,6 +334,28 @@ public final class ZombieInvasion extends JavaPlugin
 					e.printStackTrace();
 				}
 		}
+	}
+	
+	@EventHandler
+	private void onPlayerQuit(PlayerQuitEvent event)
+	{
+		for(Arena a : arenas.values())
+		if (a.players.contains(event.getPlayer()))
+			a.onPlayerLeaveArena(event.getPlayer(), "left the arena", (JavaPlugin) Bukkit.getServer().getPluginManager().getPlugin("ZombieInvasion"));
+	}
+
+	@EventHandler
+	private void onPlayerDeath(PlayerDeathEvent event)
+	{
+		for(Arena a : arenas.values())
+			if (a.players.contains(event.getEntity()))
+				a.onPlayerLeaveArena(event.getEntity(), "died", (JavaPlugin) Bukkit.getServer().getPluginManager().getPlugin("ZombieInvasion"));
+	}
+	
+	@EventHandler
+	private void onPlayerRespawn(PlayerRespawnEvent event)
+	{
+		event.getPlayer().teleport(this.lobby.getLocation());
 	}
 
 }

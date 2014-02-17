@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -14,10 +15,9 @@ import org.bukkit.block.BlockState;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -34,7 +34,7 @@ public abstract class Arena
 	protected int size;
 	protected Location middle;
 	protected Vector schematicOffset = new Vector(0, 0, 0);
-	protected Location spawnLocation = new Location(null, 0, 0, 0, 0, 0);
+	protected Location spawnLocation;
 	protected Random r = new Random();
 	protected String name;
 	protected File configFile;
@@ -44,12 +44,14 @@ public abstract class Arena
 	protected int oldMinutesPassed = -1;
 	protected int ticksSinceLastWave = -1;
 	protected int maxPlayers = 10;
-	protected int startAtPlayerCount = 2;
-	protected int secondsAfterStart = 20;
+	protected int startAtPlayerCount = 1;
+	protected int secondsAfterStart = 60;
 
 	public List<Player> players = new LinkedList<Player>();
+	public List<Player> spectators = new LinkedList<Player>();
 	protected LinkedList<BlockState> border;
 	protected Lobby lobby;
+	YamlConfiguration config;
 
 	public Arena(String name, JavaPlugin plugin, Lobby lobby)
 	{
@@ -60,6 +62,7 @@ public abstract class Arena
 		if (!dir.exists())
 			dir.mkdir();
 		middle = new Location(Bukkit.getServer().getWorlds().get(0), 0, 0, 0);
+		spawnLocation = middle;
 		String configPath = plugin.getDataFolder() + File.separator + name + File.separator + "config.yml";
 		configFile = new File(configPath);
 
@@ -78,7 +81,7 @@ public abstract class Arena
 		this.Load(plugin);
 	}
 
-	public void Reset(JavaPlugin plugin)
+	public void ResetMap(JavaPlugin plugin)
 	{
 		EditSession es = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
 		File schematic = new File(plugin.getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
@@ -96,9 +99,55 @@ public abstract class Arena
 		}
 	}
 
+	public void ResetSpectators()
+	{
+		for (Player player : spectators)
+		{
+			this.RemoveSpectator(player);
+		}
+		spectators.clear();
+	}
+
+	public void MakeSpectator(Player player)
+	{
+		if (!spectators.contains(player))
+			spectators.add(player);
+		player.setGameMode(GameMode.CREATIVE);
+		player.setAllowFlight(true);
+		player.setFlying(true);
+		player.teleport(this.spawnLocation);
+		player.sendMessage("[ZombieInvasion] You died! You are now a spectator.");
+	}
+
+	public void RemoveSpectator(Player player)
+	{
+		while (spectators.contains(player))
+			spectators.remove(player);
+		player.setGameMode(GameMode.SURVIVAL);
+		player.setFlying(false);
+		player.setAllowFlight(false);
+		player.teleport(this.spawnLocation);
+		player.sendMessage("[ZombieInvasion] You are now alive again!");
+	}
+
+	public void Reset()
+	{
+		if (this.tickTaskId != -1)
+		{
+			Bukkit.getServer().getScheduler().cancelTask(this.tickTaskId);
+			this.tickTaskId = -1;
+		}
+		for (Player player : players)
+		{
+			player.teleport(this.spawnLocation);
+		}
+		this.ResetSpectators();
+		this.Broadcast("Arena was reset!");
+	}
+
 	public void Load(JavaPlugin plugin)
 	{
-		YamlConfiguration config = new YamlConfiguration();
+		config = new YamlConfiguration();
 		try
 		{
 			config.load(configFile);
@@ -123,7 +172,7 @@ public abstract class Arena
 
 	public void Save(JavaPlugin plugin)
 	{
-		YamlConfiguration config = new YamlConfiguration();
+		config = new YamlConfiguration();
 		try
 		{
 			config.set("world", middle.getWorld().getName());
@@ -144,9 +193,35 @@ public abstract class Arena
 		}
 	}
 
-	abstract void StartWave(int wave, JavaPlugin plugin);
+	abstract void SendWave(int wave, JavaPlugin plugin);
 
 	abstract String getType();
+
+	public void SendWaves(final JavaPlugin plugin)
+	{
+		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+		this.tickTaskId = scheduler.scheduleSyncRepeatingTask(plugin, new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				Tick(plugin);
+			}
+			// Do something
+		}, 0L, 100L);
+	}
+
+	public void Tick(JavaPlugin plugin)
+	{
+		this.ticksSinceLastWave += 100;
+		ticksPassed += 100;
+		int minutesPassed = ticksPassed / 20 / 60;
+		if (minutesPassed != oldMinutesPassed)
+		{
+			this.Broadcast(minutesPassed + " minutes have passed!");
+			oldMinutesPassed = minutesPassed;
+		}
+	}
 
 	public void CreateBorder(int height, Material material)
 	{
@@ -194,33 +269,6 @@ public abstract class Arena
 		}
 	}
 
-	public void SendWaves(final JavaPlugin plugin)
-	{
-		this.StartWave(5, plugin);
-		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-		this.tickTaskId = scheduler.scheduleSyncRepeatingTask(plugin, new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				Tick(plugin);
-			}
-			// Do something
-		}, 0L, 100L);
-	}
-
-	public void Tick(JavaPlugin plugin)
-	{
-		this.ticksSinceLastWave += 100;
-		ticksPassed += 100;
-		int minutesPassed = ticksPassed / 20 / 60;
-		if (minutesPassed != oldMinutesPassed)
-		{
-			this.Broadcast(minutesPassed + " minutes have passed!");
-			oldMinutesPassed = minutesPassed;
-		}
-	}
-
 	public void RestoreBorder()
 	{
 		for (BlockState block : border)
@@ -243,12 +291,23 @@ public abstract class Arena
 	public void setMiddle(Location middle, JavaPlugin plugin)
 	{
 		this.middle = middle;
-		Save(plugin);
+		this.Save(plugin);
 	}
 
 	public Location getMiddle()
 	{
 		return this.middle;
+	}
+
+	public void setSpawnLocation(Location location, JavaPlugin plugin)
+	{
+		this.spawnLocation = location;
+		this.Save(plugin);
+	}
+
+	public Location getSpawnLocation()
+	{
+		return this.spawnLocation;
 	}
 
 	protected void Broadcast(String message)
@@ -268,26 +327,32 @@ public abstract class Arena
 	{
 		while (players.contains(player))
 			players.remove(player);
-		players.add(player);
-		player.teleport(this.middle);
 		player.setMetadata("arena", new FixedMetadataValue(plugin, this.name));
 		ZombieInvasion.economyPlugin.ResetStats(player);
-		this.Broadcast(player.getName() + " has joined the arena!");
-
-		if (!isRunning())
+		players.add(player);
+		if (this.isRunning())
 		{
-			if (players.size() >= this.startAtPlayerCount)
+			this.MakeSpectator(player);
+		}
+		else
+		{
+			player.teleport(this.spawnLocation);
+			this.Broadcast(player.getName() + " has joined the arena!");
+			if (!isRunning())
 			{
-				this.Broadcast("Waves are coming in " + this.secondsAfterStart + " seconds!");
-				BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-				scheduler.scheduleSyncDelayedTask(plugin, new Runnable()
+				if (players.size() >= this.startAtPlayerCount)
 				{
-					@Override
-					public void run()
+					this.Broadcast("Waves are coming in " + this.secondsAfterStart + " seconds!");
+					BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+					scheduler.scheduleSyncDelayedTask(plugin, new Runnable()
 					{
-						SendWaves((JavaPlugin) Bukkit.getServer().getPluginManager().getPlugin("ZombieInvasion"));
-					}
-				}, 20 * this.secondsAfterStart);
+						@Override
+						public void run()
+						{
+							SendWaves((JavaPlugin) Bukkit.getServer().getPluginManager().getPlugin("ZombieInvasion"));
+						}
+					}, 20 * this.secondsAfterStart);
+				}
 			}
 		}
 	}
@@ -302,18 +367,42 @@ public abstract class Arena
 
 		if (players.size() <= 0)
 		{
-			if (this.tickTaskId != -1)
-			{
-				plugin.getServer().getScheduler().cancelTask(this.tickTaskId);
-				this.tickTaskId = -1;
-			}
-			this.Reset(plugin);
+			this.ResetMap(plugin);
+			this.Reset();
 		}
 
 		this.ticksPassed = -1;
 		this.ticksSinceLastWave = -1;
 		this.oldMinutesPassed = -1;
 		player.getInventory().clear();
+	}
+
+	public void onPlayerDeath(PlayerDeathEvent event)
+	{
+
+	}
+
+	public void onPlayerRespawn(PlayerRespawnEvent event)
+	{
+		Player player = event.getPlayer();
+		event.setRespawnLocation(this.spawnLocation);
+		if (player.isDead() && this.isRunning())
+		{
+			this.MakeSpectator(player);
+		}
+		else if (!this.isRunning())
+			this.RemoveSpectator(player);
+		else
+			event.setRespawnLocation(this.lobby.getLocation());
+	}
+
+	public void onPlayerInteract(PlayerInteractEvent event)
+	{
+		Player player = event.getPlayer();
+		if (spectators.contains(player))
+		{
+			event.setCancelled(true);
+		}
 	}
 
 }

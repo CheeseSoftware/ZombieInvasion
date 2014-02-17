@@ -70,8 +70,8 @@ public class Lobby implements Listener
 		YamlConfiguration config = new YamlConfiguration();
 		try
 		{
-			config.set("location", this.l.toVector());
 			config.set("world", this.worldName);
+			config.set("location", this.l.toVector());
 			//config.set("signs", this.signs);
 			config.save(this.configFile);
 		}
@@ -81,7 +81,6 @@ public class Lobby implements Listener
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void Load()
 	{
 		YamlConfiguration config = new YamlConfiguration();

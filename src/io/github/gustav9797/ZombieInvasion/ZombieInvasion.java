@@ -22,8 +22,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
@@ -137,8 +139,8 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					{
 						Arena a = new ZombieArena(name, this, this.lobby);
 						a.setMiddle(player.getLocation(), this);
+						a.setSpawnLocation(player.getLocation(), this);
 						a.setSize(96, this);
-						a.Save(this);
 						arenas.put(name, a);
 						this.Save();
 						sender.sendMessage("Arena " + name + " created!");
@@ -212,13 +214,25 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					sender.sendMessage("You have to join an arena! (/joinarena)");
 				return true;
 			}
-			else if (cmd.getName().equals("setmiddle"))
+			else if (cmd.getName().equals("setlocation"))
 			{
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
 					arena.setMiddle(player.getLocation(), this);
 					sender.sendMessage("Arena middle was set!");
+				}
+				else
+					sender.sendMessage("You have to join an arena! (/joinarena)");
+				return true;
+			}
+			else if (cmd.getName().equals("setarenaspawn"))
+			{
+				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				{
+					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+					arena.setSpawnLocation(player.getLocation(), this);
+					sender.sendMessage("Arena spawn was set!");
 				}
 				else
 					sender.sendMessage("You have to join an arena! (/joinarena)");
@@ -276,8 +290,8 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.Reset(this);
-					sender.sendMessage("Arena " + arena.name + " was reset!");
+					arena.ResetMap(this);
+					arena.Reset();
 				}
 				else
 					sender.sendMessage("You have to join an arena! (/joinarena)");
@@ -287,6 +301,12 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			{
 				lobby.setLocation(player.getLocation());
 				sender.sendMessage("Lobby set!");
+				return true;
+			}
+			else if(cmd.getName().equals("reloadzombieinvasion"))
+			{
+				this.Reload();
+				sender.sendMessage("Reloaded!");
 				return true;
 			}
 		}
@@ -336,26 +356,44 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		}
 	}
 	
-	@EventHandler
+	public void Reload()
+	{
+		this.Load();
+		this.lobby.Load();
+		for(Arena a : arenas.values())
+			a.Load(this);
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerQuit(PlayerQuitEvent event)
 	{
 		for(Arena a : arenas.values())
 		if (a.players.contains(event.getPlayer()))
-			a.onPlayerLeaveArena(event.getPlayer(), "left the arena", (JavaPlugin) Bukkit.getServer().getPluginManager().getPlugin("ZombieInvasion"));
+			a.onPlayerLeaveArena(event.getPlayer(), "left the arena", this);
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerDeath(PlayerDeathEvent event)
 	{
 		for(Arena a : arenas.values())
 			if (a.players.contains(event.getEntity()))
-				a.onPlayerLeaveArena(event.getEntity(), "died", (JavaPlugin) Bukkit.getServer().getPluginManager().getPlugin("ZombieInvasion"));
+				a.onPlayerDeath(event);
 	}
 	
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerRespawn(PlayerRespawnEvent event)
 	{
-		event.getPlayer().teleport(this.lobby.getLocation());
+		for(Arena a : arenas.values())
+			if (a.players.contains(event.getPlayer()))
+				a.onPlayerRespawn(event);
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onPlayerInteract(PlayerInteractEvent event)
+	{
+		for(Arena a : arenas.values())
+			if (a.players.contains(event.getPlayer()))
+				a.onPlayerInteract(event);
 	}
 
 }

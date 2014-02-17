@@ -19,6 +19,9 @@ public class ZombieArena extends Arena
 	protected int ticksUntilNextWave = -1;
 	protected int currentWave = 2;
 	protected int sendWavesTaskId = -1;
+	protected int zombieAmount;
+	protected int zombieAmountIncrease;
+	protected int zombieGroups = 5;
 
 	public ZombieArena(String name, JavaPlugin plugin, Lobby lobby)
 	{
@@ -30,7 +33,7 @@ public class ZombieArena extends Arena
 		zombiesToSpawn.add(l);
 	}
 
-	public void SpawnZombies(Location l, int amount, JavaPlugin plugin)
+	public void SpawnZombieGroup(Location l, int amount, JavaPlugin plugin)
 	{
 		int delay = 1;
 		for (int i = 0; i < amount; i++)
@@ -47,7 +50,10 @@ public class ZombieArena extends Arena
 	@Override
 	public void StartWave(int wave, JavaPlugin plugin)
 	{
-		for (int i = 0; i < 10; i++)
+		zombieAmount += zombieAmountIncrease;
+		zombieAmountIncrease++;
+		
+		for (int i = 0; i < zombieGroups; i++)
 		{
 			int x = 0;
 			int z = 0;
@@ -56,7 +62,7 @@ public class ZombieArena extends Arena
 				x = r.nextInt(size - 4) - this.size / 2 + 2;
 				z = r.nextInt(size - 4) - this.size / 2 + 2;
 			}
-			SpawnZombies(new Location(middle.getWorld(), x + middle.getBlockX(), r.nextInt(size) + middle.getBlockY(), z + middle.getBlockZ()), wave, plugin);
+			SpawnZombieGroup(new Location(middle.getWorld(), x + middle.getBlockX(), r.nextInt(size) + middle.getBlockY(), z + middle.getBlockZ()), zombieAmount / zombieGroups, plugin);
 
 		}
 	}
@@ -86,6 +92,9 @@ public class ZombieArena extends Arena
 	@Override
 	public void SendWaves(JavaPlugin plugin)
 	{
+		this.zombieAmount = 20;
+		this.zombieAmountIncrease = 10;
+		
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
 		this.sendWavesTaskId = scheduler.scheduleSyncRepeatingTask(plugin, new Runnable()
 		{
@@ -136,10 +145,7 @@ public class ZombieArena extends Arena
 				this.currentWave += 3;
 				this.StartWave(this.currentWave, plugin);
 				this.ticksUntilNextWave = -1;
-				for (Player player : players)
-				{
-					player.sendMessage("Wave " + (int) (currentWave) + " is coming!");
-				}
+				this.Broadcast("Wave " + (int) (currentWave) + " is coming!");
 
 			}
 		}

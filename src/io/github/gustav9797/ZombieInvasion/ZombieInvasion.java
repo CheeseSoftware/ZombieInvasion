@@ -42,45 +42,6 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	File configFile;
 	public static IOstEconomy economyPlugin;
 
-	public void Save()
-	{
-		YamlConfiguration config = new YamlConfiguration();
-		List<String> temp = new LinkedList<String>();
-		for (Arena a : arenas.values())
-			temp.add(a.name);
-		config.set("zombiearenas", temp);
-		try
-		{
-			config.save(configFile);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
-
-	public void Load()
-	{
-		YamlConfiguration config = new YamlConfiguration();
-		try
-		{
-			config.load(configFile);
-		}
-		catch (IOException | InvalidConfigurationException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		@SuppressWarnings("unchecked")
-		List<String> temp = (List<String>) config.getList("zombiearenas");
-		for (String arena : temp)
-		{
-			ZombieArena a = new ZombieArena(arena, this, lobby);
-			a.Load(this);
-			arenas.put(arena, a);
-		}
-	}
-
 	@Override
 	public void onEnable()
 	{
@@ -137,10 +98,10 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					String name = args[0];
 					if (!arenas.containsKey(name))
 					{
-						Arena a = new ZombieArena(name, this, this.lobby);
-						a.setMiddle(player.getLocation(), this);
-						a.setSpawnLocation(player.getLocation(), this);
-						a.setSize(96, this);
+						Arena a = new ZombieArena(name, this.lobby);
+						a.setMiddle(player.getLocation());
+						a.setSpawnLocation(player.getLocation());
+						a.setSize(96);
 						arenas.put(name, a);
 						this.Save();
 						sender.sendMessage("Arena " + name + " created!");
@@ -182,7 +143,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					if (arenas.containsKey(name))
 					{
 						Arena arena = arenas.get(name);
-						arena.onPlayerJoinArena(player, this);
+						arena.JoinPlayer(player);
 					}
 					else
 						sender.sendMessage("Arena doesn't exist.");
@@ -196,7 +157,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.onPlayerLeaveArena(player, "left the arena", this);
+					arena.RemovePlayer(player, "left the arena");
 				}
 				else
 					sender.sendMessage("You haven't joined any arena!");
@@ -207,7 +168,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.SendWaves(this);
+					arena.SendWaves();
 					this.getServer().broadcastMessage("Waves are coming! Hide!");
 				}
 				else
@@ -219,7 +180,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.setMiddle(player.getLocation(), this);
+					arena.setMiddle(player.getLocation());
 					sender.sendMessage("Arena middle was set!");
 				}
 				else
@@ -231,7 +192,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.setSpawnLocation(player.getLocation(), this);
+					arena.setSpawnLocation(player.getLocation());
 					sender.sendMessage("Arena spawn was set!");
 				}
 				else
@@ -248,7 +209,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 						int size = Integer.parseInt(args[0]);
 						if (size > 0 && size <= 128)
 						{
-							arena.setSize(size, this);
+							arena.setSize(size);
 							sender.sendMessage("Size was set to " + size);
 						}
 						else
@@ -290,7 +251,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.ResetMap(this);
+					arena.ResetMap();
 					arena.Reset();
 				}
 				else
@@ -312,12 +273,43 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		}
 		return false;
 	}
-
-	private static Object getPrivateStatic(@SuppressWarnings("rawtypes") Class clazz, String f) throws Exception
+	
+	public void Save()
 	{
-		Field field = clazz.getDeclaredField(f);
-		field.setAccessible(true);
-		return field.get(null);
+		YamlConfiguration config = new YamlConfiguration();
+		List<String> temp = new LinkedList<String>();
+		for (Arena a : arenas.values())
+			temp.add(a.name);
+		config.set("zombiearenas", temp);
+		try
+		{
+			config.save(configFile);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	public void Load()
+	{
+		YamlConfiguration config = new YamlConfiguration();
+		try
+		{
+			config.load(configFile);
+		}
+		catch (IOException | InvalidConfigurationException e)
+		{
+			e.printStackTrace();
+		}
+		@SuppressWarnings("unchecked")
+		List<String> temp = (List<String>) config.getList("zombiearenas");
+		for (String arena : temp)
+		{
+			ZombieArena a = new ZombieArena(arena, lobby);
+			a.Load();
+			arenas.put(arena, a);
+		}
 	}
 
 	public void registerEntities()
@@ -361,7 +353,19 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		this.Load();
 		this.lobby.Load();
 		for(Arena a : arenas.values())
-			a.Load(this);
+			a.Load();
+	}
+	
+	public static JavaPlugin getPlugin()
+	{
+		return (JavaPlugin) Bukkit.getPluginManager().getPlugin("ZombieInvasion");
+	}
+	
+	private static Object getPrivateStatic(@SuppressWarnings("rawtypes") Class clazz, String f) throws Exception
+	{
+		Field field = clazz.getDeclaredField(f);
+		field.setAccessible(true);
+		return field.get(null);
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -369,7 +373,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	{
 		for(Arena a : arenas.values())
 		if (a.players.contains(event.getPlayer()))
-			a.onPlayerLeaveArena(event.getPlayer(), "left the arena", this);
+			a.onPlayerQuit(event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -395,5 +399,4 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			if (a.players.contains(event.getPlayer()))
 				a.onPlayerInteract(event);
 	}
-
 }

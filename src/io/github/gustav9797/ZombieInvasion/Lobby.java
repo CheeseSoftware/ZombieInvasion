@@ -118,7 +118,7 @@ public class Lobby implements Listener
 						{
 							if (event.getAction() == Action.RIGHT_CLICK_BLOCK)
 							{
-								arena.onPlayerJoinArena(player, plugin);
+								arena.JoinPlayer(player);
 							}
 						}
 					}

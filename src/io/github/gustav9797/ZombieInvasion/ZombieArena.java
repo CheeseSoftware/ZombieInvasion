@@ -12,7 +12,6 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
 public class ZombieArena extends Arena
@@ -31,9 +30,9 @@ public class ZombieArena extends Arena
 	protected int waveIncrease = 1;
 	protected int ticksBetweenZombieSpawns = 20;
 
-	public ZombieArena(String name, JavaPlugin plugin, Lobby lobby)
+	public ZombieArena(String name, Lobby lobby)
 	{
-		super(name, plugin, lobby);
+		super(name, lobby);
 	}
 
 	public void SpawnZombie(Location l)
@@ -41,7 +40,7 @@ public class ZombieArena extends Arena
 		zombiesToSpawn.add(l);
 	}
 
-	public void SpawnZombieGroup(Location l, int amount, JavaPlugin plugin)
+	public void SpawnZombieGroup(Location l, int amount)
 	{
 		int delay = 1;
 		for (int i = 0; i < amount; i++)
@@ -50,7 +49,7 @@ public class ZombieArena extends Arena
 			while (pos.getWorld().getBlockAt(pos).getType() == Material.AIR)
 				pos.setY(pos.getBlockY() - 1);
 			pos.setY(pos.getBlockY() + 2);
-			new SpawnZombieTask(pos, this).runTaskLater(plugin, delay);
+			new SpawnZombieTask(pos, this).runTaskLater(ZombieInvasion.getPlugin(), delay);
 			delay += this.ticksBetweenZombieSpawns;
 		}
 	}
@@ -93,7 +92,7 @@ public class ZombieArena extends Arena
 	}
 
 	@Override
-	public void SendWave(int wave, JavaPlugin plugin)
+	public void SendWave(int wave)
 	{
 		for (int i = 0; i < zombieGroups; i++)
 		{
@@ -105,15 +104,15 @@ public class ZombieArena extends Arena
 				z = r.nextInt(size - 4) - this.size / 2 + 2;
 			}
 			Location groupLocation = new Location(middle.getWorld(), x + middle.getBlockX(), r.nextInt(size) + middle.getBlockY(), z + middle.getBlockZ());
-			SpawnZombieGroup(groupLocation, getZombieSpawnAmount(wave) / zombieGroups, plugin);
+			SpawnZombieGroup(groupLocation, getZombieSpawnAmount(wave) / zombieGroups);
 		}
 	}
 
 	@Override
-	public void SendWaves(JavaPlugin plugin)
+	public void SendWaves()
 	{
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-		this.sendWavesTaskId = scheduler.scheduleSyncRepeatingTask(plugin, new Runnable()
+		this.sendWavesTaskId = scheduler.scheduleSyncRepeatingTask(ZombieInvasion.getPlugin(), new Runnable()
 		{
 			@Override
 			public void run()
@@ -121,8 +120,8 @@ public class ZombieArena extends Arena
 				onSpawnZombieTick();
 			}
 		}, 0L, 5L);
-		super.SendWaves(plugin);
-		this.SendWave(this.startWave, plugin);
+		super.SendWaves();
+		this.SendWave(this.startWave);
 	}
 
 	@Override
@@ -143,9 +142,9 @@ public class ZombieArena extends Arena
 	}
 
 	@Override
-	public void Load(JavaPlugin plugin)
+	public void Load()
 	{
-		super.Load(plugin);
+		super.Load();
 		config = new YamlConfiguration();
 		try
 		{
@@ -165,9 +164,9 @@ public class ZombieArena extends Arena
 	}
 
 	@Override
-	public void Save(JavaPlugin plugin)
+	public void Save()
 	{
-		super.Save(plugin);
+		super.Save();
 		try
 		{
 			config.set("zombieGroups", this.zombieGroups);
@@ -186,9 +185,9 @@ public class ZombieArena extends Arena
 	}
 
 	@Override
-	public void Tick(JavaPlugin plugin)
+	public void Tick()
 	{
-		super.Tick(plugin);
+		super.Tick();
 		if (this.currentWave >= 200)
 			this.Reset();
 
@@ -201,7 +200,7 @@ public class ZombieArena extends Arena
 				this.currentWave += this.waveIncrease;
 				this.ResetSpectators();
 				this.ticksUntilNextWave = -1;
-				this.SendWave(this.currentWave, plugin);
+				this.SendWave(this.currentWave);
 				this.Broadcast("Wave " + (int) (currentWave) + " is coming!");
 
 			}
@@ -226,9 +225,9 @@ public class ZombieArena extends Arena
 	}
 
 	@Override
-	public void onPlayerLeaveArena(Player player, String reason, JavaPlugin plugin)
+	public void RemovePlayer(Player player, String reason)
 	{
-		super.onPlayerLeaveArena(player, reason, plugin);
+		super.RemovePlayer(player, reason);
 		if (this.players.size() <= 0)
 		{
 			this.Reset();

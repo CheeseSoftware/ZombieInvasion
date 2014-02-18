@@ -17,9 +17,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
@@ -53,17 +53,17 @@ public abstract class Arena
 	protected Lobby lobby;
 	YamlConfiguration config;
 
-	public Arena(String name, JavaPlugin plugin, Lobby lobby)
+	public Arena(String name, Lobby lobby)
 	{
 		this.lobby = lobby;
 		this.name = name;
 		border = new LinkedList<BlockState>();
-		File dir = new File(plugin.getDataFolder() + File.separator + name);
+		File dir = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name);
 		if (!dir.exists())
 			dir.mkdir();
 		middle = new Location(Bukkit.getServer().getWorlds().get(0), 0, 0, 0);
 		spawnLocation = middle;
-		String configPath = plugin.getDataFolder() + File.separator + name + File.separator + "config.yml";
+		String configPath = ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "config.yml";
 		configFile = new File(configPath);
 
 		if (!configFile.exists())
@@ -76,15 +76,15 @@ public abstract class Arena
 			{
 				e.printStackTrace();
 			}
-			this.Save(plugin);
+			this.Save();
 		}
-		this.Load(plugin);
+		this.Load();
 	}
 
-	public void ResetMap(JavaPlugin plugin)
+	public void ResetMap()
 	{
 		EditSession es = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
-		File schematic = new File(plugin.getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
+		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
 		try
 		{
 			@SuppressWarnings("deprecation")
@@ -126,8 +126,14 @@ public abstract class Arena
 		player.setGameMode(GameMode.SURVIVAL);
 		player.setFlying(false);
 		player.setAllowFlight(false);
+	}
+	
+	public void SetAlive(Player player)
+	{
+		this.RemoveSpectator(player);
 		player.teleport(this.spawnLocation);
 		player.sendMessage("[ZombieInvasion] You are now alive again!");
+		
 	}
 
 	public void Reset()
@@ -145,22 +151,22 @@ public abstract class Arena
 		this.Broadcast("Arena was reset!");
 	}
 
-	public void Load(JavaPlugin plugin)
+	public void Load()
 	{
 		config = new YamlConfiguration();
 		try
 		{
 			config.load(configFile);
 			String world = config.getString("world");
-			if (world != null && plugin.getServer().getWorld(world) != null && config.getVector("location") != null)
+			if (world != null && ZombieInvasion.getPlugin().getServer().getWorld(world) != null && config.getVector("location") != null)
 			{
 				this.size = config.getInt("size");
 				this.startAtPlayerCount = config.getInt("startAtPlayerCount");
 				this.maxPlayers = config.getInt("maxPlayers");
 				this.secondsAfterStart = config.getInt("secondsAfterStart");
-				this.middle = config.getVector("location").toLocation(plugin.getServer().getWorld(world));
+				this.middle = config.getVector("location").toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world));
 				Vector spawnPos = config.getVector("spawnLocation");
-				this.spawnLocation = spawnPos.toLocation(plugin.getServer().getWorld(world), (float) config.getDouble("spawnLocationYaw"), (float) config.getDouble("SpawnLocationPitch"));
+				this.spawnLocation = spawnPos.toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world), (float) config.getDouble("spawnLocationYaw"), (float) config.getDouble("SpawnLocationPitch"));
 				this.schematicOffset = config.getVector("schematicOffset");
 			}
 		}
@@ -170,7 +176,7 @@ public abstract class Arena
 		}
 	}
 
-	public void Save(JavaPlugin plugin)
+	public void Save()
 	{
 		config = new YamlConfiguration();
 		try
@@ -193,25 +199,25 @@ public abstract class Arena
 		}
 	}
 
-	abstract void SendWave(int wave, JavaPlugin plugin);
+	abstract void SendWave(int wave);
 
 	abstract String getType();
 
-	public void SendWaves(final JavaPlugin plugin)
+	public void SendWaves()
 	{
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-		this.tickTaskId = scheduler.scheduleSyncRepeatingTask(plugin, new Runnable()
+		this.tickTaskId = scheduler.scheduleSyncRepeatingTask(ZombieInvasion.getPlugin(), new Runnable()
 		{
 			@Override
 			public void run()
 			{
-				Tick(plugin);
+				Tick();
 			}
 			// Do something
 		}, 0L, 100L);
 	}
 
-	public void Tick(JavaPlugin plugin)
+	public void Tick()
 	{
 		this.ticksSinceLastWave += 100;
 		ticksPassed += 100;
@@ -277,10 +283,10 @@ public abstract class Arena
 		}
 	}
 
-	public void setSize(int size, JavaPlugin plugin)
+	public void setSize(int size)
 	{
 		this.size = size;
-		Save(plugin);
+		Save();
 	}
 
 	public int getSize()
@@ -288,10 +294,10 @@ public abstract class Arena
 		return this.size;
 	}
 
-	public void setMiddle(Location middle, JavaPlugin plugin)
+	public void setMiddle(Location middle)
 	{
 		this.middle = middle;
-		this.Save(plugin);
+		this.Save();
 	}
 
 	public Location getMiddle()
@@ -299,10 +305,10 @@ public abstract class Arena
 		return this.middle;
 	}
 
-	public void setSpawnLocation(Location location, JavaPlugin plugin)
+	public void setSpawnLocation(Location location)
 	{
 		this.spawnLocation = location;
-		this.Save(plugin);
+		this.Save();
 	}
 
 	public Location getSpawnLocation()
@@ -323,11 +329,11 @@ public abstract class Arena
 		return this.ticksPassed != -1;
 	}
 
-	public void onPlayerJoinArena(Player player, JavaPlugin plugin)
+	public void JoinPlayer(Player player)
 	{
 		while (players.contains(player))
 			players.remove(player);
-		player.setMetadata("arena", new FixedMetadataValue(plugin, this.name));
+		player.setMetadata("arena", new FixedMetadataValue(ZombieInvasion.getPlugin(), this.name));
 		ZombieInvasion.economyPlugin.ResetStats(player);
 		players.add(player);
 		if (this.isRunning())
@@ -344,12 +350,12 @@ public abstract class Arena
 				{
 					this.Broadcast("Waves are coming in " + this.secondsAfterStart + " seconds!");
 					BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-					scheduler.scheduleSyncDelayedTask(plugin, new Runnable()
+					scheduler.scheduleSyncDelayedTask(ZombieInvasion.getPlugin(), new Runnable()
 					{
 						@Override
 						public void run()
 						{
-							SendWaves((JavaPlugin) Bukkit.getServer().getPluginManager().getPlugin("ZombieInvasion"));
+							SendWaves();
 						}
 					}, 20 * this.secondsAfterStart);
 				}
@@ -357,17 +363,18 @@ public abstract class Arena
 		}
 	}
 
-	public void onPlayerLeaveArena(Player player, String reason, JavaPlugin plugin)
+	public void RemovePlayer(Player player, String reason)
 	{
 		this.Broadcast(player.getName() + " has " + reason + "!");
 		while (players.contains(player))
 			players.remove(player);
-		player.removeMetadata("arena", plugin);
+		RemoveSpectator(player);
+		player.removeMetadata("arena", ZombieInvasion.getPlugin());
 		player.teleport(lobby.getLocation());
 
 		if (players.size() <= 0)
 		{
-			this.ResetMap(plugin);
+			this.ResetMap();
 			this.Reset();
 		}
 
@@ -391,7 +398,7 @@ public abstract class Arena
 			this.MakeSpectator(player);
 		}
 		else if (!this.isRunning())
-			this.RemoveSpectator(player);
+			this.SetAlive(player);
 		else
 			event.setRespawnLocation(this.lobby.getLocation());
 	}
@@ -403,6 +410,11 @@ public abstract class Arena
 		{
 			event.setCancelled(true);
 		}
+	}
+	
+	public void onPlayerQuit(PlayerQuitEvent event)
+	{
+		RemovePlayer(event.getPlayer(), "left the arena");
 	}
 
 }

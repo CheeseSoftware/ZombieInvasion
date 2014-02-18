@@ -1,7 +1,7 @@
 name: ZombieInvasion
 main: io.github.gustav9797.ZombieInvasion.ZombieInvasion
 version: 0.1
-depend: [OstEconomyPlugin, WorldEdit]
+softdepend: [OstEconomyPlugin, WorldEdit]
 commands:
    createarena:
       description: Creates an arena.

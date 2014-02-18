@@ -87,10 +87,8 @@ public abstract class Arena
 		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
 		try
 		{
-			@SuppressWarnings("deprecation")
-			CuboidClipboard cc = CuboidClipboard.loadSchematic(schematic);
-			com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() + this.size / 2 + this.schematicOffset.getBlockX(), this.middle.getBlockY() + cc.getHeight()
-					+ this.schematicOffset.getBlockY(), this.middle.getBlockZ() + this.size / 2 + this.schematicOffset.getBlockZ());
+			@SuppressWarnings("deprecation") CuboidClipboard cc = CuboidClipboard.loadSchematic(schematic);
+			com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() + this.size / 2 + this.schematicOffset.getBlockX(), this.middle.getBlockY() + cc.getHeight() + this.schematicOffset.getBlockY(), this.middle.getBlockZ() + this.size / 2 + this.schematicOffset.getBlockZ());
 			cc.paste(es, location, false);
 		}
 		catch (MaxChangedBlocksException | DataException | IOException e)
@@ -127,13 +125,13 @@ public abstract class Arena
 		player.setFlying(false);
 		player.setAllowFlight(false);
 	}
-	
+
 	public void SetAlive(Player player)
 	{
 		this.RemoveSpectator(player);
 		player.teleport(this.spawnLocation);
 		player.sendMessage("[ZombieInvasion] You are now alive again!");
-		
+
 	}
 
 	public void Reset()
@@ -334,7 +332,8 @@ public abstract class Arena
 		while (players.contains(player))
 			players.remove(player);
 		player.setMetadata("arena", new FixedMetadataValue(ZombieInvasion.getPlugin(), this.name));
-		ZombieInvasion.economyPlugin.ResetStats(player);
+		if (ZombieInvasion.economyPlugin != null)
+			ZombieInvasion.economyPlugin.ResetStats(player);
 		players.add(player);
 		if (this.isRunning())
 		{
@@ -366,9 +365,9 @@ public abstract class Arena
 	public void RemovePlayer(Player player, String reason)
 	{
 		this.Broadcast(player.getName() + " has " + reason + "!");
+		RemoveSpectator(player);
 		while (players.contains(player))
 			players.remove(player);
-		RemoveSpectator(player);
 		player.removeMetadata("arena", ZombieInvasion.getPlugin());
 		player.teleport(lobby.getLocation());
 
@@ -411,10 +410,10 @@ public abstract class Arena
 			event.setCancelled(true);
 		}
 	}
-	
+
 	public void onPlayerQuit(PlayerQuitEvent event)
 	{
-		RemovePlayer(event.getPlayer(), "left the arena");
+		RemovePlayer(event.getPlayer(), "quit");
 	}
 
 }

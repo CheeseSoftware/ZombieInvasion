@@ -51,8 +51,8 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		registerEntities();
 		arenas = new HashMap<String, Arena>();
 		lobby = new Lobby(arenas, this);
-		
-		if(!configFile.exists())
+
+		if (!configFile.exists())
 		{
 			try
 			{
@@ -75,7 +75,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				break;
 			}
 		}
-		
+
 		getServer().getPluginManager().registerEvents(this, this);
 	}
 
@@ -264,7 +264,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				sender.sendMessage("Lobby set!");
 				return true;
 			}
-			else if(cmd.getName().equals("reloadzombieinvasion"))
+			else if (cmd.getName().equals("reloadzombieinvasion"))
 			{
 				this.Reload();
 				sender.sendMessage("Reloaded!");
@@ -273,7 +273,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		}
 		return false;
 	}
-	
+
 	public void Save()
 	{
 		YamlConfiguration config = new YamlConfiguration();
@@ -302,8 +302,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		{
 			e.printStackTrace();
 		}
-		@SuppressWarnings("unchecked")
-		List<String> temp = (List<String>) config.getList("zombiearenas");
+		@SuppressWarnings("unchecked") List<String> temp = (List<String>) config.getList("zombiearenas");
 		for (String arena : temp)
 		{
 			ZombieArena a = new ZombieArena(arena, lobby);
@@ -333,8 +332,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				{
 					Field list = BiomeBase.class.getDeclaredField(field);
 					list.setAccessible(true);
-					@SuppressWarnings("unchecked")
-					List<BiomeMeta> mobList = (List<BiomeMeta>) list.get(biomeBase);
+					@SuppressWarnings("unchecked") List<BiomeMeta> mobList = (List<BiomeMeta>) list.get(biomeBase);
 
 					for (BiomeMeta meta : mobList)
 						for (CustomEntityType entity : entityTypes)
@@ -347,55 +345,55 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				}
 		}
 	}
-	
+
 	public void Reload()
 	{
 		this.Load();
 		this.lobby.Load();
-		for(Arena a : arenas.values())
+		for (Arena a : arenas.values())
 			a.Load();
 	}
-	
+
 	public static JavaPlugin getPlugin()
 	{
 		return (JavaPlugin) Bukkit.getPluginManager().getPlugin("ZombieInvasion");
 	}
-	
+
 	private static Object getPrivateStatic(@SuppressWarnings("rawtypes") Class clazz, String f) throws Exception
 	{
 		Field field = clazz.getDeclaredField(f);
 		field.setAccessible(true);
 		return field.get(null);
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerQuit(PlayerQuitEvent event)
 	{
-		for(Arena a : arenas.values())
-		if (a.players.contains(event.getPlayer()))
-			a.onPlayerQuit(event);
+		for (Arena a : arenas.values())
+			if (a.players.contains(event.getPlayer()))
+				a.onPlayerQuit(event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerDeath(PlayerDeathEvent event)
 	{
-		for(Arena a : arenas.values())
+		for (Arena a : arenas.values())
 			if (a.players.contains(event.getEntity()))
 				a.onPlayerDeath(event);
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerRespawn(PlayerRespawnEvent event)
 	{
-		for(Arena a : arenas.values())
+		for (Arena a : arenas.values())
 			if (a.players.contains(event.getPlayer()))
 				a.onPlayerRespawn(event);
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerInteract(PlayerInteractEvent event)
 	{
-		for(Arena a : arenas.values())
+		for (Arena a : arenas.values())
 			if (a.players.contains(event.getPlayer()))
 				a.onPlayerInteract(event);
 	}

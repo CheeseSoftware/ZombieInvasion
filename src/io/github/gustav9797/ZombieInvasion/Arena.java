@@ -15,6 +15,10 @@ import org.bukkit.block.BlockState;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -29,7 +33,7 @@ import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.data.DataException;
 
-public abstract class Arena
+public abstract class Arena implements Listener
 {
 	protected int size;
 	protected Location middle;
@@ -79,22 +83,30 @@ public abstract class Arena
 			this.Save();
 		}
 		this.Load();
+		Bukkit.getServer().getPluginManager().registerEvents(this, ZombieInvasion.getPlugin());
 	}
 
 	public void ResetMap()
 	{
 		EditSession es = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
 		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
-		try
+		if (schematic.exists())
 		{
-			@SuppressWarnings("deprecation") CuboidClipboard cc = CuboidClipboard.loadSchematic(schematic);
-			com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() + this.size / 2 + this.schematicOffset.getBlockX(), this.middle.getBlockY() + cc.getHeight() + this.schematicOffset.getBlockY(), this.middle.getBlockZ() + this.size / 2 + this.schematicOffset.getBlockZ());
-			cc.paste(es, location, false);
+			try
+			{
+				@SuppressWarnings("deprecation")
+				CuboidClipboard cc = CuboidClipboard.loadSchematic(schematic);
+				com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() + this.size / 2 + this.schematicOffset.getBlockX(), this.middle.getBlockY()
+						+ cc.getHeight() + this.schematicOffset.getBlockY(), this.middle.getBlockZ() + this.size / 2 + this.schematicOffset.getBlockZ());
+				cc.paste(es, location, false);
+			}
+			catch (MaxChangedBlocksException | DataException | IOException e)
+			{
+				e.printStackTrace();
+			}
 		}
-		catch (MaxChangedBlocksException | DataException | IOException e)
-		{
-			e.printStackTrace();
-		}
+		else
+			Bukkit.getLogger().warning("[ZombieInvasion] Schematic file for arena " + this.name + " was not found! This will cause the arena to not get reset properly.");
 	}
 
 	public void ResetSpectators()
@@ -113,6 +125,10 @@ public abstract class Arena
 		player.setGameMode(GameMode.CREATIVE);
 		player.setAllowFlight(true);
 		player.setFlying(true);
+		for(Player p : players)
+		{
+				p.hidePlayer(player);
+		}
 		player.teleport(this.spawnLocation);
 		player.sendMessage("[ZombieInvasion] You died! You are now a spectator.");
 	}
@@ -121,9 +137,18 @@ public abstract class Arena
 	{
 		while (spectators.contains(player))
 			spectators.remove(player);
+		for(Player p : players)
+		{
+				p.showPlayer(player);
+		}
 		player.setGameMode(GameMode.SURVIVAL);
 		player.setFlying(false);
 		player.setAllowFlight(false);
+	}
+	
+	public boolean isSpectator(Player player)
+	{
+		return this.spectators.contains(player);
 	}
 
 	public void SetAlive(Player player)
@@ -164,7 +189,8 @@ public abstract class Arena
 				this.secondsAfterStart = config.getInt("secondsAfterStart");
 				this.middle = config.getVector("location").toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world));
 				Vector spawnPos = config.getVector("spawnLocation");
-				this.spawnLocation = spawnPos.toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world), (float) config.getDouble("spawnLocationYaw"), (float) config.getDouble("SpawnLocationPitch"));
+				this.spawnLocation = spawnPos.toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world), (float) config.getDouble("spawnLocationYaw"),
+						(float) config.getDouble("SpawnLocationPitch"));
 				this.schematicOffset = config.getVector("schematicOffset");
 			}
 		}
@@ -383,37 +409,64 @@ public abstract class Arena
 		player.getInventory().clear();
 	}
 
-	public void onPlayerDeath(PlayerDeathEvent event)
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onPlayerQuit(PlayerQuitEvent event)
 	{
-
-	}
-
-	public void onPlayerRespawn(PlayerRespawnEvent event)
-	{
-		Player player = event.getPlayer();
-		event.setRespawnLocation(this.spawnLocation);
-		if (player.isDead() && this.isRunning())
+		if(players.contains(event.getPlayer()))
 		{
-			this.MakeSpectator(player);
-		}
-		else if (!this.isRunning())
-			this.SetAlive(player);
-		else
-			event.setRespawnLocation(this.lobby.getLocation());
-	}
-
-	public void onPlayerInteract(PlayerInteractEvent event)
-	{
-		Player player = event.getPlayer();
-		if (spectators.contains(player))
-		{
-			event.setCancelled(true);
+			RemovePlayer(event.getPlayer(), "quit");
 		}
 	}
 
-	public void onPlayerQuit(PlayerQuitEvent event)
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onPlayerDeath(PlayerDeathEvent event)
 	{
-		RemovePlayer(event.getPlayer(), "quit");
+		if(players.contains(event.getEntity()))
+		{
+			
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onPlayerRespawn(PlayerRespawnEvent event)
+	{
+		if(players.contains(event.getPlayer()))
+		{
+			Player player = event.getPlayer();
+			event.setRespawnLocation(this.spawnLocation);
+			if (player.isDead() && this.isRunning())
+			{
+				this.MakeSpectator(player);
+			}
+			else if (!this.isRunning())
+				this.SetAlive(player);
+			else
+				event.setRespawnLocation(this.lobby.getLocation());
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onPlayerInteract(PlayerInteractEvent event)
+	{
+		if(players.contains(event.getPlayer()))
+		{
+			Player player = event.getPlayer();
+			if (spectators.contains(player))
+			{
+				event.setCancelled(true);
+			}
+		}
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onEntityTargetLivingEntity(EntityTargetLivingEntityEvent event)
+	{
+		if(event.getTarget() instanceof Player)
+		{
+			Player target = (Player)event.getTarget();
+			if(this.isSpectator(target))
+				event.setCancelled(true);
+		}
 	}
 
 }

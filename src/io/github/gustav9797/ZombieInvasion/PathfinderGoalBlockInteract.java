@@ -2,6 +2,7 @@ package io.github.gustav9797.ZombieInvasion;
 
 import java.util.Random;
 
+import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 
 import net.minecraft.server.v1_7_R1.EntityInsentient;
@@ -29,7 +30,7 @@ public abstract class PathfinderGoalBlockInteract extends PathfinderGoal
 		this.entityInsentient = entityinsentient;
 	}
 
-	public boolean a()
+	public boolean a() //canExecute
 	{
 		if (!this.entityInsentient.positionChanged)
 		{
@@ -40,8 +41,19 @@ public abstract class PathfinderGoalBlockInteract extends PathfinderGoal
 			// this.block = null;
 			Navigation navigation = this.entityInsentient.getNavigation();
 			PathEntity pathentity = navigation.e();
-
-			if (pathentity != null && !pathentity.b() && navigation.c())
+			Bukkit.getLogger().info("moved");
+			
+			/*if(pathentity == null)
+			{
+				System.out.println("pathentity null");
+				Bukkit.getLogger().info("pathentity null");
+			}
+			else
+			{
+				System.out.println("pathentity not null");
+				Bukkit.getLogger().info("pathentity not null");
+			}*/
+			/*if (pathentity != null && !pathentity.b() && navigation.c())
 			{
 				for (int i = 0; i < Math.min(pathentity.e() + 2, pathentity.d()); ++i)
 				{
@@ -72,28 +84,28 @@ public abstract class PathfinderGoalBlockInteract extends PathfinderGoal
 			else
 			{
 				return false;
-			}
+			}*/
+			return true;
 		}
 	}
 
-	public boolean b()
+	public boolean b() //canContinue
 	{
 		return !this.f;
 	}
 
-	public void c()
+	public void c() //setup
 	{
 		this.f = false;
 		this.g = (float) ((double) ((float) this.x + 0.5F) - this.entityInsentient.locX);
 		this.h = (float) ((double) ((float) this.z + 0.5F) - this.entityInsentient.locZ);
 	}
 
-	public void e()
+	public void e() //move
 	{
 		float f = (float) ((double) ((float) this.x + 0.5F) - this.entityInsentient.locX);
 		float f1 = (float) ((double) ((float) this.z + 0.5F) - this.entityInsentient.locZ);
 		float f2 = this.g * f + this.h * f1;
-
 		if (f2 < 0.0F)
 		{
 			this.f = true;

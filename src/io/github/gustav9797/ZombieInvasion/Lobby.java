@@ -16,25 +16,30 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 public class Lobby implements Listener
 {
-	Location l;
-	String worldName = "world";
+	Location location;
+	String defaultWorldName = "world";
 	Map<String, Arena> arenas;
 	JavaPlugin plugin;
-	List<Location> signs = new LinkedList<Location>();
+	List<Vector> signs = new LinkedList<Vector>();
 	File configFile;
+	File signConfigFile;
 
 	public Lobby(Map<String, Arena> arenas, JavaPlugin plugin)
 	{
 		configFile = new File(plugin.getDataFolder() + File.separator + "lobby.yml");
-		l = new Location(plugin.getServer().getWorld(worldName), 0, 0, 0);
+		signConfigFile = new File(plugin.getDataFolder() + File.separator + "lobbysigns.yml");
+		this.location = new Location(plugin.getServer().getWorld(defaultWorldName), 0, 0, 0);
 		this.arenas = arenas;
 		this.plugin = plugin;
 		
@@ -50,18 +55,31 @@ public class Lobby implements Listener
 			}
 			this.Save();
 		}
+		
+		if(!signConfigFile.exists())
+		{
+			try
+			{
+				signConfigFile.createNewFile();
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+			this.Save();
+		}
 		this.Load();
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 
 	public Location getLocation()
 	{
-		return this.l;
+		return this.location;
 	}
 	
 	public void setLocation(Location l)
 	{
-		this.l = l;
+		this.location = l;
 		Save();
 	}
 	
@@ -70,10 +88,22 @@ public class Lobby implements Listener
 		YamlConfiguration config = new YamlConfiguration();
 		try
 		{
-			config.set("world", this.worldName);
-			config.set("location", this.l.toVector());
-			//config.set("signs", this.signs);
+			config.set("world", this.location.getWorld().getName());
+			config.set("location", this.location.toVector());
+			config.set("yaw", this.location.getYaw());
+			config.set("pitch", this.location.getPitch());
 			config.save(this.configFile);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		
+		config = new YamlConfiguration();
+		try
+		{
+			config.set("signs", this.signs);
+			config.save(this.signConfigFile);
 		}
 		catch (IOException e)
 		{
@@ -81,6 +111,7 @@ public class Lobby implements Listener
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void Load()
 	{
 		YamlConfiguration config = new YamlConfiguration();
@@ -88,13 +119,40 @@ public class Lobby implements Listener
 		{
 			config.load(configFile);
 			World world = Bukkit.getServer().getWorld(config.getString("world"));
-			l = config.getVector("location").toLocation(world);
-			//this.signs = (List<Location>)config.getList("signs");
+			this.location = config.getVector("location").toLocation(world);
+			location.setYaw((float)config.getDouble("yaw"));
+			location.setPitch((float)config.getDouble("pitch"));
 		}
 		catch (IOException | InvalidConfigurationException e)
 		{
 			e.printStackTrace();
 		}
+		
+		config = new YamlConfiguration();
+		try
+		{
+			config.load(signConfigFile);
+			this.signs = (List<Vector>) config.getList("signs");
+		}
+		catch (IOException | InvalidConfigurationException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void AddSign(Location l)
+	{
+		while(this.signs.contains(l.toVector()))
+			this.signs.remove(l.toVector());
+		this.signs.add(l.toVector());
+		this.Save();
+	}
+	
+	private void RemoveSign(Location l)
+	{
+		while(this.signs.contains(l.toVector()))
+			this.signs.remove(l.toVector());
+		this.Save();
 	}
 
 	@EventHandler
@@ -107,7 +165,7 @@ public class Lobby implements Listener
 			{
 				Sign sign = (Sign) block.getState();
 				String[] text = sign.getLines();
-				if(this.signs.contains(sign.getLocation()))
+				if(this.signs.contains(sign.getLocation().toVector()))
 				{
 					String arenaName = text[1];
 					if (arenas.containsKey(arenaName))
@@ -143,14 +201,23 @@ public class Lobby implements Listener
 					String arenaName = text[1];
 					if (arenas.containsKey(arenaName))
 					{
-						signs.add(event.getBlock().getLocation());
-						Save();
-						player.sendMessage("Lobby sign successfully placed!");
+						this.AddSign(event.getBlock().getLocation());
+						player.sendMessage("[ZombieInvasion] Lobby sign successfully placed!");
 					}
 					else
-						player.sendMessage("Arena " + arenaName + " doesn't exist.");
+						player.sendMessage("[ZombieInvasion] Arena " + arenaName + " doesn't exist.");
 				}
 			//}
+		}
+	}
+	
+	@EventHandler(priority=EventPriority.LOWEST)
+	private void onBlockBreak(BlockBreakEvent event)
+	{
+		if(this.signs.contains(event.getBlock().getLocation()))
+		{
+			this.RemoveSign(event.getBlock().getLocation());
+			event.getPlayer().sendMessage("[ZombieInvasion] Lobby sign removed!");
 		}
 	}
 }

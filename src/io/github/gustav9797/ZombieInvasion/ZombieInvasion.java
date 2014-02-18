@@ -21,13 +21,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -152,7 +146,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					sender.sendMessage("Usage: /joinarena <name>");
 				return true;
 			}
-			else if (cmd.getName().equals("leavearena"))
+			else if (cmd.getName().equals("leave"))
 			{
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
@@ -306,7 +300,6 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		for (String arena : temp)
 		{
 			ZombieArena a = new ZombieArena(arena, lobby);
-			a.Load();
 			arenas.put(arena, a);
 		}
 	}
@@ -364,37 +357,5 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		Field field = clazz.getDeclaredField(f);
 		field.setAccessible(true);
 		return field.get(null);
-	}
-
-	@EventHandler(priority = EventPriority.HIGHEST)
-	private void onPlayerQuit(PlayerQuitEvent event)
-	{
-		for (Arena a : arenas.values())
-			if (a.players.contains(event.getPlayer()))
-				a.onPlayerQuit(event);
-	}
-
-	@EventHandler(priority = EventPriority.HIGHEST)
-	private void onPlayerDeath(PlayerDeathEvent event)
-	{
-		for (Arena a : arenas.values())
-			if (a.players.contains(event.getEntity()))
-				a.onPlayerDeath(event);
-	}
-
-	@EventHandler(priority = EventPriority.HIGHEST)
-	private void onPlayerRespawn(PlayerRespawnEvent event)
-	{
-		for (Arena a : arenas.values())
-			if (a.players.contains(event.getPlayer()))
-				a.onPlayerRespawn(event);
-	}
-
-	@EventHandler(priority = EventPriority.HIGHEST)
-	private void onPlayerInteract(PlayerInteractEvent event)
-	{
-		for (Arena a : arenas.values())
-			if (a.players.contains(event.getPlayer()))
-				a.onPlayerInteract(event);
 	}
 }

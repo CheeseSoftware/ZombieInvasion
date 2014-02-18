@@ -15,10 +15,10 @@ commands:
       description: Joins the specified arena.
       permission: zombieinvasion.joinarena
       permission-message: You don't have zombieinvasion.joinarena
-   leavearena:
+   leave:
       description: Leaves your current arena.
-      permission: zombieinvasion.leavearena
-      permission-message: You don't have zombieinvasion.leavearena
+      permission: zombieinvasion.leave
+      permission-message: You don't have zombieinvasion.leave
    zombie:
       description: Spawns custom zombie.
       permission: zombieinvasion.zombie

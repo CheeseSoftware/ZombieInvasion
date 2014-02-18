@@ -5,6 +5,8 @@ import java.util.LinkedList;
 
 import net.minecraft.server.v1_7_R1.Block;
 import net.minecraft.server.v1_7_R1.EntityInsentient;
+import net.minecraft.server.v1_7_R1.Navigation;
+import net.minecraft.server.v1_7_R1.PathEntity;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -26,32 +28,105 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 		super(entityinsentient);
 	}
 
-	public boolean a()
+	public boolean a() // canExecute
 	{
+
+		// return true;
 		// Bukkit.getServer().broadcastMessage("a was called");
 		return super.a();// (!this.a.world.getGameRules().getBoolean("mobGriefing")
 							// ? false : !this.e.f(this.a.world,
 		// this.b, this.c, this.d));
 	}
 
-	public void c()
+	public void c() // setup
 	{
 		// Bukkit.getServer().broadcastMessage("c was called");
 		super.c();
 		this.i = 0;
 	}
 
-	public boolean b()
+	public boolean b() // canContinue
 	{
 		// double d0 = this.a.e((double) this.b, (double) this.c, (double)
 		return true;// return this.i <= 240/* && !this.e.f(this.a.world, this.b,
 					// this.c, this.d)*/ && d0 < 4.0D;
 	}
 
-	public void d()
+	public void d() // finish
 	{
 		super.d();
-		this.entityInsentient.world.d(this.entityInsentient.getId(), this.x, this.y, this.z, -1);
+		// this.entityInsentient.world.d(this.entityInsentient.getId(), this.x,
+		// this.y, this.z, -1);
+	}
+
+	public void e() // move
+	{
+		super.e();
+		/*Navigation navigation = this.entityInsentient.getNavigation();
+		PathEntity pathEntity = navigation.a(entityInsentient);
+		if (pathEntity != null)
+		{
+			Bukkit.getLogger().info("e(): " + pathEntity.e());
+			Bukkit.getLogger().info("d(): " + pathEntity.d());
+			pathEntity.
+		}*/
+		Entity entity = this.entityInsentient.getBukkitEntity();
+		if (this.entityInsentient instanceof EntityFastZombie)
+		{
+			EntityFastZombie z = (EntityFastZombie) this.entityInsentient;
+			if (z.getGoalTarget() == null || !z.getGoalTarget().isAlive())
+				return;
+		}
+		for (int ii = 0; ii < 18; ii++)
+			if (super.block == null
+					|| super.block.getType() == Material.AIR
+					|| (l != null && getDistanceBetween(l.getBlockX(), l.getBlockY(), l.getBlockZ(), entity.getLocation().getBlockX(), entity.getLocation().getBlockY(), entity.getLocation()
+							.getBlockZ()) > 3.5))
+			{
+				if (l != null)
+					this.entityInsentient.world.d(this.entityInsentient.getId(), l.getBlockX(), l.getBlockY(), l.getBlockZ(), 0);
+				l = getRandomCloseBlock();
+				super.block = entity.getWorld().getBlockAt(l.getBlockX(), l.getBlockY(), l.getBlockZ());
+				this.i = 0;
+			}
+			else
+				break;
+
+		if (super.block != null && l != null && super.block.getType() != Material.AIR)
+		{
+			if (this.entityInsentient.aI().nextInt(300) == 0)
+			{
+				this.entityInsentient.world.triggerEffect(1010, l.getBlockX(), l.getBlockY(), l.getBlockZ(), 0);
+			}
+
+			this.i += 2;
+			int i = (int) ((float) this.i / 240.0F * 10.0F);
+
+			if (i != this.j)
+			{
+				this.entityInsentient.world.d(this.entityInsentient.getId(), l.getBlockX(), l.getBlockY(), l.getBlockZ(), i);
+				// this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).setData((byte)(this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).getData()
+				// - 1));
+				// this.i =
+				// this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).getData();
+				this.j = i;
+			}
+
+			if (false)
+			{
+				if (this.i >= 240)
+				{
+					this.i = 0;
+					Bukkit.getPluginManager().callEvent(new LeavesDecayEvent(entity.getWorld().getBlockAt(l)));
+					entity.getWorld().getBlockAt(l).breakNaturally();
+					this.entityInsentient.world.triggerEffect(1012, l.getBlockX(), l.getBlockY(), l.getBlockZ(), 0);
+					this.entityInsentient.world.triggerEffect(2001, l.getBlockX(), l.getBlockY(), l.getBlockZ(),
+							Block.b(this.entityInsentient.world.getType(l.getBlockX(), l.getBlockY(), l.getBlockZ())));
+					super.block = null;
+					l = null;
+				}
+			}
+		}
 	}
 
 	private Location getRandomCloseBlock()
@@ -87,61 +162,5 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 		int zd = z2 - z1;
 		double distance = Math.sqrt(xd * xd + yd * yd + zd * zd);
 		return distance;
-	}
-
-	public void e()
-	{
-		super.e();
-		Entity entity = this.entityInsentient.getBukkitEntity();
-		if (this.entityInsentient instanceof EntityFastZombie)
-		{
-			EntityFastZombie z = (EntityFastZombie) this.entityInsentient;
-			if (z.getGoalTarget() == null || !z.getGoalTarget().isAlive())
-				return;
-		}
-		for (int ii = 0; ii < 18; ii++)
-			if (super.block == null
-					|| super.block.getType() == Material.AIR
-					|| (l != null && getDistanceBetween(l.getBlockX(), l.getBlockY(), l.getBlockZ(), entity.getLocation().getBlockX(), entity.getLocation().getBlockY(), entity.getLocation()
-							.getBlockZ()) > 3.5))
-			{
-				if (l != null)
-					this.entityInsentient.world.d(this.entityInsentient.getId(), l.getBlockX(), l.getBlockY(), l.getBlockZ(), 0);
-				l = getRandomCloseBlock();
-				super.block = entity.getWorld().getBlockAt(l.getBlockX(), l.getBlockY(), l.getBlockZ());
-				this.i = 0;
-			}
-			else
-				break;
-
-		if (super.block != null && l != null && super.block.getType() != Material.AIR)
-		{
-			if (this.entityInsentient.aI().nextInt(300) == 0)
-			{
-				this.entityInsentient.world.triggerEffect(1010, l.getBlockX(), l.getBlockY(), l.getBlockZ(), 0);
-			}
-
-			this.i+=2;
-			int i = (int) ((float) this.i / 240.0F * 10.0F);
-
-			if (i != this.j)
-			{
-				this.entityInsentient.world.d(this.entityInsentient.getId(), l.getBlockX(), l.getBlockY(), l.getBlockZ(), i);
-				//this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).setData((byte)(this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).getData() - 1));
-				//this.i = this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l).getData();
-				this.j = i;
-			}
-
-			if (this.i >= 240)
-			{
-				this.i = 0;
-				Bukkit.getPluginManager().callEvent(new LeavesDecayEvent(entity.getWorld().getBlockAt(l))); 
-				entity.getWorld().getBlockAt(l).breakNaturally();
-				this.entityInsentient.world.triggerEffect(1012, l.getBlockX(), l.getBlockY(), l.getBlockZ(), 0);
-				this.entityInsentient.world.triggerEffect(2001, l.getBlockX(), l.getBlockY(), l.getBlockZ(), Block.b(this.entityInsentient.world.getType(l.getBlockX(), l.getBlockY(), l.getBlockZ())));
-				super.block = null;
-				l = null;
-			}
-		}
 	}
 }

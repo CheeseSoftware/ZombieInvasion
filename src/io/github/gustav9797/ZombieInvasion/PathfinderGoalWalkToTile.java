@@ -20,7 +20,7 @@ public class PathfinderGoalWalkToTile extends PathfinderGoal
 	}
 
 	@Override
-	public boolean a()
+	public boolean a() //canExecute
 	{
 		if (times > 0 && this.entityCreature.isAlive())
 		{
@@ -32,13 +32,13 @@ public class PathfinderGoalWalkToTile extends PathfinderGoal
 	}
 
 	@Override
-	public boolean b()
+	public boolean b() //canContinue
 	{
 		return !this.entityCreature.getNavigation().g();
 	}
 
 	@Override
-	public void c()
+	public void c() //setup
 	{
 		this.entityCreature.getNavigation().a(goal.getBlockX(), goal.getBlockY(), goal.getBlockZ(), speed);
 	}

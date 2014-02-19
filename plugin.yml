@@ -59,3 +59,12 @@ commands:
       description: Sets the arena's spawn location.
       permission: zombieinvasion.setarenaspawn
       permission-message: You don't have zombieinvasion.setarenaspawn
+   savemap:
+      permission: zombieinvasion.savemap
+      permission-message: You don't have zombieinvasion.savemap
+   loadmap:
+      permission: zombieinvasion.loadmap
+      permission-message: You don't have zombieinvasion.loadmap
+   clearmap:
+      permission: zombieinvasion.clearmap
+      permission-message: You don't have zombieinvasion.clearmap

@@ -277,6 +277,39 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					sender.sendMessage("You have to join an arena! (/joinarena)");
 				return true;
 			}
+			else if (cmd.getName().equals("savemap"))
+			{
+				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				{
+					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+					arena.SaveMap();
+				}
+				else
+					sender.sendMessage("You have to join an arena! (/joinarena)");
+				return true;
+			}
+			else if (cmd.getName().equals("loadmap"))
+			{
+				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				{
+					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+					arena.LoadMap();
+				}
+				else
+					sender.sendMessage("You have to join an arena! (/joinarena)");
+				return true;
+			}
+			else if (cmd.getName().equals("clearmap"))
+			{
+				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				{
+					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+					arena.ClearMap();
+				}
+				else
+					sender.sendMessage("You have to join an arena! (/joinarena)");
+				return true;
+			}
 			else if (cmd.getName().equals("setlobby"))
 			{
 				lobby.setLocation(player.getLocation());

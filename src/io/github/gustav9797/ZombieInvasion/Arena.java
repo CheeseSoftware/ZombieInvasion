@@ -31,9 +31,11 @@ import org.bukkit.util.Vector;
 import com.sk89q.worldedit.CuboidClipboard;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
+import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.data.DataException;
+import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.schematic.MCEditSchematicFormat;
 import com.sk89q.worldedit.schematic.SchematicFormat;
@@ -76,7 +78,7 @@ public abstract class Arena implements Listener
 			directory.mkdir();
 		this.configFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "config.yml");
 		this.borderConfigFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "border.yml");
-		
+
 		if (!borderConfigFile.exists())
 		{
 			try
@@ -116,39 +118,45 @@ public abstract class Arena implements Listener
 			p.sendMessage("[ZombieInvasion] " + message);
 		}
 	}
-	
+
 	public void SaveMap()
 	{
 		int topY = 0;
-		for(BorderBlock block : border)
-			if(block.getLocation().getBlockY() > topY)
+		for (BorderBlock block : border)
+			if (block.getLocation().getBlockY() > topY)
 				topY = block.getLocation().getBlockY();
 		topY--;
 		int groundLevel = 4;
 		EditSession session = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
 		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
-		CuboidClipboard clipboard = new CuboidClipboard(new com.sk89q.worldedit.Vector(this.getSize(), 100, this.getSize()), new com.sk89q.worldedit.Vector(middle.getBlockX() - getRadius(), groundLevel , middle.getBlockZ() - getRadius()));
-		try
+		//if (schematic.exists())
 		{
-			SchematicFormat.MCEDIT.save(clipboard, schematic);
+			CuboidClipboard clipboard = new CuboidClipboard(new com.sk89q.worldedit.Vector(this.getSize(), 100, this.getSize()), new com.sk89q.worldedit.Vector(middle.getBlockX() - getRadius(), groundLevel, middle.getBlockZ() - getRadius()));
+			try
+			{
+				SchematicFormat.MCEDIT.save(clipboard, schematic);
+			}
+			catch (IOException | DataException e)
+			{
+				e.printStackTrace();
+			}
 		}
-		catch (IOException | DataException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
+		//else
+			//Bukkit.getLogger().warning("[ZombieInvasion] Schematic file for arena " + this.name + " was not found! This will cause the arena to not get reset properly.");
 	}
 
+	@SuppressWarnings("deprecation")
 	public void LoadMap()
 	{
 		EditSession es = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
 		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
+		int groundLevel = 4;
 		if (schematic.exists())
 		{
 			try
 			{
-				@SuppressWarnings("deprecation") CuboidClipboard cc = CuboidClipboard.loadSchematic(schematic);
-				com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() + this.size / 2 + this.schematicOffset.getBlockX(), this.middle.getBlockY() + cc.getHeight() + this.schematicOffset.getBlockY(), this.middle.getBlockZ() + this.size / 2 + this.schematicOffset.getBlockZ());
+				CuboidClipboard cc = CuboidClipboard.loadSchematic(schematic);
+				com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() - getRadius() + this.schematicOffset.getBlockX(), groundLevel + this.schematicOffset.getBlockY(), this.middle.getBlockZ() - getRadius() + this.schematicOffset.getBlockZ());
 				cc.paste(es, location, false);
 			}
 			catch (MaxChangedBlocksException | DataException | IOException e)
@@ -158,6 +166,21 @@ public abstract class Arena implements Listener
 		}
 		else
 			Bukkit.getLogger().warning("[ZombieInvasion] Schematic file for arena " + this.name + " was not found! This will cause the arena to not get reset properly.");
+	}
+	
+	public void ClearMap()
+	{
+		int groundLevel = 4;
+		EditSession es = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
+		CuboidRegion region = new CuboidRegion(new com.sk89q.worldedit.Vector(middle.getBlockX() - getRadius(), groundLevel, middle.getBlockZ() - getRadius()), new com.sk89q.worldedit.Vector(middle.getBlockX() + getRadius(), 100, middle.getBlockZ() + getRadius()));	
+		try
+		{
+			es.setBlocks(region, new BaseBlock(0));
+		}
+		catch (MaxChangedBlocksException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	public void ResetSpectators()
@@ -224,19 +247,19 @@ public abstract class Arena implements Listener
 		this.ResetSpectators();
 		this.Broadcast("Arena was reset!");
 	}
-	
+
 	public void Save()
 	{
 		this.SaveConfig();
 		this.SaveBorderConfig();
 	}
-	
+
 	public void Load()
 	{
 		this.LoadConfig();
 		this.LoadBorderConfig();
 	}
-	
+
 	protected void SaveConfig()
 	{
 		config = new YamlConfiguration();
@@ -284,7 +307,7 @@ public abstract class Arena implements Listener
 			e.printStackTrace();
 		}
 	}
-	
+
 	protected void SaveBorderConfig()
 	{
 		config = new YamlConfiguration();
@@ -298,7 +321,7 @@ public abstract class Arena implements Listener
 			e.printStackTrace();
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	protected void LoadBorderConfig()
 	{
@@ -307,7 +330,7 @@ public abstract class Arena implements Listener
 		{
 			config.load(borderConfigFile);
 			ArrayList<BorderBlock> temp = (ArrayList<BorderBlock>) config.getList("border");
-			if(temp == null)
+			if (temp == null)
 				this.border = new ArrayList<BorderBlock>();
 			else
 				this.border = new ArrayList<BorderBlock>(temp);
@@ -352,7 +375,7 @@ public abstract class Arena implements Listener
 		int radius = size / 2;
 		BlockState originalBlock = null;
 		World world = middle.getWorld();
-		
+
 		for (int y = 0; y <= height; y++)
 		{
 			for (int x = -radius; x <= radius; x++)
@@ -389,10 +412,10 @@ public abstract class Arena implements Listener
 				}
 			}
 		}
-		
-		if(buildRoof)
+
+		if (buildRoof)
 		{
-			for(int x = -radius + 1; x < radius; x++)
+			for (int x = -radius + 1; x < radius; x++)
 			{
 				for (int z = -radius + 1; z < radius; z++)
 				{
@@ -452,12 +475,12 @@ public abstract class Arena implements Listener
 	{
 		return this.spawnLocation;
 	}
-	
+
 	public boolean isBorder(Vector position)
 	{
-		for(BorderBlock block : this.border)
+		for (BorderBlock block : this.border)
 		{
-			if(block.getLocation() == position)
+			if (block.getLocation() == position)
 				return true;
 		}
 		return false;
@@ -595,13 +618,13 @@ public abstract class Arena implements Listener
 				event.setCancelled(true);
 		}
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onBlockBreak(BlockBreakEvent event)
 	{
-		if(this.players.contains(event.getPlayer()))
+		if (this.players.contains(event.getPlayer()))
 		{
-			if(this.isBorder(event.getBlock().getLocation().toVector()))
+			if (this.isBorder(event.getBlock().getLocation().toVector()))
 				event.setCancelled(true);
 		}
 	}

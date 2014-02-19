@@ -142,9 +142,9 @@ public class ZombieArena extends Arena
 	}
 
 	@Override
-	public void Load()
+	protected void LoadConfig()
 	{
-		super.Load();
+		super.LoadConfig();
 		config = new YamlConfiguration();
 		try
 		{
@@ -164,9 +164,9 @@ public class ZombieArena extends Arena
 	}
 
 	@Override
-	public void Save()
+	protected void SaveConfig()
 	{
-		super.Save();
+		super.SaveConfig();
 		try
 		{
 			config.set("zombieGroups", this.zombieGroups);

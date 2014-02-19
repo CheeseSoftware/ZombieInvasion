@@ -11,6 +11,7 @@ import java.util.Random;
 
 import net.minecraft.server.v1_7_R1.BiomeBase;
 import net.minecraft.server.v1_7_R1.BiomeMeta;
+import net.minecraft.server.v1_7_R1.Entity;
 import net.minecraft.server.v1_7_R1.EntityZombie;
 
 import org.bukkit.Bukkit;
@@ -21,7 +22,11 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -56,7 +61,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			{
 				e.printStackTrace();
 			}
-			this.Save();
+			this.SaveConfig();
 		}
 		this.Load();
 
@@ -267,8 +272,18 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		}
 		return false;
 	}
-
+	
 	public void Save()
+	{
+		this.SaveConfig();
+	}
+	
+	public void Load()
+	{
+		this.LoadConfig();
+	}
+
+	public void SaveConfig()
 	{
 		YamlConfiguration config = new YamlConfiguration();
 		List<String> temp = new LinkedList<String>();
@@ -285,7 +300,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		}
 	}
 
-	public void Load()
+	public void LoadConfig()
 	{
 		YamlConfiguration config = new YamlConfiguration();
 		try
@@ -347,15 +362,55 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			a.Load();
 	}
 
+	public boolean isEntityInAnyArena(Entity entity)
+	{
+		for (Arena a : this.arenas.values())
+		{
+			if (a instanceof ZombieArena)
+			{
+				ZombieArena arena = (ZombieArena) a;
+				if (arena.zombies.contains(entity))
+					return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean isEntityInsideAnyArena(Entity entity)
+	{
+		for (Arena a : this.arenas.values())
+		{
+			if (a.ContainsPosition(entity.getBukkitEntity().getLocation().toVector()))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static JavaPlugin getPlugin()
 	{
 		return (JavaPlugin) Bukkit.getPluginManager().getPlugin("ZombieInvasion");
 	}
 
-	private static Object getPrivateStatic(@SuppressWarnings("rawtypes") Class clazz, String f) throws Exception
+	@SuppressWarnings("rawtypes")
+	private static Object getPrivateStatic(Class clazz, String f) throws Exception
 	{
 		Field field = clazz.getDeclaredField(f);
 		field.setAccessible(true);
 		return field.get(null);
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onCreatureSpawn(CreatureSpawnEvent event)
+	{
+		if (!this.isEntityInAnyArena((Entity) event.getEntity()))
+		{
+			if (this.isEntityInsideAnyArena((Entity) event.getEntity()))
+			{
+				if (event.getSpawnReason() == SpawnReason.NATURAL)
+					event.setCancelled(true);
+			}
+		}
 	}
 }

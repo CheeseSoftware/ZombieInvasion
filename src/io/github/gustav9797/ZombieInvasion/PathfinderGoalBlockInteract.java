@@ -2,14 +2,9 @@ package io.github.gustav9797.ZombieInvasion;
 
 import java.util.Random;
 
-import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 
 import net.minecraft.server.v1_7_R1.EntityInsentient;
-import net.minecraft.server.v1_7_R1.MathHelper;
-import net.minecraft.server.v1_7_R1.Navigation;
-import net.minecraft.server.v1_7_R1.PathEntity;
-import net.minecraft.server.v1_7_R1.PathPoint;
 import net.minecraft.server.v1_7_R1.PathfinderGoal;
 
 public abstract class PathfinderGoalBlockInteract extends PathfinderGoal
@@ -38,54 +33,45 @@ public abstract class PathfinderGoalBlockInteract extends PathfinderGoal
 		}
 		else
 		{
-			// this.block = null;
-			Navigation navigation = this.entityInsentient.getNavigation();
-			PathEntity pathentity = navigation.e();
-			Bukkit.getLogger().info("moved");
-			
-			/*if(pathentity == null)
-			{
-				System.out.println("pathentity null");
-				Bukkit.getLogger().info("pathentity null");
-			}
-			else
-			{
-				System.out.println("pathentity not null");
-				Bukkit.getLogger().info("pathentity not null");
-			}*/
-			/*if (pathentity != null && !pathentity.b() && navigation.c())
-			{
-				for (int i = 0; i < Math.min(pathentity.e() + 2, pathentity.d()); ++i)
-				{
-					PathPoint pathpoint = pathentity.a(i);
-
-					this.x = pathpoint.a;
-					this.y = pathpoint.b + 1;
-					this.z = pathpoint.c;
-
-					if (this.entityInsentient.e((double) this.x, this.entityInsentient.locY, (double) this.z) <= 2.25D)
-					{
-						this.block = this.getBlockAt(this.x, this.y, this.z);
-						if (this.block != null)
-						{
-							return true;
-						}
-					}
-
-				}
-
-				this.x = MathHelper.floor(this.entityInsentient.locX);
-				this.y = MathHelper.floor(this.entityInsentient.locY + 1.0D);
-				this.z = MathHelper.floor(this.entityInsentient.locZ);
-				// this.block = this.getBlockAt(this.x, this.y, this.z);
-				// return this.block!= null;
-				return true;
-			}
-			else
-			{
-				return false;
-			}*/
 			return true;
+			// this.block = null;
+//			Navigation navigation = this.entityInsentient.getNavigation();
+//			PathEntity pathentity = navigation.e();
+//			Bukkit.getLogger().info("moved");
+			
+//			if (pathentity != null && !pathentity.b() && navigation.c())
+//			{
+//				for (int i = 0; i < Math.min(pathentity.e() + 2, pathentity.d()); ++i)
+//				{
+//					PathPoint pathpoint = pathentity.a(i);
+//
+//					this.x = pathpoint.a;
+//					this.y = pathpoint.b + 1;
+//					this.z = pathpoint.c;
+//
+//					if (this.entityInsentient.e((double) this.x, this.entityInsentient.locY, (double) this.z) <= 2.25D)
+//					{
+//						this.block = this.getBlockAt(this.x, this.y, this.z);
+//						if (this.block != null)
+//						{
+//							return true;
+//						}
+//					}
+//
+//				}
+//
+//				this.x = MathHelper.floor(this.entityInsentient.locX);
+//				this.y = MathHelper.floor(this.entityInsentient.locY + 1.0D);
+//				this.z = MathHelper.floor(this.entityInsentient.locZ);
+//				// this.block = this.getBlockAt(this.x, this.y, this.z);
+//				// return this.block!= null;
+//				return true;
+//			}
+//			else
+//			{
+//				return false;
+//			}
+//			return true;
 		}
 	}
 
@@ -110,10 +96,5 @@ public abstract class PathfinderGoalBlockInteract extends PathfinderGoal
 		{
 			this.f = true;
 		}
-	}
-
-	private Block getBlockAt(int i, int j, int k)
-	{
-		return this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(i, j, k);
 	}
 }

@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -41,7 +42,6 @@ public abstract class Arena implements Listener
 	protected Location spawnLocation;
 	protected Random r = new Random();
 	protected String name;
-	protected File configFile;
 	protected Material borderMaterial; // save tihs
 	protected int tickTaskId = -1;
 	protected int ticksPassed = -1;
@@ -53,23 +53,38 @@ public abstract class Arena implements Listener
 
 	public List<Player> players = new LinkedList<Player>();
 	public List<Player> spectators = new LinkedList<Player>();
-	protected LinkedList<BlockState> border;
+	protected LinkedList<BorderBlock> border;
 	protected Lobby lobby;
-	YamlConfiguration config;
+	protected YamlConfiguration config;
+	protected File configFile;
+	protected File borderConfigFile;
+	protected File directory;
 
 	public Arena(String name, Lobby lobby)
 	{
 		this.lobby = lobby;
 		this.name = name;
-		border = new LinkedList<BlockState>();
-		File dir = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name);
-		if (!dir.exists())
-			dir.mkdir();
-		middle = new Location(Bukkit.getServer().getWorlds().get(0), 0, 0, 0);
-		spawnLocation = middle;
-		String configPath = ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "config.yml";
-		configFile = new File(configPath);
-
+		this.border = new LinkedList<BorderBlock>();
+		this.middle = new Location(Bukkit.getServer().getWorlds().get(0), 0, 0, 0);
+		this.spawnLocation = middle;
+		this.directory = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name);
+		if (!directory.exists())
+			directory.mkdir();
+		this.configFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "config.yml");
+		this.borderConfigFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "border.yml");
+		
+		if (!borderConfigFile.exists())
+		{
+			try
+			{
+				borderConfigFile.createNewFile();
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+			this.SaveBorderConfig();
+		}
 		if (!configFile.exists())
 		{
 			try
@@ -80,10 +95,22 @@ public abstract class Arena implements Listener
 			{
 				e.printStackTrace();
 			}
-			this.Save();
+			this.SaveConfig();
 		}
 		this.Load();
 		Bukkit.getServer().getPluginManager().registerEvents(this, ZombieInvasion.getPlugin());
+	}
+
+	abstract void SendWave(int wave);
+
+	abstract String getType();
+
+	protected void Broadcast(String message)
+	{
+		for (Player p : players)
+		{
+			p.sendMessage("[ZombieInvasion] " + message);
+		}
 	}
 
 	public void ResetMap()
@@ -94,10 +121,8 @@ public abstract class Arena implements Listener
 		{
 			try
 			{
-				@SuppressWarnings("deprecation")
-				CuboidClipboard cc = CuboidClipboard.loadSchematic(schematic);
-				com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() + this.size / 2 + this.schematicOffset.getBlockX(), this.middle.getBlockY()
-						+ cc.getHeight() + this.schematicOffset.getBlockY(), this.middle.getBlockZ() + this.size / 2 + this.schematicOffset.getBlockZ());
+				@SuppressWarnings("deprecation") CuboidClipboard cc = CuboidClipboard.loadSchematic(schematic);
+				com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() + this.size / 2 + this.schematicOffset.getBlockX(), this.middle.getBlockY() + cc.getHeight() + this.schematicOffset.getBlockY(), this.middle.getBlockZ() + this.size / 2 + this.schematicOffset.getBlockZ());
 				cc.paste(es, location, false);
 			}
 			catch (MaxChangedBlocksException | DataException | IOException e)
@@ -125,9 +150,9 @@ public abstract class Arena implements Listener
 		player.setGameMode(GameMode.CREATIVE);
 		player.setAllowFlight(true);
 		player.setFlying(true);
-		for(Player p : players)
+		for (Player p : players)
 		{
-				p.hidePlayer(player);
+			p.hidePlayer(player);
 		}
 		player.teleport(this.spawnLocation);
 		player.sendMessage("[ZombieInvasion] You died! You are now a spectator.");
@@ -137,15 +162,15 @@ public abstract class Arena implements Listener
 	{
 		while (spectators.contains(player))
 			spectators.remove(player);
-		for(Player p : players)
+		for (Player p : players)
 		{
-				p.showPlayer(player);
+			p.showPlayer(player);
 		}
 		player.setGameMode(GameMode.SURVIVAL);
 		player.setFlying(false);
 		player.setAllowFlight(false);
 	}
-	
+
 	public boolean isSpectator(Player player)
 	{
 		return this.spectators.contains(player);
@@ -173,34 +198,20 @@ public abstract class Arena implements Listener
 		this.ResetSpectators();
 		this.Broadcast("Arena was reset!");
 	}
-
+	
+	public void Save()
+	{
+		this.SaveConfig();
+		this.SaveBorderConfig();
+	}
+	
 	public void Load()
 	{
-		config = new YamlConfiguration();
-		try
-		{
-			config.load(configFile);
-			String world = config.getString("world");
-			if (world != null && ZombieInvasion.getPlugin().getServer().getWorld(world) != null && config.getVector("location") != null)
-			{
-				this.size = config.getInt("size");
-				this.startAtPlayerCount = config.getInt("startAtPlayerCount");
-				this.maxPlayers = config.getInt("maxPlayers");
-				this.secondsAfterStart = config.getInt("secondsAfterStart");
-				this.middle = config.getVector("location").toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world));
-				Vector spawnPos = config.getVector("spawnLocation");
-				this.spawnLocation = spawnPos.toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world), (float) config.getDouble("spawnLocationYaw"),
-						(float) config.getDouble("SpawnLocationPitch"));
-				this.schematicOffset = config.getVector("schematicOffset");
-			}
-		}
-		catch (IOException | InvalidConfigurationException e)
-		{
-			e.printStackTrace();
-		}
+		this.LoadConfig();
+		this.LoadBorderConfig();
 	}
-
-	public void Save()
+	
+	protected void SaveConfig()
 	{
 		config = new YamlConfiguration();
 		try
@@ -223,9 +234,59 @@ public abstract class Arena implements Listener
 		}
 	}
 
-	abstract void SendWave(int wave);
-
-	abstract String getType();
+	protected void LoadConfig()
+	{
+		config = new YamlConfiguration();
+		try
+		{
+			config.load(configFile);
+			String world = config.getString("world");
+			if (world != null && ZombieInvasion.getPlugin().getServer().getWorld(world) != null && config.getVector("location") != null)
+			{
+				this.size = config.getInt("size");
+				this.startAtPlayerCount = config.getInt("startAtPlayerCount");
+				this.maxPlayers = config.getInt("maxPlayers");
+				this.secondsAfterStart = config.getInt("secondsAfterStart");
+				this.middle = config.getVector("location").toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world));
+				Vector spawnPos = config.getVector("spawnLocation");
+				this.spawnLocation = spawnPos.toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world), (float) config.getDouble("spawnLocationYaw"), (float) config.getDouble("SpawnLocationPitch"));
+				this.schematicOffset = config.getVector("schematicOffset");
+			}
+		}
+		catch (IOException | InvalidConfigurationException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	protected void SaveBorderConfig()
+	{
+		config = new YamlConfiguration();
+		try
+		{
+			config.set("border", this.border);
+			config.save(configFile);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected void LoadBorderConfig()
+	{
+		config = new YamlConfiguration();
+		try
+		{
+			config.load(borderConfigFile);
+			this.border = (LinkedList<BorderBlock>) config.getList("border");
+		}
+		catch (IOException | InvalidConfigurationException e)
+		{
+			e.printStackTrace();
+		}
+	}
 
 	public void SendWaves()
 	{
@@ -268,14 +329,14 @@ public abstract class Arena implements Listener
 				originalBlock = world.getBlockAt(x + middle.getBlockX(), y, -radius + middle.getBlockZ()).getState();
 				if (originalBlock.getType() == Material.AIR)
 				{
-					this.border.push(originalBlock);
+					this.border.push(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
 					world.getBlockAt(x + middle.getBlockX(), y, -radius + middle.getBlockZ()).setType(material);
 				}
 
 				originalBlock = world.getBlockAt(x + middle.getBlockX(), y, radius + middle.getBlockZ()).getState();
 				if (originalBlock.getType() == Material.AIR)
 				{
-					this.border.push(originalBlock);
+					this.border.push(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
 					world.getBlockAt(x + middle.getBlockX(), y, radius + middle.getBlockZ()).setType(material);
 				}
 			}
@@ -285,14 +346,14 @@ public abstract class Arena implements Listener
 				originalBlock = world.getBlockAt(-radius + middle.getBlockX(), y, z + middle.getBlockZ()).getState();
 				if (originalBlock.getType() == Material.AIR)
 				{
-					this.border.push(originalBlock);
+					this.border.push(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
 					world.getBlockAt(-radius + middle.getBlockX(), y, z + middle.getBlockZ()).setType(material);
 				}
 
 				originalBlock = world.getBlockAt(radius + middle.getBlockX(), y, z + middle.getBlockZ()).getState();
 				if (originalBlock.getType() == Material.AIR)
 				{
-					this.border.push(originalBlock);
+					this.border.push(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
 					world.getBlockAt(radius + middle.getBlockX(), y, z + middle.getBlockZ()).setType(material);
 				}
 			}
@@ -301,16 +362,16 @@ public abstract class Arena implements Listener
 
 	public void RestoreBorder()
 	{
-		for (BlockState block : border)
+		for (BorderBlock block : border)
 		{
-			block.getBlock().setType(block.getType());
+			this.middle.getWorld().getBlockAt(block.getLocation().toLocation(this.middle.getWorld())).setType(block.getReplacedBlockType());
 		}
 	}
 
 	public void setSize(int size)
 	{
 		this.size = size;
-		Save();
+		SaveConfig();
 	}
 
 	public int getSize()
@@ -318,10 +379,15 @@ public abstract class Arena implements Listener
 		return this.size;
 	}
 
+	public int getRadius()
+	{
+		return this.size / 2;
+	}
+
 	public void setMiddle(Location middle)
 	{
 		this.middle = middle;
-		this.Save();
+		this.SaveConfig();
 	}
 
 	public Location getMiddle()
@@ -332,25 +398,39 @@ public abstract class Arena implements Listener
 	public void setSpawnLocation(Location location)
 	{
 		this.spawnLocation = location;
-		this.Save();
+		this.SaveConfig();
 	}
 
 	public Location getSpawnLocation()
 	{
 		return this.spawnLocation;
 	}
-
-	protected void Broadcast(String message)
+	
+	public boolean isBorder(Vector position)
 	{
-		for (Player p : players)
+		for(BorderBlock block : this.border)
 		{
-			p.sendMessage("[ZombieInvasion] " + message);
+			if(block.getLocation() == position)
+				return true;
 		}
+		return false;
 	}
 
 	public boolean isRunning()
 	{
 		return this.ticksPassed != -1;
+	}
+
+	public boolean ContainsPosition(Vector pos)
+	{
+		if (pos.getBlockX() > this.middle.getBlockX() - this.getRadius() && pos.getBlockX() < this.middle.getBlockX() + this.getRadius())
+		{
+			if (pos.getBlockZ() > this.middle.getBlockZ() - this.getRadius() && pos.getBlockZ() < this.middle.getBlockZ() + this.getRadius())
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void JoinPlayer(Player player)
@@ -412,7 +492,7 @@ public abstract class Arena implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerQuit(PlayerQuitEvent event)
 	{
-		if(players.contains(event.getPlayer()))
+		if (players.contains(event.getPlayer()))
 		{
 			RemovePlayer(event.getPlayer(), "quit");
 		}
@@ -421,16 +501,16 @@ public abstract class Arena implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerDeath(PlayerDeathEvent event)
 	{
-		if(players.contains(event.getEntity()))
+		if (players.contains(event.getEntity()))
 		{
-			
+
 		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerRespawn(PlayerRespawnEvent event)
 	{
-		if(players.contains(event.getPlayer()))
+		if (players.contains(event.getPlayer()))
 		{
 			Player player = event.getPlayer();
 			event.setRespawnLocation(this.spawnLocation);
@@ -448,7 +528,7 @@ public abstract class Arena implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerInteract(PlayerInteractEvent event)
 	{
-		if(players.contains(event.getPlayer()))
+		if (players.contains(event.getPlayer()))
 		{
 			Player player = event.getPlayer();
 			if (spectators.contains(player))
@@ -457,14 +537,24 @@ public abstract class Arena implements Listener
 			}
 		}
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onEntityTargetLivingEntity(EntityTargetLivingEntityEvent event)
 	{
-		if(event.getTarget() instanceof Player)
+		if (event.getTarget() instanceof Player)
 		{
-			Player target = (Player)event.getTarget();
-			if(this.isSpectator(target))
+			Player target = (Player) event.getTarget();
+			if (this.isSpectator(target))
+				event.setCancelled(true);
+		}
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onBlockBreak(BlockBreakEvent event)
+	{
+		if(this.players.contains(event.getPlayer()))
+		{
+			if(this.isBorder(event.getBlock().getLocation().toVector()))
 				event.setCancelled(true);
 		}
 	}

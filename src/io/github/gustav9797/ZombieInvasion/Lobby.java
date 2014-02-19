@@ -37,9 +37,9 @@ public class Lobby implements Listener
 
 	public Lobby(Map<String, Arena> arenas, JavaPlugin plugin)
 	{
-		configFile = new File(plugin.getDataFolder() + File.separator + "lobby.yml");
-		signConfigFile = new File(plugin.getDataFolder() + File.separator + "lobbysigns.yml");
-		this.location = new Location(plugin.getServer().getWorld(defaultWorldName), 0, 0, 0);
+		this.configFile = new File(plugin.getDataFolder() + File.separator + "lobby.yml");
+		this.signConfigFile = new File(plugin.getDataFolder() + File.separator + "lobbysigns.yml");
+		this.location = new Location(plugin.getServer().getWorld(this.defaultWorldName), 0, 0, 0);
 		this.arenas = arenas;
 		this.plugin = plugin;
 		
@@ -53,7 +53,7 @@ public class Lobby implements Listener
 			{
 				e.printStackTrace();
 			}
-			this.Save();
+			this.SaveConfig();
 		}
 		
 		if(!signConfigFile.exists())
@@ -66,7 +66,7 @@ public class Lobby implements Listener
 			{
 				e.printStackTrace();
 			}
-			this.Save();
+			this.SaveSignConfig();
 		}
 		this.Load();
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -83,7 +83,7 @@ public class Lobby implements Listener
 		Save();
 	}
 	
-	public void Save()
+	protected void SaveConfig()
 	{
 		YamlConfiguration config = new YamlConfiguration();
 		try
@@ -98,21 +98,9 @@ public class Lobby implements Listener
 		{
 			e.printStackTrace();
 		}
-		
-		config = new YamlConfiguration();
-		try
-		{
-			config.set("signs", this.signs);
-			config.save(this.signConfigFile);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void Load()
+	protected void LoadConfig()
 	{
 		YamlConfiguration config = new YamlConfiguration();
 		try
@@ -127,8 +115,26 @@ public class Lobby implements Listener
 		{
 			e.printStackTrace();
 		}
-		
-		config = new YamlConfiguration();
+	}
+	
+	protected void SaveSignConfig()
+	{
+		YamlConfiguration config = new YamlConfiguration();
+		try
+		{
+			config.set("signs", this.signs);
+			config.save(this.signConfigFile);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected void LoadSignConfig()
+	{
+		YamlConfiguration config = new YamlConfiguration();
 		try
 		{
 			config.load(signConfigFile);
@@ -138,6 +144,18 @@ public class Lobby implements Listener
 		{
 			e.printStackTrace();
 		}
+	}
+	
+	public void Save()
+	{
+		this.SaveConfig();
+		this.SaveSignConfig();
+	}
+	
+	public void Load()
+	{
+		this.LoadConfig();
+		this.LoadSignConfig();
 	}
 	
 	private void AddSign(Location l)

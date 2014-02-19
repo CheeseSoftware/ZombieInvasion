@@ -5,8 +5,6 @@ import java.util.LinkedList;
 
 import net.minecraft.server.v1_7_R1.Block;
 import net.minecraft.server.v1_7_R1.EntityInsentient;
-import net.minecraft.server.v1_7_R1.Navigation;
-import net.minecraft.server.v1_7_R1.PathEntity;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -19,9 +17,7 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 	private int i;
 	private int j = -1;
 	private Location l = null;
-	protected static LinkedList<Location> possibleLocations = new LinkedList<Location>(Arrays.asList(new Location(null, -1, 0, 0), new Location(null, -1, 1, 0), new Location(null, 1, 0, 0),
-			new Location(null, 1, 1, 0), new Location(null, 0, 0, -1), new Location(null, 0, 1, -1), new Location(null, 0, 0, 1), new Location(null, 0, 1, 1), new Location(null, 0, 2, 0),
-			new Location(null, 0, -1, 0)));
+	protected static LinkedList<Location> possibleLocations = new LinkedList<Location>(Arrays.asList(new Location(null, -1, 0, 0), new Location(null, -1, 1, 0), new Location(null, 1, 0, 0), new Location(null, 1, 1, 0), new Location(null, 0, 0, -1), new Location(null, 0, 1, -1), new Location(null, 0, 0, 1), new Location(null, 0, 1, 1), new Location(null, 0, 2, 0), new Location(null, 0, -1, 0)));
 
 	public PathfinderGoalBreakBlock(EntityInsentient entityinsentient)
 	{
@@ -62,14 +58,13 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 	public void e() // move
 	{
 		super.e();
-		/*Navigation navigation = this.entityInsentient.getNavigation();
-		PathEntity pathEntity = navigation.a(entityInsentient);
-		if (pathEntity != null)
-		{
-			Bukkit.getLogger().info("e(): " + pathEntity.e());
-			Bukkit.getLogger().info("d(): " + pathEntity.d());
-			pathEntity.
-		}*/
+		/*
+		 * Navigation navigation = this.entityInsentient.getNavigation();
+		 * PathEntity pathEntity = navigation.a(entityInsentient); if
+		 * (pathEntity != null) { Bukkit.getLogger().info("e(): " +
+		 * pathEntity.e()); Bukkit.getLogger().info("d(): " + pathEntity.d());
+		 * pathEntity. }
+		 */
 		Entity entity = this.entityInsentient.getBukkitEntity();
 		if (this.entityInsentient instanceof EntityFastZombie)
 		{
@@ -78,10 +73,7 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 				return;
 		}
 		for (int ii = 0; ii < 18; ii++)
-			if (super.block == null
-					|| super.block.getType() == Material.AIR
-					|| (l != null && getDistanceBetween(l.getBlockX(), l.getBlockY(), l.getBlockZ(), entity.getLocation().getBlockX(), entity.getLocation().getBlockY(), entity.getLocation()
-							.getBlockZ()) > 3.5))
+			if (super.block == null || super.block.getType() == Material.AIR || (l != null && getDistanceBetween(l.getBlockX(), l.getBlockY(), l.getBlockZ(), entity.getLocation().getBlockX(), entity.getLocation().getBlockY(), entity.getLocation().getBlockZ()) > 3.5))
 			{
 				if (l != null)
 					this.entityInsentient.world.d(this.entityInsentient.getId(), l.getBlockX(), l.getBlockY(), l.getBlockZ(), 0);
@@ -112,19 +104,15 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 				this.j = i;
 			}
 
-			if (false)
+			if (this.i >= 240)
 			{
-				if (this.i >= 240)
-				{
-					this.i = 0;
-					Bukkit.getPluginManager().callEvent(new LeavesDecayEvent(entity.getWorld().getBlockAt(l)));
-					entity.getWorld().getBlockAt(l).breakNaturally();
-					this.entityInsentient.world.triggerEffect(1012, l.getBlockX(), l.getBlockY(), l.getBlockZ(), 0);
-					this.entityInsentient.world.triggerEffect(2001, l.getBlockX(), l.getBlockY(), l.getBlockZ(),
-							Block.b(this.entityInsentient.world.getType(l.getBlockX(), l.getBlockY(), l.getBlockZ())));
-					super.block = null;
-					l = null;
-				}
+				this.i = 0;
+				Bukkit.getPluginManager().callEvent(new LeavesDecayEvent(entity.getWorld().getBlockAt(l)));
+				entity.getWorld().getBlockAt(l).breakNaturally();
+				this.entityInsentient.world.triggerEffect(1012, l.getBlockX(), l.getBlockY(), l.getBlockZ(), 0);
+				this.entityInsentient.world.triggerEffect(2001, l.getBlockX(), l.getBlockY(), l.getBlockZ(), Block.b(this.entityInsentient.world.getType(l.getBlockX(), l.getBlockY(), l.getBlockZ())));
+				super.block = null;
+				l = null;
 			}
 		}
 	}

@@ -2,7 +2,7 @@ package io.github.gustav9797.ZombieInvasion;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -32,7 +32,10 @@ import com.sk89q.worldedit.CuboidClipboard;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
+import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.data.DataException;
+import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.schematic.MCEditSchematicFormat;
 
 public abstract class Arena implements Listener
 {
@@ -51,9 +54,9 @@ public abstract class Arena implements Listener
 	protected int startAtPlayerCount = 1;
 	protected int secondsAfterStart = 60;
 
-	public List<Player> players = new LinkedList<Player>();
-	public List<Player> spectators = new LinkedList<Player>();
-	protected LinkedList<BorderBlock> border;
+	public List<Player> players = new ArrayList<Player>();
+	public List<Player> spectators = new ArrayList<Player>();
+	protected ArrayList<BorderBlock> border;
 	protected Lobby lobby;
 	protected YamlConfiguration config;
 	protected File configFile;
@@ -64,7 +67,7 @@ public abstract class Arena implements Listener
 	{
 		this.lobby = lobby;
 		this.name = name;
-		this.border = new LinkedList<BorderBlock>();
+		this.border = new ArrayList<BorderBlock>();
 		this.middle = new Location(Bukkit.getServer().getWorlds().get(0), 0, 0, 0);
 		this.spawnLocation = middle;
 		this.directory = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name);
@@ -111,6 +114,19 @@ public abstract class Arena implements Listener
 		{
 			p.sendMessage("[ZombieInvasion] " + message);
 		}
+	}
+	
+	public void SaveMap()
+	{
+		EditSession session = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
+		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
+		CuboidClipboard clipboard = new CuboidClipboard(new Vector(this.middle.getBlockX()), null);
+		MCEditSchematicFormat f = new MCEditSchematicFormat();
+		f.save(clipboard, targetFile);
+		
+		
+		WorldEditPlugin worldEdit = (WorldEditPlugin) Bukkit.getServer().getPluginManager().getPlugin("WorldEdit");
+		
 	}
 
 	public void ResetMap()
@@ -280,11 +296,11 @@ public abstract class Arena implements Listener
 		try
 		{
 			config.load(borderConfigFile);
-			LinkedList<BorderBlock> temp = (LinkedList<BorderBlock>) config.getList("border");
+			ArrayList<BorderBlock> temp = (ArrayList<BorderBlock>) config.getList("border");
 			if(temp == null)
-				this.border = new LinkedList<BorderBlock>();
+				this.border = new ArrayList<BorderBlock>();
 			else
-				this.border = new LinkedList<BorderBlock>(temp);
+				this.border = new ArrayList<BorderBlock>(temp);
 		}
 		catch (IOException | InvalidConfigurationException e)
 		{
@@ -318,7 +334,7 @@ public abstract class Arena implements Listener
 		}
 	}
 
-	public void CreateBorder(int height, Material material)
+	public void CreateBorder(Material material, int height, boolean buildRoof)
 	{
 		if (!border.isEmpty())
 			RestoreBorder();
@@ -326,39 +342,53 @@ public abstract class Arena implements Listener
 		int radius = size / 2;
 		BlockState originalBlock = null;
 		World world = middle.getWorld();
-		for (int y = 0; y < height; y++)
+		
+		for (int y = 0; y <= height; y++)
 		{
-			for (int x = -radius; x < radius; x++)
+			for (int x = -radius; x <= radius; x++)
 			{
 				originalBlock = world.getBlockAt(x + middle.getBlockX(), y, -radius + middle.getBlockZ()).getState();
 				if (originalBlock.getType() == Material.AIR)
 				{
-					this.border.push(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
+					this.border.add(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
 					world.getBlockAt(x + middle.getBlockX(), y, -radius + middle.getBlockZ()).setType(material);
 				}
 
 				originalBlock = world.getBlockAt(x + middle.getBlockX(), y, radius + middle.getBlockZ()).getState();
 				if (originalBlock.getType() == Material.AIR)
 				{
-					this.border.push(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
+					this.border.add(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
 					world.getBlockAt(x + middle.getBlockX(), y, radius + middle.getBlockZ()).setType(material);
 				}
 			}
 
-			for (int z = -radius; z < radius; z++)
+			for (int z = -radius; z <= radius; z++)
 			{
 				originalBlock = world.getBlockAt(-radius + middle.getBlockX(), y, z + middle.getBlockZ()).getState();
 				if (originalBlock.getType() == Material.AIR)
 				{
-					this.border.push(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
+					this.border.add(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
 					world.getBlockAt(-radius + middle.getBlockX(), y, z + middle.getBlockZ()).setType(material);
 				}
 
 				originalBlock = world.getBlockAt(radius + middle.getBlockX(), y, z + middle.getBlockZ()).getState();
 				if (originalBlock.getType() == Material.AIR)
 				{
-					this.border.push(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
+					this.border.add(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
 					world.getBlockAt(radius + middle.getBlockX(), y, z + middle.getBlockZ()).setType(material);
+				}
+			}
+		}
+		
+		if(buildRoof)
+		{
+			for(int x = -radius + 1; x < radius; x++)
+			{
+				for (int z = -radius + 1; z < radius; z++)
+				{
+					originalBlock = world.getBlockAt(x + middle.getBlockX(), height, z + middle.getBlockZ()).getState();
+					this.border.add(new BorderBlock(new Vector(x + middle.getBlockX(), height, z + middle.getBlockZ()), material, originalBlock.getType()));
+					world.getBlockAt(x + middle.getBlockX(), height, z + middle.getBlockZ()).setType(material);
 				}
 			}
 		}
@@ -371,6 +401,7 @@ public abstract class Arena implements Listener
 		{
 			this.middle.getWorld().getBlockAt(block.getLocation().toLocation(this.middle.getWorld())).setType(block.getReplacedBlockType());
 		}
+		border.clear();
 		this.SaveBorderConfig();
 	}
 

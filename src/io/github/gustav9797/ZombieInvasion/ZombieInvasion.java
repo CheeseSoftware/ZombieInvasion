@@ -19,6 +19,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -44,12 +45,13 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	@Override
 	public void onEnable()
 	{
-		configFile = new File(this.getDataFolder() + File.separator + "config.yml");
-		entityTypes = new LinkedList<CustomEntityType>();
-		entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityFastZombie.class));
-		registerEntities();
-		arenas = new HashMap<String, Arena>();
-		lobby = new Lobby(arenas, this);
+		ConfigurationSerialization.registerClass(BorderBlock.class, "BorderBlock");
+		this.configFile = new File(this.getDataFolder() + File.separator + "config.yml");
+		this.entityTypes = new LinkedList<CustomEntityType>();
+		this.entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityFastZombie.class));
+		this.registerEntities();
+		this.arenas = new HashMap<String, Arena>();
+		this.lobby = new Lobby(arenas, this);
 
 		if (!configFile.exists())
 		{
@@ -223,14 +225,32 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			}
 			else if (cmd.getName().equals("createborder"))
 			{
-				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				boolean roof = false;
+				int height = 100;
+				Material material = Material.GLASS;
+				if (args.length >= 1)
 				{
-					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.CreateBorder(150, Material.GLASS);
-					sender.sendMessage("Border created.");
+					material = Material.getMaterial(args[0]);
+					if (material != null)
+					{
+						if (args.length >= 2)
+							height = Integer.parseInt(args[1]);
+						if (args.length >= 3)
+							roof = Boolean.parseBoolean(args[2]);
+						if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+						{
+							Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+							arena.CreateBorder(material, height, roof);
+							sender.sendMessage("Border created.");
+						}
+						else
+							sender.sendMessage("You have to join an arena! (/joinarena)");
+					}
+					else
+						sender.sendMessage("Invalid material!");
 				}
 				else
-					sender.sendMessage("You have to join an arena! (/joinarena)");
+					sender.sendMessage("Usage: /createborder <string material> <int height> <bool buildroof=true>");
 				return true;
 			}
 			else if (cmd.getName().equals("removeborder"))
@@ -272,12 +292,12 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		}
 		return false;
 	}
-	
+
 	public void Save()
 	{
 		this.SaveConfig();
 	}
-	
+
 	public void Load()
 	{
 		this.LoadConfig();

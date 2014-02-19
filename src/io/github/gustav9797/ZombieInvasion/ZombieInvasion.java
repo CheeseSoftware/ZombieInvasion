@@ -11,7 +11,6 @@ import java.util.Random;
 
 import net.minecraft.server.v1_7_R1.BiomeBase;
 import net.minecraft.server.v1_7_R1.BiomeMeta;
-import net.minecraft.server.v1_7_R1.Entity;
 import net.minecraft.server.v1_7_R1.EntityZombie;
 
 import org.bukkit.Bukkit;
@@ -20,6 +19,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -380,7 +380,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	{
 		for (Arena a : this.arenas.values())
 		{
-			if (a.ContainsPosition(entity.getBukkitEntity().getLocation().toVector()))
+			if (a.ContainsPosition(entity.getLocation().toVector()))
 			{
 				return true;
 			}
@@ -404,9 +404,9 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onCreatureSpawn(CreatureSpawnEvent event)
 	{
-		if (!this.isEntityInAnyArena((Entity) event.getEntity()))
+		if (!this.isEntityInAnyArena(event.getEntity()))
 		{
-			if (this.isEntityInsideAnyArena((Entity) event.getEntity()))
+			if (this.isEntityInsideAnyArena(event.getEntity()))
 			{
 				if (event.getSpawnReason() == SpawnReason.NATURAL)
 					event.setCancelled(true);

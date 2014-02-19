@@ -265,7 +265,7 @@ public abstract class Arena implements Listener
 		try
 		{
 			config.set("border", this.border);
-			config.save(configFile);
+			config.save(borderConfigFile);
 		}
 		catch (IOException e)
 		{
@@ -280,7 +280,11 @@ public abstract class Arena implements Listener
 		try
 		{
 			config.load(borderConfigFile);
-			this.border = (LinkedList<BorderBlock>) config.getList("border");
+			LinkedList<BorderBlock> temp = (LinkedList<BorderBlock>) config.getList("border");
+			if(temp == null)
+				this.border = new LinkedList<BorderBlock>();
+			else
+				this.border = new LinkedList<BorderBlock>(temp);
 		}
 		catch (IOException | InvalidConfigurationException e)
 		{
@@ -358,6 +362,7 @@ public abstract class Arena implements Listener
 				}
 			}
 		}
+		this.SaveBorderConfig();
 	}
 
 	public void RestoreBorder()
@@ -366,6 +371,7 @@ public abstract class Arena implements Listener
 		{
 			this.middle.getWorld().getBlockAt(block.getLocation().toLocation(this.middle.getWorld())).setType(block.getReplacedBlockType());
 		}
+		this.SaveBorderConfig();
 	}
 
 	public void setSize(int size)

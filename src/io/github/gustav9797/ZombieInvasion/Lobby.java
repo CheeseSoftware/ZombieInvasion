@@ -179,7 +179,7 @@ public class Lobby implements Listener
 	{
 		for (Vector l : this.signs)
 		{
-			Sign sign = (Sign) this.location.getWorld().getBlockAt(l.toLocation(this.location.getWorld()));
+			Sign sign = (Sign) this.location.getWorld().getBlockAt(l.toLocation(this.location.getWorld())).getState();
 			String arenaName = sign.getLine(1);
 			if (this.arenas.containsKey(arenaName))
 			{

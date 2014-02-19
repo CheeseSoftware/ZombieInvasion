@@ -68,3 +68,7 @@ commands:
    clearmap:
       permission: zombieinvasion.clearmap
       permission-message: You don't have zombieinvasion.clearmap
+   selectarena:
+      description: Selects an arena for edit.
+      permission: zombieinvasion.selectarena
+      permission-message: You don't have zombieinvasion.selectarena

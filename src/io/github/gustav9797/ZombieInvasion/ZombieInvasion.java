@@ -28,6 +28,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -40,6 +41,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	Map<String, Arena> arenas;
 	Lobby lobby;
 	File configFile;
+	File schematicsDirectory;
 	public static IOstEconomy economyPlugin;
 
 	@Override
@@ -47,11 +49,15 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	{
 		ConfigurationSerialization.registerClass(BorderBlock.class, "BorderBlock");
 		this.configFile = new File(this.getDataFolder() + File.separator + "config.yml");
+		this.schematicsDirectory = new File(this.getDataFolder() + File.separator + "schematics");
 		this.entityTypes = new LinkedList<CustomEntityType>();
 		this.entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityFastZombie.class));
 		this.registerEntities();
 		this.arenas = new HashMap<String, Arena>();
 		this.lobby = new Lobby(arenas, this);
+
+		if (!schematicsDirectory.exists())
+			schematicsDirectory.mkdir();
 
 		if (!configFile.exists())
 		{
@@ -116,9 +122,9 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			}
 			else if (cmd.getName().equals("removearena"))
 			{
-				if (args.length > 0)
+				if (player.hasMetadata("selectedarena"))
 				{
-					String name = args[0];
+					String name = player.getMetadata("selectedarena").get(0).asString();
 					if (arenas.containsKey(name))
 					{
 						arenas.remove(name);
@@ -133,21 +139,43 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 						sender.sendMessage("Arena doesn't exists.");
 				}
 				else
-					sender.sendMessage("Usage: /removearena <name>");
+					sender.sendMessage("You don't have any arena selected.");
 				return true;
 			}
-			else if (cmd.getName().equals("joinarena"))
+			else if (cmd.getName().equals("selectarena"))
 			{
 				if (args.length > 0)
 				{
 					String name = args[0];
 					if (arenas.containsKey(name))
 					{
-						Arena arena = arenas.get(name);
-						arena.JoinPlayer(player);
+						player.setMetadata("selectedarena", new FixedMetadataValue(this, name));
+						sender.sendMessage("Arena selected.");
 					}
 					else
 						sender.sendMessage("Arena doesn't exist.");
+				}
+				else
+					sender.sendMessage("Usage: /selectarena <name>");
+				return true;
+			}
+			else if (cmd.getName().equals("joinarena"))
+			{
+				if (args.length > 0)
+				{
+					if (!player.hasMetadata("arena"))
+					{
+						String name = args[0];
+						if (arenas.containsKey(name))
+						{
+							Arena arena = arenas.get(name);
+							arena.JoinPlayer(player);
+						}
+						else
+							sender.sendMessage("Arena doesn't exist.");
+					}
+					else
+						sender.sendMessage("You are already inside an arena! (/leave)");
 				}
 				else
 					sender.sendMessage("Usage: /joinarena <name>");
@@ -178,136 +206,193 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			}
 			else if (cmd.getName().equals("setlocation"))
 			{
-				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				if (player.hasMetadata("selectedarena"))
 				{
-					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.setMiddle(player.getLocation());
-					sender.sendMessage("Arena middle was set!");
+					String name = player.getMetadata("selectedarena").get(0).asString();
+					if (arenas.containsKey(name))
+					{
+						Arena arena = arenas.get(name);
+						arena.setMiddle(player.getLocation());
+						sender.sendMessage("Arena middle was set!");
+					}
+					else
+						sender.sendMessage("Arena doesn't exist.");
 				}
 				else
-					sender.sendMessage("You have to join an arena! (/joinarena)");
+					sender.sendMessage("You don't have any arena selected.");
 				return true;
 			}
 			else if (cmd.getName().equals("setarenaspawn"))
 			{
-				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				if (player.hasMetadata("selectedarena"))
 				{
-					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.setSpawnLocation(player.getLocation());
-					sender.sendMessage("Arena spawn was set!");
+					String name = player.getMetadata("selectedarena").get(0).asString();
+					if (arenas.containsKey(name))
+					{
+						Arena arena = arenas.get(name);
+						arena.setSpawnLocation(player.getLocation());
+						sender.sendMessage("Arena spawn was set!");
+					}
+					else
+						sender.sendMessage("Arena doesn't exist.");
 				}
 				else
-					sender.sendMessage("You have to join an arena! (/joinarena)");
+					sender.sendMessage("You don't have any arena selected.");
 				return true;
 			}
 			else if (cmd.getName().equals("setsize"))
 			{
-				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				if (player.hasMetadata("selectedarena"))
 				{
-					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					if (args.length > 0)
+					String name = player.getMetadata("selectedarena").get(0).asString();
+					if (arenas.containsKey(name))
 					{
-						int size = Integer.parseInt(args[0]);
-						if (size > 0 && size <= 128)
+						Arena arena = arenas.get(name);
+						if (args.length > 0)
 						{
-							arena.setSize(size);
-							sender.sendMessage("Size was set to " + size);
+							int size = Integer.parseInt(args[0]);
+							if (size > 0 && size <= 128)
+							{
+								arena.setSize(size);
+								sender.sendMessage("Size was set to " + size);
+							}
+							else
+								sender.sendMessage("Size has to be between 0 and 128.");
 						}
 						else
-							sender.sendMessage("Size has to be between 0 and 128.");
+							sender.sendMessage("Usage: /setsize <size>");
 					}
 					else
-						sender.sendMessage("Usage: /setsize <size>");
+						sender.sendMessage("Arena doesn't exist.");
 				}
 				else
-					sender.sendMessage("You have to join an arena! (/joinarena)");
+					sender.sendMessage("You don't have any arena selected.");
 				return true;
 			}
 			else if (cmd.getName().equals("createborder"))
 			{
-				boolean roof = false;
-				int height = 100;
-				Material material = Material.GLASS;
-				if (args.length >= 1)
+				if (player.hasMetadata("selectedarena"))
 				{
-					material = Material.getMaterial(args[0]);
-					if (material != null)
+					String name = player.getMetadata("selectedarena").get(0).asString();
+					if (arenas.containsKey(name))
 					{
-						if (args.length >= 2)
-							height = Integer.parseInt(args[1]);
-						if (args.length >= 3)
-							roof = Boolean.parseBoolean(args[2]);
-						if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+						Arena arena = arenas.get(name);
+						boolean roof = false;
+						int height = 100;
+						Material material = Material.GLASS;
+						if (args.length >= 1)
 						{
-							Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-							arena.CreateBorder(material, height, roof);
-							sender.sendMessage("Border created.");
+							material = Material.getMaterial(args[0]);
+							if (material != null)
+							{
+								if (args.length >= 2)
+									height = Integer.parseInt(args[1]);
+								if (args.length >= 3)
+									roof = Boolean.parseBoolean(args[2]);
+								arena.CreateBorder(material, height, roof);
+								sender.sendMessage("Border created.");
+							}
+							else
+								sender.sendMessage("Invalid material!");
 						}
 						else
-							sender.sendMessage("You have to join an arena! (/joinarena)");
+							sender.sendMessage("Usage: /createborder <string material> <int height> <bool buildroof=true>");
 					}
 					else
-						sender.sendMessage("Invalid material!");
+						sender.sendMessage("Arena doesn't exist.");
 				}
 				else
-					sender.sendMessage("Usage: /createborder <string material> <int height> <bool buildroof=true>");
+					sender.sendMessage("You don't have any arena selected.");
 				return true;
 			}
 			else if (cmd.getName().equals("removeborder"))
 			{
-				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				if (player.hasMetadata("selectedarena"))
 				{
-					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.RestoreBorder();
-					sender.sendMessage("Border removed.");
+					String name = player.getMetadata("selectedarena").get(0).asString();
+					if (arenas.containsKey(name))
+					{
+						Arena arena = arenas.get(name);
+						arena.RestoreBorder();
+						sender.sendMessage("Border removed.");
+					}
+					else
+						sender.sendMessage("Arena doesn't exist.");
 				}
 				else
-					sender.sendMessage("You have to join an arena! (/joinarena)");
+					sender.sendMessage("You don't have any arena selected.");
 				return true;
 			}
 			else if (cmd.getName().equals("reset"))
 			{
-				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				if (player.hasMetadata("selectedarena"))
 				{
-					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.LoadMap();
-					arena.Reset();
+					String name = player.getMetadata("selectedarena").get(0).asString();
+					if (arenas.containsKey(name))
+					{
+						Arena arena = arenas.get(name);
+						arena.LoadMap();
+						arena.Reset();
+					}
+					else
+						sender.sendMessage("Arena doesn't exist.");
 				}
 				else
-					sender.sendMessage("You have to join an arena! (/joinarena)");
+					sender.sendMessage("You don't have any arena selected.");
 				return true;
 			}
 			else if (cmd.getName().equals("savemap"))
 			{
-				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				if (player.hasMetadata("selectedarena"))
 				{
-					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.SaveMap();
+					String name = player.getMetadata("selectedarena").get(0).asString();
+					if (arenas.containsKey(name))
+					{
+						Arena arena = arenas.get(name);
+						arena.SaveMap();
+						sender.sendMessage("Map saved.");
+					}
+					else
+						sender.sendMessage("Arena doesn't exist.");
 				}
 				else
-					sender.sendMessage("You have to join an arena! (/joinarena)");
+					sender.sendMessage("You don't have any arena selected.");
 				return true;
 			}
 			else if (cmd.getName().equals("loadmap"))
 			{
-				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				if (player.hasMetadata("selectedarena"))
 				{
-					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.LoadMap();
+					String name = player.getMetadata("selectedarena").get(0).asString();
+					if (arenas.containsKey(name))
+					{
+						Arena arena = arenas.get(name);
+						arena.LoadMap();
+						sender.sendMessage("Map loaded.");
+					}
+					else
+						sender.sendMessage("Arena doesn't exist.");
 				}
 				else
-					sender.sendMessage("You have to join an arena! (/joinarena)");
+					sender.sendMessage("You don't have any arena selected.");
 				return true;
 			}
 			else if (cmd.getName().equals("clearmap"))
 			{
-				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				if (player.hasMetadata("selectedarena"))
 				{
-					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.ClearMap();
+					String name = player.getMetadata("selectedarena").get(0).asString();
+					if (arenas.containsKey(name))
+					{
+						Arena arena = arenas.get(name);
+						arena.ClearMap();
+						sender.sendMessage("Map cleared.");
+					}
+					else
+						sender.sendMessage("Arena doesn't exist.");
 				}
 				else
-					sender.sendMessage("You have to join an arena! (/joinarena)");
+					sender.sendMessage("You don't have any arena selected.");
 				return true;
 			}
 			else if (cmd.getName().equals("setlobby"))
@@ -364,7 +449,8 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		{
 			e.printStackTrace();
 		}
-		@SuppressWarnings("unchecked") List<String> temp = (List<String>) config.getList("zombiearenas");
+		@SuppressWarnings("unchecked")
+		List<String> temp = (List<String>) config.getList("zombiearenas");
 		for (String arena : temp)
 		{
 			ZombieArena a = new ZombieArena(arena, lobby);
@@ -393,7 +479,8 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				{
 					Field list = BiomeBase.class.getDeclaredField(field);
 					list.setAccessible(true);
-					@SuppressWarnings("unchecked") List<BiomeMeta> mobList = (List<BiomeMeta>) list.get(biomeBase);
+					@SuppressWarnings("unchecked")
+					List<BiomeMeta> mobList = (List<BiomeMeta>) list.get(biomeBase);
 
 					for (BiomeMeta meta : mobList)
 						for (CustomEntityType entity : entityTypes)

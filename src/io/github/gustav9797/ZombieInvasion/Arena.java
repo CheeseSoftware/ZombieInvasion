@@ -33,18 +33,15 @@ import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.data.DataException;
 import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.regions.Region;
-import com.sk89q.worldedit.schematic.MCEditSchematicFormat;
 import com.sk89q.worldedit.schematic.SchematicFormat;
 
 public abstract class Arena implements Listener
 {
 	protected int size;
 	protected Location middle;
-	protected Vector schematicOffset = new Vector(0, 0, 0);
+	protected String schematicFileName;
 	protected Location spawnLocation;
 	protected Random r = new Random();
 	protected String name;
@@ -70,6 +67,7 @@ public abstract class Arena implements Listener
 	{
 		this.lobby = lobby;
 		this.name = name;
+		this.schematicFileName = name;
 		this.border = new ArrayList<BorderBlock>();
 		this.middle = new Location(Bukkit.getServer().getWorlds().get(0), 0, 0, 0);
 		this.spawnLocation = middle;
@@ -119,44 +117,51 @@ public abstract class Arena implements Listener
 		}
 	}
 
+	public void setSchematic(String name)
+	{
+		this.schematicFileName = name;
+	}
+
 	public void SaveMap()
 	{
 		int topY = 0;
-		for (BorderBlock block : border)
-			if (block.getLocation().getBlockY() > topY)
-				topY = block.getLocation().getBlockY();
-		topY--;
+		if (!border.isEmpty())
+		{
+			for (BorderBlock borderBlock : border)
+				if (borderBlock.getLocation().getBlockY() > topY)
+					topY = borderBlock.getLocation().getBlockY();
+			topY--;
+		}
+		else
+			topY = 100;
 		int groundLevel = 4;
 		EditSession session = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
-		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
-		//if (schematic.exists())
+		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + "schematics" + File.separator + this.schematicFileName + ".schematic");
+		CuboidClipboard clipboard = new CuboidClipboard(new com.sk89q.worldedit.Vector(this.getSize() - 1, topY, this.getSize() - 1), new com.sk89q.worldedit.Vector(middle.getBlockX() - getRadius()
+				+ 1, groundLevel, middle.getBlockZ() - getRadius() + 1));
+		clipboard.copy(session);
+		try
 		{
-			CuboidClipboard clipboard = new CuboidClipboard(new com.sk89q.worldedit.Vector(this.getSize(), 100, this.getSize()), new com.sk89q.worldedit.Vector(middle.getBlockX() - getRadius(), groundLevel, middle.getBlockZ() - getRadius()));
-			try
-			{
-				SchematicFormat.MCEDIT.save(clipboard, schematic);
-			}
-			catch (IOException | DataException e)
-			{
-				e.printStackTrace();
-			}
+			SchematicFormat.MCEDIT.save(clipboard, schematic);
 		}
-		//else
-			//Bukkit.getLogger().warning("[ZombieInvasion] Schematic file for arena " + this.name + " was not found! This will cause the arena to not get reset properly.");
+		catch (IOException | DataException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	@SuppressWarnings("deprecation")
 	public void LoadMap()
 	{
 		EditSession es = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
-		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
+		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + "schematics" + File.separator + this.schematicFileName + ".schematic");
 		int groundLevel = 4;
 		if (schematic.exists())
 		{
 			try
 			{
 				CuboidClipboard cc = CuboidClipboard.loadSchematic(schematic);
-				com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() - getRadius() + this.schematicOffset.getBlockX(), groundLevel + this.schematicOffset.getBlockY(), this.middle.getBlockZ() - getRadius() + this.schematicOffset.getBlockZ());
+				com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() - getRadius() + 1, groundLevel, this.middle.getBlockZ() - getRadius() + 1);
 				cc.paste(es, location, false);
 			}
 			catch (MaxChangedBlocksException | DataException | IOException e)
@@ -167,12 +172,23 @@ public abstract class Arena implements Listener
 		else
 			Bukkit.getLogger().warning("[ZombieInvasion] Schematic file for arena " + this.name + " was not found! This will cause the arena to not get reset properly.");
 	}
-	
+
 	public void ClearMap()
 	{
+		int topY = 0;
+		if (!border.isEmpty())
+		{
+			for (BorderBlock borderBlock : border)
+				if (borderBlock.getLocation().getBlockY() > topY)
+					topY = borderBlock.getLocation().getBlockY();
+			topY--;
+		}
+		else
+			topY = 100;
 		int groundLevel = 4;
 		EditSession es = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
-		CuboidRegion region = new CuboidRegion(new com.sk89q.worldedit.Vector(middle.getBlockX() - getRadius(), groundLevel, middle.getBlockZ() - getRadius()), new com.sk89q.worldedit.Vector(middle.getBlockX() + getRadius(), 100, middle.getBlockZ() + getRadius()));	
+		CuboidRegion region = new CuboidRegion(new com.sk89q.worldedit.Vector(middle.getBlockX() - getRadius() + 1, groundLevel, middle.getBlockZ() - getRadius() + 1), new com.sk89q.worldedit.Vector(
+				middle.getBlockX() + getRadius() - 1, topY, middle.getBlockZ() + getRadius() - 1));
 		try
 		{
 			es.setBlocks(region, new BaseBlock(0));
@@ -274,7 +290,7 @@ public abstract class Arena implements Listener
 			config.set("spawnLocationYaw", this.spawnLocation.getYaw());
 			config.set("spawnLocationPitch", this.spawnLocation.getPitch());
 			config.set("location", middle.toVector());
-			config.set("schematicOffset", this.schematicOffset);
+			config.set("schematicFileName", this.schematicFileName);
 			config.save(configFile);
 		}
 		catch (IOException e)
@@ -298,8 +314,9 @@ public abstract class Arena implements Listener
 				this.secondsAfterStart = config.getInt("secondsAfterStart");
 				this.middle = config.getVector("location").toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world));
 				Vector spawnPos = config.getVector("spawnLocation");
-				this.spawnLocation = spawnPos.toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world), (float) config.getDouble("spawnLocationYaw"), (float) config.getDouble("SpawnLocationPitch"));
-				this.schematicOffset = config.getVector("schematicOffset");
+				this.spawnLocation = spawnPos.toLocation(ZombieInvasion.getPlugin().getServer().getWorld(world), (float) config.getDouble("spawnLocationYaw"),
+						(float) config.getDouble("SpawnLocationPitch"));
+				this.schematicFileName = config.getString("schematicFileName");
 			}
 		}
 		catch (IOException | InvalidConfigurationException e)
@@ -364,6 +381,13 @@ public abstract class Arena implements Listener
 		{
 			this.Broadcast(minutesPassed + " minutes have passed!");
 			oldMinutesPassed = minutesPassed;
+		}
+
+		if (this.spectators.size() >= this.players.size())
+		{
+			Broadcast("Everyone have died. Reseting arena...");
+			this.Reset();
+			this.LoadMap();
 		}
 	}
 
@@ -571,10 +595,7 @@ public abstract class Arena implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerDeath(PlayerDeathEvent event)
 	{
-		if (players.contains(event.getEntity()))
-		{
 
-		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)

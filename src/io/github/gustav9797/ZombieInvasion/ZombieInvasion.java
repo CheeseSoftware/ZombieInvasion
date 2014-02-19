@@ -270,7 +270,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
 				{
 					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.ResetMap();
+					arena.LoadMap();
 					arena.Reset();
 				}
 				else

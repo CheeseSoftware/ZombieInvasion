@@ -36,6 +36,7 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.data.DataException;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.schematic.MCEditSchematicFormat;
+import com.sk89q.worldedit.schematic.SchematicFormat;
 
 public abstract class Arena implements Listener
 {
@@ -118,18 +119,27 @@ public abstract class Arena implements Listener
 	
 	public void SaveMap()
 	{
+		int topY = 0;
+		for(BorderBlock block : border)
+			if(block.getLocation().getBlockY() > topY)
+				topY = block.getLocation().getBlockY();
+		topY--;
+		int groundLevel = 4;
 		EditSession session = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
 		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
-		CuboidClipboard clipboard = new CuboidClipboard(new Vector(this.middle.getBlockX()), null);
-		MCEditSchematicFormat f = new MCEditSchematicFormat();
-		f.save(clipboard, targetFile);
-		
-		
-		WorldEditPlugin worldEdit = (WorldEditPlugin) Bukkit.getServer().getPluginManager().getPlugin("WorldEdit");
-		
+		CuboidClipboard clipboard = new CuboidClipboard(new com.sk89q.worldedit.Vector(this.getSize(), 100, this.getSize()), new com.sk89q.worldedit.Vector(middle.getBlockX() - getRadius(), groundLevel , middle.getBlockZ() - getRadius()));
+		try
+		{
+			SchematicFormat.MCEDIT.save(clipboard, schematic);
+		}
+		catch (IOException | DataException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
 	}
 
-	public void ResetMap()
+	public void LoadMap()
 	{
 		EditSession es = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
 		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + this.name + File.separator + name + ".schematic");
@@ -516,7 +526,7 @@ public abstract class Arena implements Listener
 
 		if (players.size() <= 0)
 		{
-			this.ResetMap();
+			this.LoadMap();
 			this.Reset();
 		}
 

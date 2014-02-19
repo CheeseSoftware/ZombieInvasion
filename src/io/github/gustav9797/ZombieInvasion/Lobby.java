@@ -22,6 +22,8 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
@@ -42,8 +44,8 @@ public class Lobby implements Listener
 		this.location = new Location(plugin.getServer().getWorld(this.defaultWorldName), 0, 0, 0);
 		this.arenas = arenas;
 		this.plugin = plugin;
-		
-		if(!configFile.exists())
+
+		if (!configFile.exists())
 		{
 			try
 			{
@@ -55,8 +57,8 @@ public class Lobby implements Listener
 			}
 			this.SaveConfig();
 		}
-		
-		if(!signConfigFile.exists())
+
+		if (!signConfigFile.exists())
 		{
 			try
 			{
@@ -76,13 +78,13 @@ public class Lobby implements Listener
 	{
 		return this.location;
 	}
-	
+
 	public void setLocation(Location l)
 	{
 		this.location = l;
 		Save();
 	}
-	
+
 	protected void SaveConfig()
 	{
 		YamlConfiguration config = new YamlConfiguration();
@@ -99,7 +101,7 @@ public class Lobby implements Listener
 			e.printStackTrace();
 		}
 	}
-	
+
 	protected void LoadConfig()
 	{
 		YamlConfiguration config = new YamlConfiguration();
@@ -108,15 +110,15 @@ public class Lobby implements Listener
 			config.load(configFile);
 			World world = Bukkit.getServer().getWorld(config.getString("world"));
 			this.location = config.getVector("location").toLocation(world);
-			location.setYaw((float)config.getDouble("yaw"));
-			location.setPitch((float)config.getDouble("pitch"));
+			location.setYaw((float) config.getDouble("yaw"));
+			location.setPitch((float) config.getDouble("pitch"));
 		}
 		catch (IOException | InvalidConfigurationException e)
 		{
 			e.printStackTrace();
 		}
 	}
-	
+
 	protected void SaveSignConfig()
 	{
 		YamlConfiguration config = new YamlConfiguration();
@@ -130,7 +132,7 @@ public class Lobby implements Listener
 			e.printStackTrace();
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	protected void LoadSignConfig()
 	{
@@ -145,32 +147,48 @@ public class Lobby implements Listener
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void Save()
 	{
 		this.SaveConfig();
 		this.SaveSignConfig();
 	}
-	
+
 	public void Load()
 	{
 		this.LoadConfig();
 		this.LoadSignConfig();
 	}
-	
+
 	private void AddSign(Location l)
 	{
-		while(this.signs.contains(l.toVector()))
+		while (this.signs.contains(l.toVector()))
 			this.signs.remove(l.toVector());
 		this.signs.add(l.toVector());
 		this.Save();
 	}
-	
+
 	private void RemoveSign(Location l)
 	{
-		while(this.signs.contains(l.toVector()))
+		while (this.signs.contains(l.toVector()))
 			this.signs.remove(l.toVector());
 		this.Save();
+	}
+
+	private void UpdateSigns()
+	{
+		for (Vector l : this.signs)
+		{
+			Sign sign = (Sign) this.location.getWorld().getBlockAt(l.toLocation(this.location.getWorld()));
+			String arenaName = sign.getLine(1);
+			if (this.arenas.containsKey(arenaName))
+			{
+				Arena arena = arenas.get(arenaName);
+				sign.setLine(2, "Players: " + arena.players.size());
+				sign.setLine(3, "Arena: " + arena.name);
+				
+			}
+		}
 	}
 
 	@EventHandler
@@ -183,7 +201,7 @@ public class Lobby implements Listener
 			{
 				Sign sign = (Sign) block.getState();
 				String[] text = sign.getLines();
-				if(this.signs.contains(sign.getLocation().toVector()))
+				if (this.signs.contains(sign.getLocation().toVector()))
 				{
 					String arenaName = text[1];
 					if (arenas.containsKey(arenaName))
@@ -209,33 +227,41 @@ public class Lobby implements Listener
 		Player player = event.getPlayer();
 		if (player.hasPermission("zombieinvasion.admin"))
 		{
-			//Block block = event.getBlock();
-			//if(block.getType() == Material.SIGN)
-			//{
-				//Sign sign = (Sign) block;
-				String[] text = event.getLines();
-				if (text[0].equals("ZombieInvasion"))
+			String[] text = event.getLines();
+			if (text[0].equals("ZombieInvasion"))
+			{
+				String arenaName = text[1];
+				if (arenas.containsKey(arenaName))
 				{
-					String arenaName = text[1];
-					if (arenas.containsKey(arenaName))
-					{
-						this.AddSign(event.getBlock().getLocation());
-						player.sendMessage("[ZombieInvasion] Lobby sign successfully placed!");
-					}
-					else
-						player.sendMessage("[ZombieInvasion] Arena " + arenaName + " doesn't exist.");
+					this.AddSign(event.getBlock().getLocation());
+					UpdateSigns();
+					player.sendMessage("[ZombieInvasion] Lobby sign successfully placed!");
 				}
-			//}
+				else
+					player.sendMessage("[ZombieInvasion] Arena " + arenaName + " doesn't exist.");
+			}
 		}
 	}
-	
-	@EventHandler(priority=EventPriority.LOWEST)
+
+	@EventHandler(priority = EventPriority.LOWEST)
 	private void onBlockBreak(BlockBreakEvent event)
 	{
-		if(this.signs.contains(event.getBlock().getLocation()))
+		if (this.signs.contains(event.getBlock().getLocation()))
 		{
 			this.RemoveSign(event.getBlock().getLocation());
 			event.getPlayer().sendMessage("[ZombieInvasion] Lobby sign removed!");
 		}
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	private void onPlayerQuit(PlayerQuitEvent event)
+	{
+		this.UpdateSigns();
+	}
+	
+	@EventHandler(priority = EventPriority.LOWEST)
+	private void onPlayerJoin(PlayerJoinEvent event)
+	{
+		this.UpdateSigns();
 	}
 }

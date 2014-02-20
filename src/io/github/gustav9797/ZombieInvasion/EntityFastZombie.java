@@ -129,8 +129,9 @@ public class EntityFastZombie extends EntityZombie
 	@Override
 	public Entity findTarget()
 	{
-		EntityHuman entityhuman = findNearbyVulnerablePlayer(this.locX, this.locY, this.locZ);
-		return entityhuman;
+		return super.findTarget();
+		//EntityHuman entityhuman = findNearbyVulnerablePlayer(this.locX, this.locY, this.locZ);
+		//return entityhuman;
 	}
 
 	@Override

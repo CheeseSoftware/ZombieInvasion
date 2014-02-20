@@ -26,8 +26,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -91,6 +97,13 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	{
 		this.saveDefaultConfig();
 		this.saveConfig();
+		for (Arena a : arenas.values())
+		{
+			for (Player player : a.players)
+				player.removeMetadata("arena", this);
+			a.Reset();
+			a.LoadMap();
+		}
 	}
 
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
@@ -183,10 +196,13 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			}
 			else if (cmd.getName().equals("leave"))
 			{
-				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				if (player.hasMetadata("arena"))
 				{
-					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.RemovePlayer(player, "left the arena");
+					if (arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+					{
+						Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
+						arena.RemovePlayer(player, "left the arena");
+					}
 				}
 				else
 					sender.sendMessage("You haven't joined any arena!");
@@ -552,5 +568,47 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					event.setCancelled(true);
 			}
 		}
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onPlayerQuit(PlayerQuitEvent event)
+	{
+		for(Arena a : arenas.values())
+			a.onPlayerQuit(event);
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onPlayerDeath(PlayerDeathEvent event)
+	{
+		for(Arena a : arenas.values())
+			a.onPlayerDeath(event);
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onPlayerRespawn(PlayerRespawnEvent event)
+	{
+		for(Arena a : arenas.values())
+			a.onPlayerRespawn(event);
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onPlayerInteract(PlayerInteractEvent event)
+	{
+		for(Arena a : arenas.values())
+			a.onPlayerInteract(event);
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onEntityTargetLivingEntity(EntityTargetLivingEntityEvent event)
+	{
+		for(Arena a : arenas.values())
+			a.onEntityTargetLivingEntity(event);
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onBlockBreak(BlockBreakEvent event)
+	{
+		for(Arena a : arenas.values())
+			a.onBlockBreak(event);
 	}
 }

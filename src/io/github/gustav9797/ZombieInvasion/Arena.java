@@ -3,7 +3,9 @@ package io.github.gustav9797.ZombieInvasion;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.bukkit.Bukkit;
@@ -26,6 +28,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
@@ -60,6 +63,7 @@ public abstract class Arena implements Listener
 
 	public List<Player> players = new ArrayList<Player>();
 	public List<Player> spectators = new ArrayList<Player>();
+	public Map<Player, ItemStack[]> spectatorInventories = new HashMap<Player, ItemStack[]>();
 	public ArenaScoreboard scoreboard;
 	protected ArrayList<BorderBlock> border;
 	protected Lobby lobby;
@@ -229,7 +233,9 @@ public abstract class Arena implements Listener
 	{
 		if (!spectators.contains(player))
 			spectators.add(player);
-		player.setGameMode(GameMode.CREATIVE);
+		this.spectatorInventories.put(player, player.getInventory().getContents());
+		player.getInventory().clear();
+		player.setGameMode(GameMode.ADVENTURE);
 		player.setAllowFlight(true);
 		player.setFlying(true);
 		for (Player p : players)
@@ -248,6 +254,12 @@ public abstract class Arena implements Listener
 		for (Player p : players)
 		{
 			p.showPlayer(player);
+		}
+		if (spectatorInventories.containsKey(player))
+		{
+			ItemStack[] oldContents = spectatorInventories.get(player);
+			player.getInventory().setContents(oldContents);
+			spectatorInventories.remove(player);
 		}
 		player.setGameMode(GameMode.SURVIVAL);
 		player.setFlying(false);
@@ -297,8 +309,7 @@ public abstract class Arena implements Listener
 		this.ResetSpectators();
 		this.RespawnPlayers();
 
-		World world = Bukkit.getServer().getWorld("world");// get the world
-		List<Entity> entList = world.getEntities();// get all entities in the
+		List<Entity> entList = this.middle.getWorld().getEntities();
 		for (Entity entity : entList)
 		{
 			if (entity instanceof Item)
@@ -631,6 +642,7 @@ public abstract class Arena implements Listener
 		player.setMetadata("arena", new FixedMetadataValue(ZombieInvasion.getPlugin(), this.name));
 		ZombieInvasion.getEconomyPlugin().ResetStats(player);
 		players.add(player);
+		player.setGameMode(GameMode.SURVIVAL);
 		lobby.UpdateSigns();
 		scoreboard.AddPlayerScoreboard(player);
 		if (this.isRunning())
@@ -695,12 +707,9 @@ public abstract class Arena implements Listener
 	public void onPlayerInteract(PlayerInteractEvent event)
 	{
 		Player player = event.getPlayer();
-		if (players.contains(player))
+		if (spectators.contains(player))
 		{
-			if (spectators.contains(player))
-			{
-				event.setCancelled(true);
-			}
+			event.setCancelled(true);
 		}
 	}
 

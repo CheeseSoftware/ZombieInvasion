@@ -3,7 +3,6 @@ package io.github.gustav9797.ZombieInvasion;
 import java.lang.reflect.Field;
 import java.util.Random;
 
-import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_7_R1.util.UnsafeList;
 
 import net.minecraft.server.v1_7_R1.AttributeInstance;
@@ -23,7 +22,7 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton
 {
 	private Random r = new Random();
 
-	public EntityBlockBreakingSkeleton(World world, Location middle)
+	public EntityBlockBreakingSkeleton(World world, Arena arena)
 	{
 		super(world);
 
@@ -51,13 +50,10 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton
 		}
 
 		this.getNavigation().b(true);
-		if (middle != null)
-			this.targetSelector.a(4, new PathfinderGoalWalkToTile(this, 1.0F, middle));
-		// this.goalSelector.a(0, new PathfinderGoalFloat(this));
-		this.goalSelector.a(3, new PathfinderGoalFindBreakBlock(this));
+		if (arena != null)
+			this.targetSelector.a(4, new PathfinderGoalWalkToTile(this, 1.0F, arena.getSpawnLocation()));
+		this.goalSelector.a(3, new PathfinderGoalFindBreakBlock(this, arena));
 		this.goalSelector.a(2, new PathfinderGoalMeleeAttack(this, EntityHuman.class, 1.0D, false));
-		// this.goalSelector.a(5, new PathfinderGoalMoveTowardsRestriction(this,
-		// 1.0D));
 		this.goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
 		this.goalSelector.a(1, new PathfinderGoalRandomLookaround(this));
 		this.targetSelector.a(2, new PathfinderGoalHurtByTarget(this, true));
@@ -69,32 +65,6 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton
 	public EntityBlockBreakingSkeleton(World world)
 	{
 		this(world, null);
-		/*
-		 * super(world); try { Field field =
-		 * Navigation.class.getDeclaredField("e"); field.setAccessible(true);
-		 * AttributeInstance e = (AttributeInstance)
-		 * field.get(this.getNavigation()); e.setValue(128); // Navigation
-		 * distance in block lengths goes here } catch (Exception ex) { }
-		 * 
-		 * try { Field gsa = PathfinderGoalSelector.class.getDeclaredField("b");
-		 * gsa.setAccessible(true); gsa.set(this.goalSelector, new
-		 * UnsafeList<Object>()); gsa.set(this.targetSelector, new
-		 * UnsafeList<Object>()); } catch (Exception e) { e.printStackTrace(); }
-		 * 
-		 * this.getNavigation().b(true); //this.goalSelector.a(0, new
-		 * PathfinderGoalFloat(this)); this.goalSelector.a(3, new
-		 * PathfinderGoalFindBreakBlock(this)); this.goalSelector.a(2, new
-		 * PathfinderGoalMeleeAttack(this, EntityHuman.class, 1.0D, false));
-		 * //this.goalSelector.a(4, new PathfinderGoalMeleeAttack(this,
-		 * EntityVillager.class, 1.0D, true)); //this.goalSelector.a(5, new
-		 * PathfinderGoalMoveTowardsRestriction(this, 1.0D));
-		 * this.goalSelector.a(1, new PathfinderGoalLookAtPlayer(this,
-		 * EntityHuman.class, 8.0F)); this.goalSelector.a(1, new
-		 * PathfinderGoalRandomLookaround(this)); this.targetSelector.a(2, new
-		 * PathfinderGoalHurtByTarget(this, true)); this.targetSelector.a(1, new
-		 * PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0,
-		 * true)); this.a(0.6F, 1.8F);
-		 */
 	}
 
 	public EntityHuman findNearbyVulnerablePlayer(double d0, double d1, double d2)
@@ -116,9 +86,6 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton
 	public Entity findTarget()
 	{
 		return super.findTarget();
-		// EntityHuman entityhuman = findNearbyVulnerablePlayer(this.locX,
-		// this.locY, this.locZ);
-		// return entityhuman;
 	}
 
 }

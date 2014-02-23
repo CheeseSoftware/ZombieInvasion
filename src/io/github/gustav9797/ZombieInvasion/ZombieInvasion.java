@@ -593,16 +593,6 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		lobby.onPlayerInteract(event);
 		for (Arena a : arenas.values())
 			a.onPlayerInteract(event);
-		/*if(event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getPlayer().getItemInHand().getType() == Material.MONSTER_EGG)
-		{
-			SpawnEgg egg = (SpawnEgg) event.getPlayer().getItemInHand().getData();
-			if(egg.getSpawnedType() == EntityType.PIG_ZOMBIE)
-			{
-				EntityBlockBreakingPigman pigman = new EntityBlockBreakingPigman(((CraftWorld)event.getPlayer().getWorld()).getHandle());
-				pigman.getBukkitEntity().teleport(event.getClickedBlock().getLocation());
-				((CraftWorld)event.getPlayer().getWorld()).getHandle().addEntity(pigman);
-			}
-		}*/
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)

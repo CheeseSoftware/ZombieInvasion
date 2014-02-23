@@ -17,6 +17,7 @@ import net.minecraft.server.v1_7_R1.PathfinderGoal;
 public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 {
 	EntityInsentient entity;
+	Arena arena;
 	Location oldLocation = null;
 	int findRadius = 10;
 	int findHeight = 2;
@@ -31,9 +32,10 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 	List<Block> blocksNotWalkable = new ArrayList<Block>();
 	Random r = new Random();
 
-	public PathfinderGoalFindBreakBlock(EntityInsentient entity)
+	public PathfinderGoalFindBreakBlock(EntityInsentient entity, Arena arena)
 	{
 		this.entity = entity;
+		this.arena = arena;
 	}
 
 	@Override
@@ -195,7 +197,8 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 					Block block = this.entity.getBukkitEntity().getWorld().getBlockAt(x, y, z);
 					if (block.getType() != Material.AIR && !this.blocksNotWalkable.contains(block))
 					{
-						blocks.add(block);
+						if (arena == null || (arena != null && !arena.isBorder(block.getLocation().toVector())))
+							blocks.add(block);
 					}
 				}
 			}

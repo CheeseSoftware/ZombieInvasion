@@ -20,12 +20,11 @@ import org.bukkit.util.Vector;
 public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 {
 	private int i;
+	private Arena arena;
 	private int j = -1;
-	// private Location l = null;
 	protected Block block;
 	protected static List<Vector> possiblePositions = new ArrayList<Vector>(Arrays.asList(new Vector(-1, 0, 0), new Vector(-1, 1, 0), new Vector(1, 0, 0), new Vector(1, 1, 0), new Vector(0, 0, -1),
 			new Vector(0, 1, -1), new Vector(0, 0, 1), new Vector(0, 1, 1), new Vector(0, 2, 0), new Vector(0, -1, 0)));
-
 	protected static List<Material> nonBreakableMaterials = new ArrayList<Material>(Arrays.asList(Material.WOOD_STAIRS, Material.COBBLESTONE_STAIRS, Material.SANDSTONE_STAIRS, Material.BRICK_STAIRS,
 			Material.SMOOTH_STAIRS, Material.BEDROCK, Material.WATER, Material.GRASS));
 	protected static List<Material> naturalMaterials = new ArrayList<Material>(Arrays.asList(Material.GRASS, Material.DIRT, Material.LEAVES));
@@ -34,16 +33,17 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 
 	private Location oldLocation = null;
 
-	public PathfinderGoalBreakBlock(EntityInsentient entityinsentient)
+	public PathfinderGoalBreakBlock(EntityInsentient entity, Arena arena)
 	{
-		super(entityinsentient);
+		super(entity);
+		this.arena = arena;
 	}
 
 	public boolean a() // canExecute
 	{
-		if (this.entityInsentient instanceof EntityMonster)
+		if (this.entity instanceof EntityMonster)
 		{
-			EntityMonster monster = (EntityMonster) this.entityInsentient;
+			EntityMonster monster = (EntityMonster) this.entity;
 			if (monster.getGoalTarget() == null || !monster.getGoalTarget().isAlive())
 				return false;
 			return super.a();
@@ -53,43 +53,38 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 
 	public void c() // setup
 	{
-		oldLocation = entityInsentient.getBukkitEntity().getLocation();
+		oldLocation = entity.getBukkitEntity().getLocation();
 		super.c();
 		this.i = 0;
 	}
 
 	public boolean b() // canContinue
 	{
-		if (this.entityInsentient instanceof EntityMonster)
+		if (this.entity instanceof EntityMonster)
 		{
-			EntityMonster monster = (EntityMonster) this.entityInsentient;
+			EntityMonster monster = (EntityMonster) this.entity;
 			if (monster.getGoalTarget() == null || !monster.getGoalTarget().isAlive())
 				return false;
-			// double d0 = this.a.e((double) this.b, (double) this.c, (double)
-			return true;// return this.i <= 240/* && !this.e.f(this.a.world,
-						// this.b,
+			return true;
 		}
 		return false;
-		// this.c, this.d)*/ && d0 < 4.0D;
 	}
 
 	public void d() // finish
 	{
 		super.d();
-		// this.entityInsentient.world.d(this.entityInsentient.getId(), this.x,
-		// this.y, this.z, -1);
 	}
 
 	public void e() // move
 	{
 		super.e();
-		Location currentLocation = this.entityInsentient.getBukkitEntity().getLocation();
+		Location currentLocation = this.entity.getBukkitEntity().getLocation();
 		if (currentLocation.getBlockX() == oldLocation.getBlockX() && currentLocation.getBlockY() == oldLocation.getBlockY() && currentLocation.getBlockZ() == oldLocation.getBlockZ())
 		{
-			Entity entity = this.entityInsentient.getBukkitEntity();
-			if (this.entityInsentient instanceof EntityMonster)
+			Entity entity = this.entity.getBukkitEntity();
+			if (this.entity instanceof EntityMonster)
 			{
-				EntityMonster monster = (EntityMonster) this.entityInsentient;
+				EntityMonster monster = (EntityMonster) this.entity;
 				if (monster.getGoalTarget() == null || !monster.getGoalTarget().isAlive())
 					return;
 			}
@@ -97,7 +92,7 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 			if (block == null || block.getType() == Material.AIR || getDistanceBetween(block.getLocation(), entity.getLocation()) > 3.5)
 			{
 				if (block != null)
-					this.entityInsentient.world.d(this.entityInsentient.getId(), block.getX(), block.getY(), block.getZ(), 0);
+					this.entity.world.d(this.entity.getId(), block.getX(), block.getY(), block.getZ(), 0);
 				block = getRandomCloseBlock();
 				if (block == null)
 					return;
@@ -106,9 +101,9 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 
 			if (block != null && block.getType() != Material.AIR)
 			{
-				if (this.entityInsentient.aI().nextInt(300) == 0)
+				if (this.entity.aI().nextInt(300) == 0)
 				{
-					this.entityInsentient.world.triggerEffect(1010, block.getX(), block.getY(), block.getZ(), 0);
+					this.entity.world.triggerEffect(1010, block.getX(), block.getY(), block.getZ(), 0);
 				}
 
 				this.i += 2;
@@ -116,7 +111,7 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 
 				if (i != this.j)
 				{
-					this.entityInsentient.world.d(this.entityInsentient.getId(), block.getX(), block.getY(), block.getZ(), i);
+					this.entity.world.d(this.entity.getId(), block.getX(), block.getY(), block.getZ(), i);
 					this.j = i;
 				}
 
@@ -124,10 +119,10 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 				{
 					this.i = 0;
 					Bukkit.getPluginManager().callEvent(new LeavesDecayEvent(block));
-					block.breakNaturally();
-					this.entityInsentient.world.triggerEffect(1012, block.getX(), block.getY(), block.getZ(), 0);
-					this.entityInsentient.world.triggerEffect(2001, block.getX(), block.getY(), block.getZ(),
-							net.minecraft.server.v1_7_R1.Block.b(this.entityInsentient.world.getType(block.getX(), block.getY(), block.getZ())));
+					block.setType(Material.AIR);
+					this.entity.world.triggerEffect(1012, block.getX(), block.getY(), block.getZ(), 0);
+					this.entity.world.triggerEffect(2001, block.getX(), block.getY(), block.getZ(),
+							net.minecraft.server.v1_7_R1.Block.b(this.entity.world.getType(block.getX(), block.getY(), block.getZ())));
 					block = null;
 				}
 			}
@@ -137,24 +132,17 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 
 	private Block getRandomCloseBlock()
 	{
-		if (this.entityInsentient instanceof EntityMonster)
+		if (this.entity instanceof EntityMonster)
 		{
-			EntityMonster zombie = (EntityMonster) this.entityInsentient;
+			EntityMonster zombie = (EntityMonster) this.entity;
 			if (zombie.target != null && zombie.target.isAlive())
 			{
 				Set<Block> blocks = this.getCloseBlocks();
 				Location monsterLocation = zombie.getBukkitEntity().getLocation();
 				Location targetLocation = zombie.target.getBukkitEntity().getLocation();
-				/*
-				 * if (targetLocation.getBlockY() < monsterLocation.getBlockY()
-				 * - 1) { Location below =
-				 * this.entityInsentient.getBukkitEntity().getLocation();
-				 * below.setY(below.getY() - 1); blocks.add(below.getBlock()); }
-				 * else
-				 */
 				if (targetLocation.getBlockY() > monsterLocation.getBlockY())
 				{
-					Location above = this.entityInsentient.getBukkitEntity().getLocation();
+					Location above = this.entity.getBukkitEntity().getLocation();
 					above.setY(above.getY() + 1);
 					blocks.add(above.getBlock());
 				}
@@ -168,7 +156,7 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 					{
 						Location l = block.getLocation();
 						l.setY(l.getY() + 1);
-						Block above = this.entityInsentient.getBukkitEntity().getWorld().getBlockAt(l);
+						Block above = this.entity.getBukkitEntity().getWorld().getBlockAt(l);
 						if (above == null || (!priorityMaterials.contains(block.getType()) && above.getType() == Material.AIR))
 							hatedBlocks.add(block);
 						else if (priorityBlocks.contains(block.getType()))
@@ -200,11 +188,12 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 	private Set<Block> getCloseBlocks()
 	{
 		Set<Block> blocks = new HashSet<Block>();
-		Location a = this.entityInsentient.getBukkitEntity().getLocation();
+		Location a = this.entity.getBukkitEntity().getLocation();
 		for (Vector vector : possiblePositions)
 		{
 			Location finalLocation = new Location(a.getWorld(), a.getBlockX() + vector.getBlockX(), a.getBlockY() + vector.getBlockY(), a.getBlockZ() + vector.getBlockZ());
-			blocks.add(finalLocation.getBlock());
+			if (arena == null || (arena != null && !arena.isBorder(finalLocation.toVector())))
+				blocks.add(finalLocation.getBlock());
 		}
 		return (Set<Block>) blocks;
 	}

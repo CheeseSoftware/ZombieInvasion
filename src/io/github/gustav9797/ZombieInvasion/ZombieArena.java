@@ -70,9 +70,9 @@ public class ZombieArena extends Arena
 			EntityMonster monster;
 			int j = r.nextInt(10);
 			if (j == 0)
-				monster = new EntityBlockBreakingSkeleton(mcWorld, middle);
+				monster = new EntityBlockBreakingSkeleton(mcWorld, this);
 			else
-				monster = new EntityFastZombie(mcWorld, middle);
+				monster = new EntityFastZombie(mcWorld, this);
 			monster.setPosition(l.getBlockX(), l.getBlockY(), l.getBlockZ());
 			mcWorld.addEntity(monster);
 			monsters.add(monster);

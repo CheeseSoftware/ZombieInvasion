@@ -66,14 +66,16 @@ public class EntityFastZombie extends EntityZombie
 		this.goalSelector.a(8, new PathfinderGoalRandomLookaround(this));
 		this.targetSelector.a(1, new PathfinderGoalHurtByTarget(this, true));
 		this.targetSelector.a(2, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0, true));
-		this.targetSelector.a(0, new PathfinderGoalWalkToTile(this, 1.0F, middle));
+		if(middle != null)
+			this.targetSelector.a(0, new PathfinderGoalWalkToTile(this, 1.0F, middle));
 		this.a(0.6F, 1.8F);
 		
 	}
 	
 	public EntityFastZombie(World world)
 	{
-		super(world);
+		this(world, null);
+		/*//super(world);
 
 		try
 		{
@@ -107,8 +109,8 @@ public class EntityFastZombie extends EntityZombie
 		this.goalSelector.a(8, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
 		this.goalSelector.a(8, new PathfinderGoalRandomLookaround(this));
 		this.targetSelector.a(1, new PathfinderGoalHurtByTarget(this, true));
-		this.targetSelector.a(2, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0, true));
-		this.a(0.6F, 1.8F);
+		//this.targetSelector.a(2, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0, true));
+		this.a(0.6F, 1.8F);*/
 	}
 
 	public EntityHuman findNearbyVulnerablePlayer(double d0, double d1, double d2)

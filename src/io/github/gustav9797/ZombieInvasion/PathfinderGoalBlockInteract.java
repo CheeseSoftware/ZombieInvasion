@@ -2,8 +2,6 @@ package io.github.gustav9797.ZombieInvasion;
 
 import java.util.Random;
 
-import org.bukkit.block.Block;
-
 import net.minecraft.server.v1_7_R1.EntityInsentient;
 import net.minecraft.server.v1_7_R1.PathfinderGoal;
 
@@ -14,7 +12,6 @@ public abstract class PathfinderGoalBlockInteract extends PathfinderGoal
 	protected int x;
 	protected int y;
 	protected int z;
-	protected Block block;
 	boolean f;
 	float g;
 	float h;
@@ -27,13 +24,15 @@ public abstract class PathfinderGoalBlockInteract extends PathfinderGoal
 
 	public boolean a() //canExecute
 	{
+		return true;
+		/*
 		if (!this.entityInsentient.positionChanged)
 		{
 			return false;
 		}
 		else
 		{
-			return true;
+			return true;*/
 			// this.block = null;
 //			Navigation navigation = this.entityInsentient.getNavigation();
 //			PathEntity pathentity = navigation.e();
@@ -72,7 +71,7 @@ public abstract class PathfinderGoalBlockInteract extends PathfinderGoal
 //				return false;
 //			}
 //			return true;
-		}
+		//}
 	}
 
 	public boolean b() //canContinue

@@ -15,8 +15,6 @@ import org.bukkit.block.Sign;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -175,7 +173,7 @@ public class Lobby implements Listener
 		this.Save();
 	}
 
-	private void UpdateSigns()
+	public void UpdateSigns()
 	{
 		for (Vector l : this.signs)
 		{
@@ -186,13 +184,12 @@ public class Lobby implements Listener
 				Arena arena = arenas.get(arenaName);
 				sign.setLine(2, "Players: " + arena.players.size());
 				sign.setLine(3, "Arena: " + arena.name);
-				
+				sign.update();
 			}
 		}
 	}
 
-	@EventHandler
-	private void onPlayerInteract(PlayerInteractEvent event)
+	public void onPlayerInteract(PlayerInteractEvent event)
 	{
 		if (event.hasBlock())
 		{
@@ -221,8 +218,7 @@ public class Lobby implements Listener
 		}
 	}
 
-	@EventHandler
-	private void onSignChange(SignChangeEvent event)
+	public void onSignChange(SignChangeEvent event)
 	{
 		Player player = event.getPlayer();
 		if (player.hasPermission("zombieinvasion.admin"))
@@ -243,8 +239,7 @@ public class Lobby implements Listener
 		}
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
-	private void onBlockBreak(BlockBreakEvent event)
+	public void onBlockBreak(BlockBreakEvent event)
 	{
 		if (this.signs.contains(event.getBlock().getLocation()))
 		{
@@ -253,14 +248,12 @@ public class Lobby implements Listener
 		}
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
-	private void onPlayerQuit(PlayerQuitEvent event)
+	public void onPlayerQuit(PlayerQuitEvent event)
 	{
 		this.UpdateSigns();
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
-	private void onPlayerJoin(PlayerJoinEvent event)
+	public void onPlayerJoin(PlayerJoinEvent event)
 	{
 		this.UpdateSigns();
 	}

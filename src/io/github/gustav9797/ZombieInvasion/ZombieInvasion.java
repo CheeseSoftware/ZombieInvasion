@@ -12,6 +12,7 @@ import java.util.Random;
 import net.minecraft.server.v1_7_R1.BiomeBase;
 import net.minecraft.server.v1_7_R1.BiomeMeta;
 import net.minecraft.server.v1_7_R1.EntityZombie;
+import net.minecraft.server.v1_7_R1.EntitySkeleton;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -20,18 +21,21 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.bukkit.entity.Entity;
+import org.bukkit.craftbukkit.v1_7_R1.entity.CraftEntity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -39,6 +43,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import ostkaka34.OstEconomyPlugin.IOstEconomy;
+import ostkaka34.OstEconomyPlugin.OstEconomyPlugin;
 
 public final class ZombieInvasion extends JavaPlugin implements Listener
 {
@@ -58,6 +63,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		this.schematicsDirectory = new File(this.getDataFolder() + File.separator + "schematics");
 		this.entityTypes = new LinkedList<CustomEntityType>();
 		this.entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityFastZombie.class));
+		this.entityTypes.add(new CustomEntityType("Skeleton", 51, EntityType.SKELETON, EntitySkeleton.class, EntityBlockBreakingSkeleton.class));
 		this.registerEntities();
 		this.arenas = new HashMap<String, Arena>();
 		this.lobby = new Lobby(arenas, this);
@@ -518,35 +524,19 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			a.Load();
 	}
 
-	public boolean isEntityInAnyArena(Entity entity)
+	public static ZombieInvasion getPlugin()
 	{
-		for (Arena a : this.arenas.values())
-		{
-			if (a instanceof ZombieArena)
-			{
-				ZombieArena arena = (ZombieArena) a;
-				if (arena.zombies.contains(entity))
-					return true;
-			}
-		}
-		return false;
+		return (ZombieInvasion) Bukkit.getPluginManager().getPlugin("ZombieInvasion");
 	}
 
-	public boolean isEntityInsideAnyArena(Entity entity)
+	public static OstEconomyPlugin getEconomyPlugin()
 	{
-		for (Arena a : this.arenas.values())
-		{
-			if (a.ContainsPosition(entity.getLocation().toVector()))
-			{
-				return true;
-			}
-		}
-		return false;
+		return (OstEconomyPlugin) Bukkit.getPluginManager().getPlugin("OstEconomyPlugin");
 	}
 
-	public static JavaPlugin getPlugin()
+	public static JavaPlugin getWeaponsPlugin()
 	{
-		return (JavaPlugin) Bukkit.getPluginManager().getPlugin("ZombieInvasion");
+		return (JavaPlugin) Bukkit.getPluginManager().getPlugin("WeaponsPlugin");
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -560,55 +550,92 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onCreatureSpawn(CreatureSpawnEvent event)
 	{
-		if (!this.isEntityInAnyArena(event.getEntity()))
+		for (Arena a : this.arenas.values())
 		{
-			if (this.isEntityInsideAnyArena(event.getEntity()))
+			if (a instanceof ZombieArena)
 			{
-				if (event.getSpawnReason() == SpawnReason.NATURAL)
-					event.setCancelled(true);
+				ZombieArena arena = (ZombieArena) a;
+				if (!arena.monsters.contains((CraftEntity) event.getEntity()))
+				{
+					if (a.ContainsPosition(event.getEntity().getLocation().toVector()))
+						if (event.getSpawnReason() == SpawnReason.NATURAL)
+							event.setCancelled(true);
+				}
 			}
 		}
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerQuit(PlayerQuitEvent event)
 	{
-		for(Arena a : arenas.values())
+		lobby.onPlayerQuit(event);
+		for (Arena a : arenas.values())
 			a.onPlayerQuit(event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerDeath(PlayerDeathEvent event)
 	{
-		for(Arena a : arenas.values())
+		for (Arena a : arenas.values())
 			a.onPlayerDeath(event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerRespawn(PlayerRespawnEvent event)
 	{
-		for(Arena a : arenas.values())
+		for (Arena a : arenas.values())
 			a.onPlayerRespawn(event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerInteract(PlayerInteractEvent event)
 	{
-		for(Arena a : arenas.values())
+		lobby.onPlayerInteract(event);
+		for (Arena a : arenas.values())
 			a.onPlayerInteract(event);
+		/*if(event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getPlayer().getItemInHand().getType() == Material.MONSTER_EGG)
+		{
+			SpawnEgg egg = (SpawnEgg) event.getPlayer().getItemInHand().getData();
+			if(egg.getSpawnedType() == EntityType.PIG_ZOMBIE)
+			{
+				EntityBlockBreakingPigman pigman = new EntityBlockBreakingPigman(((CraftWorld)event.getPlayer().getWorld()).getHandle());
+				pigman.getBukkitEntity().teleport(event.getClickedBlock().getLocation());
+				((CraftWorld)event.getPlayer().getWorld()).getHandle().addEntity(pigman);
+			}
+		}*/
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onEntityTargetLivingEntity(EntityTargetLivingEntityEvent event)
 	{
-		for(Arena a : arenas.values())
+		for (Arena a : arenas.values())
 			a.onEntityTargetLivingEntity(event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onBlockBreak(BlockBreakEvent event)
 	{
-		for(Arena a : arenas.values())
+		lobby.onBlockBreak(event);
+		for (Arena a : arenas.values())
 			a.onBlockBreak(event);
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	private void onSignChange(SignChangeEvent event)
+	{
+		lobby.onSignChange(event);
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	private void onPlayerJoin(PlayerJoinEvent event)
+	{
+		lobby.onPlayerJoin(event);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH)
+	private void onEntityDamageEByntity(EntityDamageByEntityEvent event)
+	{
+		for (Arena a : arenas.values())
+			a.onEntityDamageEByntity(event);
 	}
 }

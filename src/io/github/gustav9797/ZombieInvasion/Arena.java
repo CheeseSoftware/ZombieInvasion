@@ -19,6 +19,8 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -50,6 +52,7 @@ public abstract class Arena implements Listener
 	protected int tickTaskId = -1;
 	protected int ticksPassed = -1;
 	protected int oldMinutesPassed = -1;
+	protected int ticksUntilNextWave = -1;
 	protected int ticksSinceLastWave = -1;
 	protected int maxPlayers = 10;
 	protected int startAtPlayerCount = 1;
@@ -57,6 +60,7 @@ public abstract class Arena implements Listener
 
 	public List<Player> players = new ArrayList<Player>();
 	public List<Player> spectators = new ArrayList<Player>();
+	public ArenaScoreboard scoreboard;
 	protected ArrayList<BorderBlock> border;
 	protected Lobby lobby;
 	protected YamlConfiguration config;
@@ -103,11 +107,10 @@ public abstract class Arena implements Listener
 			this.SaveConfig();
 		}
 		this.Load();
+		this.scoreboard = new ArenaScoreboard(this);
 	}
 
 	abstract void SendWave(int wave);
-
-	abstract String getType();
 
 	protected void Broadcast(String message)
 	{
@@ -205,6 +208,7 @@ public abstract class Arena implements Listener
 		for (Player player : tempspectators)
 		{
 			this.RemoveSpectator(player);
+			player.teleport(spawnLocation);
 		}
 		spectators.clear();
 		tempspectators.clear();
@@ -217,6 +221,7 @@ public abstract class Arena implements Listener
 			Broadcast("Everyone have died. Reseting arena...");
 			this.Reset();
 			this.LoadMap();
+			this.TryStart();
 		}
 	}
 
@@ -233,7 +238,7 @@ public abstract class Arena implements Listener
 		}
 		player.teleport(this.spawnLocation);
 		CheckSpectators();
-		player.sendMessage("[ZombieInvasion] You died! You are now a spectator.");
+		player.sendMessage("[ZombieInvasion] You are now a spectator.");
 	}
 
 	public void RemoveSpectator(Player player)
@@ -262,6 +267,14 @@ public abstract class Arena implements Listener
 
 	}
 
+	public void RespawnPlayers()
+	{
+		for (Player player : this.players)
+		{
+			player.teleport(spawnLocation);
+		}
+	}
+
 	public void Reset()
 	{
 		if (this.tickTaskId != -1)
@@ -282,24 +295,33 @@ public abstract class Arena implements Listener
 		this.ticksSinceLastWave = -1;
 		this.oldMinutesPassed = -1;
 		this.ResetSpectators();
-		
+		this.RespawnPlayers();
+
 		World world = Bukkit.getServer().getWorld("world");// get the world
 		List<Entity> entList = world.getEntities();// get all entities in the
-		for (Entity item : entList)
+		for (Entity entity : entList)
 		{
-			if (item instanceof Item)
-			{				
-				if(this.Contains(item.getLocation().toVector()))
+			if (entity instanceof Item)
+			{
+				Item item = (Item) entity;
+				if (this.Contains(item.getLocation().toVector()))
 					item.remove();
 			}
 		}
-		
+
 		this.Broadcast("Arena was reset!");
 	}
-	
+
 	public boolean Contains(Vector vector)
 	{
-		return vector.getBlockX() > (-getRadius() + this.middle.getBlockX()) && vector.getBlockX() < (getRadius() + this.middle.getBlockX()) && vector.getBlockZ() > (-getRadius() + this.middle.getBlockZ()) && vector.getBlockZ() < (getRadius() + this.middle.getBlockZ());
+		if (vector.getBlockX() > (-getRadius() + this.middle.getBlockX()) && vector.getBlockX() < (getRadius() + this.middle.getBlockX()))
+		{
+			if (vector.getBlockZ() > (-getRadius() + this.middle.getBlockZ()) && vector.getBlockZ() < (getRadius() + this.middle.getBlockZ()))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void Save()
@@ -408,20 +430,23 @@ public abstract class Arena implements Listener
 			{
 				Tick();
 			}
-			// Do something
-		}, 0L, 100L);
+		}, 0L, 1L);
 	}
 
 	protected void Tick()
 	{
-		this.ticksSinceLastWave += 100;
-		ticksPassed += 100;
-		int minutesPassed = ticksPassed / 20 / 60;
+		this.ticksSinceLastWave += 1;
+		ticksPassed += 1;
+		int minutesPassed = Math.round(ticksPassed / 20 / 60);
 		if (minutesPassed != oldMinutesPassed)
 		{
 			this.Broadcast(minutesPassed + " minutes have passed!");
 			oldMinutesPassed = minutesPassed;
 		}
+		if (this.sendWavesTaskId != -1)
+			this.ticksUntilNextWave += 1;
+		else
+			this.ticksUntilNextWave = 0;
 	}
 
 	public void CreateBorder(Material material, int height, boolean buildRoof)
@@ -511,6 +536,16 @@ public abstract class Arena implements Listener
 		return this.size / 2;
 	}
 
+	public int getTicksUntilNextWave()
+	{
+		return this.ticksUntilNextWave;
+	}
+
+	public int getTotalGameTicks()
+	{
+		return this.ticksPassed == -1 ? 0 : this.ticksPassed;
+	}
+
 	public void setMiddle(Location middle)
 	{
 		this.middle = middle;
@@ -548,6 +583,11 @@ public abstract class Arena implements Listener
 		return this.ticksPassed != -1;
 	}
 
+	public boolean isStarting()
+	{
+		return this.sendWavesTaskId != -1;
+	}
+
 	public boolean ContainsPosition(Vector pos)
 	{
 		if (pos.getBlockX() > this.middle.getBlockX() - this.getRadius() && pos.getBlockX() < this.middle.getBlockX() + this.getRadius())
@@ -560,14 +600,39 @@ public abstract class Arena implements Listener
 		return false;
 	}
 
+	public void TryStart()
+	{
+		if (!isRunning() && !isStarting())
+		{
+			if (players.size() >= this.startAtPlayerCount)
+			{
+				this.Broadcast("Waves are coming in " + this.secondsAfterStart + " seconds!");
+				if (this.sendWavesTaskId != -1)
+					Bukkit.getServer().getScheduler().cancelTask(this.sendWavesTaskId);
+				BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+				this.sendWavesTaskId = scheduler.scheduleSyncDelayedTask(ZombieInvasion.getPlugin(), new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						SendWaves();
+						Bukkit.getScheduler().cancelTask(sendWavesTaskId);
+						sendWavesTaskId = -1;
+					}
+				}, 20 * this.secondsAfterStart);
+			}
+		}
+	}
+
 	public void JoinPlayer(Player player)
 	{
 		while (players.contains(player))
 			players.remove(player);
 		player.setMetadata("arena", new FixedMetadataValue(ZombieInvasion.getPlugin(), this.name));
-		if (ZombieInvasion.economyPlugin != null)
-			ZombieInvasion.economyPlugin.ResetStats(player);
+		ZombieInvasion.getEconomyPlugin().ResetStats(player);
 		players.add(player);
+		lobby.UpdateSigns();
+		scoreboard.AddPlayerScoreboard(player);
 		if (this.isRunning())
 		{
 			this.MakeSpectator(player);
@@ -576,24 +641,7 @@ public abstract class Arena implements Listener
 		{
 			player.teleport(this.spawnLocation);
 			this.Broadcast(player.getName() + " has joined the arena!");
-			if (!isRunning())
-			{
-				if (players.size() >= this.startAtPlayerCount)
-				{
-					this.Broadcast("Waves are coming in " + this.secondsAfterStart + " seconds!");
-					if (this.sendWavesTaskId != -1)
-						Bukkit.getServer().getScheduler().cancelTask(this.sendWavesTaskId);
-					BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-					this.sendWavesTaskId = scheduler.scheduleSyncDelayedTask(ZombieInvasion.getPlugin(), new Runnable()
-					{
-						@Override
-						public void run()
-						{
-							SendWaves();
-						}
-					}, 20 * this.secondsAfterStart);
-				}
-			}
+			TryStart();
 		}
 	}
 
@@ -610,6 +658,8 @@ public abstract class Arena implements Listener
 		player.removeMetadata("arena", ZombieInvasion.getPlugin());
 		player.teleport(lobby.getLocation());
 		player.getInventory().clear();
+		scoreboard.RemovePlayerScoreboard(player);
+		lobby.UpdateSigns();
 		this.Broadcast(player.getName() + " has " + reason + "!");
 	}
 
@@ -623,7 +673,14 @@ public abstract class Arena implements Listener
 
 	public void onPlayerDeath(PlayerDeathEvent event)
 	{
-
+		Player player = event.getEntity();
+		if (players.contains(player))
+		{
+			if (this.isRunning() && !this.isStarting())
+				this.MakeSpectator(player);
+			else if (!this.isRunning())
+				this.SetAlive(player);
+		}
 	}
 
 	public void onPlayerRespawn(PlayerRespawnEvent event)
@@ -632,20 +689,14 @@ public abstract class Arena implements Listener
 		if (players.contains(player))
 		{
 			event.setRespawnLocation(this.spawnLocation);
-			if (this.isRunning())
-				this.MakeSpectator(player);
-			else if (!this.isRunning())
-				this.SetAlive(player);
-			else
-				event.setRespawnLocation(this.lobby.getLocation());
 		}
 	}
 
 	public void onPlayerInteract(PlayerInteractEvent event)
 	{
-		if (players.contains(event.getPlayer()))
+		Player player = event.getPlayer();
+		if (players.contains(player))
 		{
-			Player player = event.getPlayer();
 			if (spectators.contains(player))
 			{
 				event.setCancelled(true);
@@ -669,6 +720,21 @@ public abstract class Arena implements Listener
 		{
 			if (this.isBorder(event.getBlock().getLocation().toVector()))
 				event.setCancelled(true);
+		}
+	}
+
+	public void onEntityDamageEByntity(EntityDamageByEntityEvent event)
+	{
+		if (event.getCause() == DamageCause.ENTITY_ATTACK)
+		{
+			if (event.getDamager() instanceof Player)
+			{
+				Player player = (Player) event.getDamager();
+				if (spectators.contains(player))
+				{
+					event.setCancelled(true);
+				}
+			}
 		}
 	}
 

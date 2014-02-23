@@ -34,8 +34,10 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -610,22 +612,36 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			a.onBlockBreak(event);
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onSignChange(SignChangeEvent event)
 	{
 		lobby.onSignChange(event);
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerJoin(PlayerJoinEvent event)
 	{
 		lobby.onPlayerJoin(event);
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
-	private void onEntityDamageEByntity(EntityDamageByEntityEvent event)
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onEntityDamageByEntity(EntityDamageByEntityEvent event)
 	{
 		for (Arena a : arenas.values())
-			a.onEntityDamageEByntity(event);
+			a.onEntityDamageByEntity(event);
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onPlayerDropItem(PlayerDropItemEvent event)
+	{
+		for (Arena a : arenas.values())
+			a.onPlayerDropItem(event);
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST)
+	public void onPlayerPickupItem(PlayerPickupItemEvent event)
+	{
+		for (Arena a : arenas.values())
+			a.onPlayerPickupItem(event);
 	}
 }

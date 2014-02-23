@@ -25,7 +25,9 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
@@ -59,7 +61,7 @@ public abstract class Arena implements Listener
 	protected int ticksSinceLastWave = -1;
 	protected int maxPlayers = 10;
 	protected int startAtPlayerCount = 1;
-	protected int secondsAfterStart = 60;
+	protected int secondsAfterStart = 20;
 
 	public List<Player> players = new ArrayList<Player>();
 	public List<Player> spectators = new ArrayList<Player>();
@@ -583,7 +585,8 @@ public abstract class Arena implements Listener
 	{
 		for (BorderBlock block : this.border)
 		{
-			if (block.getLocation() == position)
+			Vector loc = block.getLocation();
+			if (loc.getBlockX() == position.getBlockX() && loc.getBlockY() == position.getBlockY() && loc.getBlockZ() == position.getBlockZ())
 				return true;
 		}
 		return false;
@@ -732,7 +735,7 @@ public abstract class Arena implements Listener
 		}
 	}
 
-	public void onEntityDamageEByntity(EntityDamageByEntityEvent event)
+	public void onEntityDamageByEntity(EntityDamageByEntityEvent event)
 	{
 		if (event.getCause() == DamageCause.ENTITY_ATTACK)
 		{
@@ -745,6 +748,18 @@ public abstract class Arena implements Listener
 				}
 			}
 		}
+	}
+	
+	public void onPlayerPickupItem(PlayerPickupItemEvent event)
+	{
+		if(spectators.contains(event.getPlayer()))
+			event.setCancelled(true);
+	}
+	
+	public void onPlayerDropItem(PlayerDropItemEvent event)
+	{
+		if(spectators.contains(event.getPlayer()))
+			event.setCancelled(true);
 	}
 
 }

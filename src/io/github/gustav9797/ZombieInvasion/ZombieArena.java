@@ -27,7 +27,7 @@ public class ZombieArena extends Arena
 	protected int ticksUntilNextWave = -1;
 	protected int sendWavesTaskId = -1;
 
-	protected int zombieGroups = 5;
+	protected int zombieGroups = 10;
 	protected int zombieStartAmount = 20;
 	protected int zombieAmountIncrease = 10;
 	protected int maxZombieAmount = 200;

@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import net.minecraft.server.v1_7_R1.EntityInsentient;
 import net.minecraft.server.v1_7_R1.EntityMonster;
+import net.minecraft.server.v1_7_R1.PathfinderGoal;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -17,14 +19,22 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.util.Vector;
 
-public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
+public class PathfinderGoalBreakBlock extends PathfinderGoal
 {
+	protected EntityInsentient entity;
+	protected int x;
+	protected int y;
+	protected int z;
+	boolean f;
+	float g;
+	float h;
+	Random r = new Random();
 	private int i;
 	private Arena arena;
 	private int j = -1;
 	protected Block block;
 	protected static List<Vector> possiblePositions = new ArrayList<Vector>(Arrays.asList(new Vector(-1, 0, 0), new Vector(-1, 1, 0), new Vector(1, 0, 0), new Vector(1, 1, 0), new Vector(0, 0, -1),
-			new Vector(0, 1, -1), new Vector(0, 0, 1), new Vector(0, 1, 1), new Vector(0, 2, 0), new Vector(0, -1, 0)));
+			new Vector(0, 1, -1), new Vector(0, 0, 1), new Vector(0, 1, 1), new Vector(0, 2, 0)));
 	protected static List<Material> nonBreakableMaterials = new ArrayList<Material>(Arrays.asList(Material.WOOD_STAIRS, Material.COBBLESTONE_STAIRS, Material.SANDSTONE_STAIRS, Material.BRICK_STAIRS,
 			Material.SMOOTH_STAIRS, Material.BEDROCK, Material.WATER, Material.GRASS));
 	protected static List<Material> naturalMaterials = new ArrayList<Material>(Arrays.asList(Material.GRASS, Material.DIRT, Material.LEAVES));
@@ -35,8 +45,8 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 
 	public PathfinderGoalBreakBlock(EntityInsentient entity, Arena arena)
 	{
-		super(entity);
 		this.arena = arena;
+		this.entity = entity;
 	}
 
 	public boolean a() // canExecute
@@ -46,7 +56,7 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 			EntityMonster monster = (EntityMonster) this.entity;
 			if (monster.getGoalTarget() == null || !monster.getGoalTarget().isAlive())
 				return false;
-			return super.a();
+			return true;
 		}
 		return false;
 	}
@@ -54,7 +64,9 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 	public void c() // setup
 	{
 		oldLocation = entity.getBukkitEntity().getLocation();
-		super.c();
+		this.f = false;
+		this.g = (float) ((double) ((float) this.x + 0.5F) - this.entity.locX);
+		this.h = (float) ((double) ((float) this.z + 0.5F) - this.entity.locZ);
 		this.i = 0;
 	}
 
@@ -77,7 +89,13 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 
 	public void e() // move
 	{
-		super.e();
+		float f = (float) ((double) ((float) this.x + 0.5F) - this.entity.locX);
+		float f1 = (float) ((double) ((float) this.z + 0.5F) - this.entity.locZ);
+		float f2 = this.g * f + this.h * f1;
+		if (f2 < 0.0F)
+		{
+			this.f = true;
+		}
 		Location currentLocation = this.entity.getBukkitEntity().getLocation();
 		if (currentLocation.getBlockX() == oldLocation.getBlockX() && currentLocation.getBlockY() == oldLocation.getBlockY() && currentLocation.getBlockZ() == oldLocation.getBlockZ())
 		{
@@ -188,7 +206,8 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 	private Set<Block> getCloseBlocks()
 	{
 		Set<Block> blocks = new HashSet<Block>();
-		Location a = this.entity.getBukkitEntity().getLocation();
+		Location e = this.entity.getBukkitEntity().getLocation();
+		Location a = new Location(e.getWorld(), e.getBlockX(), e.getBlockY(), e.getBlockZ());
 		for (Vector vector : possiblePositions)
 		{
 			Location finalLocation = new Location(a.getWorld(), a.getBlockX() + vector.getBlockX(), a.getBlockY() + vector.getBlockY(), a.getBlockZ() + vector.getBlockZ());
@@ -203,7 +222,6 @@ public class PathfinderGoalBreakBlock extends PathfinderGoalBlockInteract
 		int xd = b.getBlockX() - a.getBlockX();
 		int yd = b.getBlockY() - a.getBlockY();
 		int zd = b.getBlockZ() - a.getBlockZ();
-		double distance = Math.sqrt(xd * xd + yd * yd + zd * zd);
-		return distance;
+		return Math.sqrt(xd * xd + yd * yd + zd * zd);
 	}
 }

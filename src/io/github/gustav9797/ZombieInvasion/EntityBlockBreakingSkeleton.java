@@ -56,8 +56,8 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton
 		this.goalSelector.a(2, new PathfinderGoalMeleeAttack(this, EntityHuman.class, 1.0D, false));
 		this.goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
 		this.goalSelector.a(1, new PathfinderGoalRandomLookaround(this));
+		this.goalSelector.a(1, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0, true));
 		this.targetSelector.a(2, new PathfinderGoalHurtByTarget(this, true));
-		this.targetSelector.a(1, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0, true));
 		this.a(0.6F, 1.8F);
 
 	}

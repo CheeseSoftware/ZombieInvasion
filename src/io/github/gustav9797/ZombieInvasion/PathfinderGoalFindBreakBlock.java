@@ -1,6 +1,7 @@
 package io.github.gustav9797.ZombieInvasion;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -31,6 +32,12 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 	boolean couldNotWalkToBlock = false;
 	List<Block> blocksNotWalkable = new ArrayList<Block>();
 	Random r = new Random();
+	
+	@SuppressWarnings("deprecation")
+	private static List<Material> nonBreakableMaterials = new ArrayList<Material>(Arrays.asList(Material.BEDROCK, Material.getMaterial(8), Material.getMaterial(9), Material.GRASS, Material.SAND, Material.AIR));
+	private static List<Material> naturalMaterials = new ArrayList<Material>(Arrays.asList(Material.GRASS, Material.DIRT, Material.LEAVES));
+	private static List<Material> priorityMaterials = new ArrayList<Material>(Arrays.asList(Material.WOOD_DOOR, Material.IRON_DOOR, Material.TRAP_DOOR, Material.CHEST, Material.THIN_GLASS,
+			Material.STAINED_GLASS, Material.STAINED_GLASS_PANE, Material.GLASS, Material.TORCH, Material.WOOL));
 
 	public PathfinderGoalFindBreakBlock(EntityInsentient entity, Arena arena)
 	{
@@ -146,13 +153,7 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 				if (currentBlockDamage >= 240)
 				{
 					currentBlock.setType(Material.AIR);
-					entity.world.getWorld().playEffect(currentBlock.getLocation(), Effect.SMOKE, 1);
-					// entity.world.triggerEffect(1012, currentBlock.getX(),
-					// currentBlock.getY(), currentBlock.getZ(), 0);
-					// entity.world.triggerEffect(2001, currentBlock.getX(),
-					// currentBlock.getY(), currentBlock.getZ(),
-					// net.minecraft.server.v1_7_R1.Block.b(entity.world.getType(currentBlock.getX(),
-					// currentBlock.getY(), currentBlock.getZ())));
+					entity.world.getWorld().playEffect(currentBlock.getLocation(), Effect.ZOMBIE_DESTROY_DOOR, 1);
 					Bukkit.getPluginManager().callEvent(new LeavesDecayEvent(this.currentBlock));
 
 					this.blocksNotWalkable.clear();
@@ -178,7 +179,7 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 		List<Block> blocks = this.getCloseBlocks();
 		for (Block block : blocks)
 		{
-			if (!PathfinderGoalBreakBlock.nonBreakableMaterials.contains(block.getType()))
+			if (!nonBreakableMaterials.contains(block.getType()))
 				return true;
 		}
 		return false;
@@ -195,7 +196,7 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 				for (int z = loc.getBlockZ() - findRadius; z < loc.getBlockZ() + findRadius; z++)
 				{
 					Block block = this.entity.getBukkitEntity().getWorld().getBlockAt(x, y, z);
-					if (block.getType() != Material.AIR && !this.blocksNotWalkable.contains(block))
+					if (!nonBreakableMaterials.contains(block.getType()) && !this.blocksNotWalkable.contains(block))
 					{
 						if (arena == null || (arena != null && !arena.isBorder(block.getLocation().toVector())))
 							blocks.add(block);
@@ -214,11 +215,11 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 		List<Block> lowPriorityBlocks = new ArrayList<Block>();
 		for (Block block : blocks)
 		{
-			if (!PathfinderGoalBreakBlock.nonBreakableMaterials.contains(block.getType()))
+			if (!nonBreakableMaterials.contains(block.getType()) && (arena == null || arena.ContainsLocation(block.getLocation())))
 			{
-				if (PathfinderGoalBreakBlock.priorityMaterials.contains(block.getType()))
+				if (priorityMaterials.contains(block.getType()))
 					highPriorityBlocks.add(block);
-				else if (PathfinderGoalBreakBlock.naturalMaterials.contains(block.getType()))
+				else if (naturalMaterials.contains(block.getType()))
 					lowPriorityBlocks.add(block);
 				else
 					normalPriorityBlocks.add(block);

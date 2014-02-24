@@ -21,11 +21,11 @@ import net.minecraft.server.v1_7_R1.World;
 
 import org.bukkit.craftbukkit.v1_7_R1.util.UnsafeList;
 
-public class EntityFastZombie extends EntityZombie
+public class EntityBlockBreakingZombie extends EntityZombie
 {
 	private Random r = new Random();
 
-	public EntityFastZombie(World world, Arena arena)
+	public EntityBlockBreakingZombie(World world)
 	{
 		super(world);
 
@@ -54,7 +54,6 @@ public class EntityFastZombie extends EntityZombie
 
 		this.getNavigation().b(true);
 		this.goalSelector.a(0, new PathfinderGoalFloat(this));
-		this.goalSelector.a(1, new PathfinderGoalBreakBlock(this, arena));
 		this.goalSelector.a(2, new PathfinderGoalMeleeAttack(this, EntityHuman.class, 1.0D, false));
 		this.goalSelector.a(4, new PathfinderGoalMeleeAttack(this, EntityVillager.class, 1.0D, true));
 		this.goalSelector.a(5, new PathfinderGoalMoveTowardsRestriction(this, 1.0D));
@@ -62,15 +61,15 @@ public class EntityFastZombie extends EntityZombie
 		this.goalSelector.a(8, new PathfinderGoalRandomLookaround(this));
 		this.targetSelector.a(1, new PathfinderGoalHurtByTarget(this, true));
 		this.targetSelector.a(2, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0, true));
-		if(arena != null)
-			this.targetSelector.a(0, new PathfinderGoalWalkToTile(this, 1.0F, arena.getSpawnLocation()));
 		this.a(0.6F, 1.8F);
 		
 	}
 	
-	public EntityFastZombie(World world)
+	public void setArena(Arena arena)
 	{
-		this(world, null);
+		if(arena != null)
+			this.targetSelector.a(0, new PathfinderGoalWalkToTile(this, 1.0F, arena.getSpawnLocation()));
+		this.goalSelector.a(1, new PathfinderGoalBreakBlock(this, arena));
 	}
 
 	public EntityHuman findNearbyVulnerablePlayer(double d0, double d1, double d2)

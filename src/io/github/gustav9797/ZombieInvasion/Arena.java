@@ -3,6 +3,7 @@ package io.github.gustav9797.ZombieInvasion;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -280,7 +281,7 @@ public abstract class Arena implements Listener
 	public void SetAlive(Player player)
 	{
 		this.RemoveSpectator(player);
-		player.setHealth((double)20);
+		player.setHealth((double) 20);
 		player.setFoodLevel(20);
 		player.teleport(this.spawnLocation);
 		player.sendMessage("[ZombieInvasion] You are now alive again!");
@@ -323,7 +324,7 @@ public abstract class Arena implements Listener
 			if (entity instanceof Item)
 			{
 				Item item = (Item) entity;
-				if (this.Contains(item.getLocation().toVector()))
+				if (this.ContainsLocation(item.getLocation()))
 					item.remove();
 			}
 		}
@@ -331,13 +332,16 @@ public abstract class Arena implements Listener
 		this.Broadcast("Arena was reset!");
 	}
 
-	public boolean Contains(Vector vector)
+	public boolean ContainsLocation(Location location)
 	{
-		if (vector.getBlockX() > (-getRadius() + this.middle.getBlockX()) && vector.getBlockX() < (getRadius() + this.middle.getBlockX()))
+		if (location.getWorld().getName().equals(this.middle.getWorld().getName()))
 		{
-			if (vector.getBlockZ() > (-getRadius() + this.middle.getBlockZ()) && vector.getBlockZ() < (getRadius() + this.middle.getBlockZ()))
+			if (location.getBlockX() >= (-getRadius() + this.middle.getBlockX()) && location.getBlockX() <= (getRadius() + this.middle.getBlockX()))
 			{
-				return true;
+				if (location.getBlockZ() >= (-getRadius() + this.middle.getBlockZ()) && location.getBlockZ() <= (getRadius() + this.middle.getBlockZ()))
+				{
+					return true;
+				}
 			}
 		}
 		return false;
@@ -470,6 +474,8 @@ public abstract class Arena implements Listener
 
 	public void CreateBorder(Material material, int height, boolean buildRoof)
 	{
+		@SuppressWarnings("deprecation")
+		List<Material> replacableMaterials = new ArrayList<Material>(Arrays.asList(Material.AIR, Material.WATER, Material.getMaterial(8), Material.getMaterial(9), Material.LAVA, material));
 		if (!border.isEmpty())
 			RestoreBorder();
 
@@ -481,35 +487,20 @@ public abstract class Arena implements Listener
 		{
 			for (int x = -radius; x <= radius; x++)
 			{
-				originalBlock = world.getBlockAt(x + middle.getBlockX(), y, -radius + middle.getBlockZ()).getState();
-				if (originalBlock.getType() == Material.AIR)
+				for (int z = -radius; z <= radius; z++)
 				{
-					this.border.add(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
-					world.getBlockAt(x + middle.getBlockX(), y, -radius + middle.getBlockZ()).setType(material);
-				}
-
-				originalBlock = world.getBlockAt(x + middle.getBlockX(), y, radius + middle.getBlockZ()).getState();
-				if (originalBlock.getType() == Material.AIR)
-				{
-					this.border.add(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
-					world.getBlockAt(x + middle.getBlockX(), y, radius + middle.getBlockZ()).setType(material);
-				}
-			}
-
-			for (int z = -radius; z <= radius; z++)
-			{
-				originalBlock = world.getBlockAt(-radius + middle.getBlockX(), y, z + middle.getBlockZ()).getState();
-				if (originalBlock.getType() == Material.AIR)
-				{
-					this.border.add(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
-					world.getBlockAt(-radius + middle.getBlockX(), y, z + middle.getBlockZ()).setType(material);
-				}
-
-				originalBlock = world.getBlockAt(radius + middle.getBlockX(), y, z + middle.getBlockZ()).getState();
-				if (originalBlock.getType() == Material.AIR)
-				{
-					this.border.add(new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType()));
-					world.getBlockAt(radius + middle.getBlockX(), y, z + middle.getBlockZ()).setType(material);
+					if (x == -radius || z == -radius || x == radius || z == radius)
+					{
+						originalBlock = world.getBlockAt(x + middle.getBlockX(), y, z + middle.getBlockZ()).getState();
+						if (replacableMaterials.contains(originalBlock.getType()))
+						{
+							BorderBlock block = new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType());
+							while(this.border.contains(block))
+								this.border.remove(block);
+							this.border.add(block);
+							world.getBlockAt(x + middle.getBlockX(), y, z + middle.getBlockZ()).setType(material);
+						}
+					}
 				}
 			}
 		}
@@ -640,7 +631,7 @@ public abstract class Arena implements Listener
 		ZombieInvasion.getEconomyPlugin().ResetStats(player);
 		players.add(player);
 		player.setGameMode(GameMode.SURVIVAL);
-		player.setHealth((double)20);
+		player.setHealth((double) 20);
 		player.setFoodLevel(20);
 		lobby.UpdateSigns();
 		scoreboard.AddPlayerScoreboard(player);
@@ -748,16 +739,16 @@ public abstract class Arena implements Listener
 			}
 		}
 	}
-	
+
 	public void onPlayerPickupItem(PlayerPickupItemEvent event)
 	{
-		if(spectators.contains(event.getPlayer()))
+		if (spectators.contains(event.getPlayer()))
 			event.setCancelled(true);
 	}
-	
+
 	public void onPlayerDropItem(PlayerDropItemEvent event)
 	{
-		if(spectators.contains(event.getPlayer()))
+		if (spectators.contains(event.getPlayer()))
 			event.setCancelled(true);
 	}
 

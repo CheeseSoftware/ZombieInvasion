@@ -21,7 +21,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftEntity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -33,7 +32,6 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -63,7 +61,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		this.configFile = new File(this.getDataFolder() + File.separator + "config.yml");
 		this.schematicsDirectory = new File(this.getDataFolder() + File.separator + "schematics");
 		this.entityTypes = new LinkedList<CustomEntityType>();
-		this.entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityFastZombie.class));
+		this.entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityBlockBreakingZombie.class));
 		this.entityTypes.add(new CustomEntityType("Skeleton", 51, EntityType.SKELETON, EntitySkeleton.class, EntityBlockBreakingSkeleton.class));
 		this.registerEntities();
 		this.arenas = new HashMap<String, Arena>();
@@ -541,19 +539,23 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onCreatureSpawn(CreatureSpawnEvent event)
 	{
+		boolean monsterIsPartOfAnyArena = false;
 		for (Arena a : this.arenas.values())
 		{
 			if (a instanceof ZombieArena)
 			{
 				ZombieArena arena = (ZombieArena) a;
-				if (!arena.monsters.contains((CraftEntity) event.getEntity()))
+				if (arena.monsters.containsKey(event.getEntity().getUniqueId()))
 				{
-					if (a.Contains(event.getEntity().getLocation().toVector()))
-						if (event.getSpawnReason() != SpawnReason.SPAWNER_EGG)
-							event.setCancelled(true);
+					monsterIsPartOfAnyArena = true;
+					if (!a.ContainsLocation(event.getLocation()))
+						event.setCancelled(true);
+					break;
 				}
 			}
 		}
+		if (!monsterIsPartOfAnyArena)
+			event.setCancelled(true);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -619,14 +621,14 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		for (Arena a : arenas.values())
 			a.onEntityDamageByEntity(event);
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onPlayerDropItem(PlayerDropItemEvent event)
 	{
 		for (Arena a : arenas.values())
 			a.onPlayerDropItem(event);
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerPickupItem(PlayerPickupItemEvent event)
 	{

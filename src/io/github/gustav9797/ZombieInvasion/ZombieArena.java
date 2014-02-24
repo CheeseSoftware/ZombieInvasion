@@ -2,11 +2,13 @@ package io.github.gustav9797.ZombieInvasion;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import net.minecraft.server.v1_7_R1.Entity;
 import net.minecraft.server.v1_7_R1.EntityMonster;
 import net.minecraft.server.v1_7_R1.EntityPlayer;
 
@@ -16,12 +18,13 @@ import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
 
 public class ZombieArena extends Arena
 {
-	protected List<EntityMonster> monsters = new LinkedList<EntityMonster>();
+	protected Map<UUID, EntityMonster> monsters = new HashMap<UUID, EntityMonster>();
 	protected List<Location> zombiesToSpawn = new LinkedList<Location>();
 	protected int currentWave = 0;
 	protected int ticksUntilNextWave = -1;
@@ -70,12 +73,18 @@ public class ZombieArena extends Arena
 			EntityMonster monster;
 			int j = r.nextInt(8);
 			if (j == 0)
-				monster = new EntityBlockBreakingSkeleton(mcWorld, this);
+			{
+				monster = new EntityBlockBreakingSkeleton(mcWorld);
+				((EntityBlockBreakingSkeleton)monster).setArena(this);
+			}
 			else
-				monster = new EntityFastZombie(mcWorld, this);
+			{
+				monster = new EntityBlockBreakingZombie(mcWorld);
+				((EntityBlockBreakingZombie)monster).setArena(this);
+			}
 			monster.setPosition(l.getBlockX(), l.getBlockY(), l.getBlockZ());
+			monsters.put(monster.getBukkitEntity().getUniqueId(), monster);
 			mcWorld.addEntity(monster);
-			monsters.add(monster);
 			i.remove();
 		}
 	}
@@ -144,7 +153,7 @@ public class ZombieArena extends Arena
 			Bukkit.getServer().getScheduler().cancelTask(this.sendWavesTaskId);
 			this.sendWavesTaskId = -1;
 		}
-		for (EntityMonster monster : monsters)
+		for (EntityMonster monster : monsters.values())
 		{
 			if (monster.isAlive())
 				monster.die();
@@ -217,7 +226,7 @@ public class ZombieArena extends Arena
 			}
 		}
 
-		Iterator<EntityMonster> i = monsters.iterator();
+		Iterator<EntityMonster> i = monsters.values().iterator();
 		while (i.hasNext())
 		{
 			EntityMonster monster = i.next();
@@ -249,7 +258,7 @@ public class ZombieArena extends Arena
 	public void MakeSpectator(Player player)
 	{
 		super.MakeSpectator(player);
-		for (EntityMonster monster : monsters)
+		for (EntityMonster monster : monsters.values())
 		{
 			if (monster.target != null && monster.target instanceof EntityPlayer)
 			{
@@ -263,7 +272,7 @@ public class ZombieArena extends Arena
 							possiblePlayers.add(poss);
 					}
 					if (possiblePlayers.size() != 0)
-						monster.setTarget((Entity) possiblePlayers.get(r.nextInt(possiblePlayers.size())));
+						monster.setTarget(((CraftPlayer)possiblePlayers.get(r.nextInt(possiblePlayers.size()))).getHandle());
 				}
 			}
 		}

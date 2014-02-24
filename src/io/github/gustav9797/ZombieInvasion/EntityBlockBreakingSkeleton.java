@@ -12,7 +12,6 @@ import net.minecraft.server.v1_7_R1.EntitySkeleton;
 import net.minecraft.server.v1_7_R1.Navigation;
 import net.minecraft.server.v1_7_R1.PathfinderGoalHurtByTarget;
 import net.minecraft.server.v1_7_R1.PathfinderGoalLookAtPlayer;
-import net.minecraft.server.v1_7_R1.PathfinderGoalMeleeAttack;
 import net.minecraft.server.v1_7_R1.PathfinderGoalNearestAttackableTarget;
 import net.minecraft.server.v1_7_R1.PathfinderGoalRandomLookaround;
 import net.minecraft.server.v1_7_R1.PathfinderGoalSelector;
@@ -22,7 +21,7 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton
 {
 	private Random r = new Random();
 
-	public EntityBlockBreakingSkeleton(World world, Arena arena)
+	public EntityBlockBreakingSkeleton(World world)
 	{
 		super(world);
 
@@ -31,7 +30,7 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton
 			Field field = Navigation.class.getDeclaredField("e");
 			field.setAccessible(true);
 			AttributeInstance e = (AttributeInstance) field.get(this.getNavigation());
-			e.setValue(128); // Navigation distance in block lengths goes here
+			e.setValue(128);
 		}
 		catch (Exception ex)
 		{
@@ -50,10 +49,7 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton
 		}
 
 		this.getNavigation().b(true);
-		if (arena != null)
-			this.targetSelector.a(4, new PathfinderGoalWalkToTile(this, 1.0F, arena.getSpawnLocation()));
-		this.goalSelector.a(3, new PathfinderGoalFindBreakBlock(this, arena));
-		this.goalSelector.a(2, new PathfinderGoalMeleeAttack(this, EntityHuman.class, 1.0D, false));
+		//this.goalSelector.a(2, new PathfinderGoalMeleeAttack(this, EntityHuman.class, 1.0D, false));
 		this.goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
 		this.goalSelector.a(1, new PathfinderGoalRandomLookaround(this));
 		this.goalSelector.a(1, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0, true));
@@ -62,9 +58,11 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton
 
 	}
 
-	public EntityBlockBreakingSkeleton(World world)
+	public void setArena(Arena arena)
 	{
-		this(world, null);
+		if (arena != null)
+			this.targetSelector.a(4, new PathfinderGoalWalkToTile(this, 1.0F, arena.getSpawnLocation()));
+		this.goalSelector.a(3, new PathfinderGoalFindBreakBlock(this, arena));
 	}
 
 	public EntityHuman findNearbyVulnerablePlayer(double d0, double d1, double d2)

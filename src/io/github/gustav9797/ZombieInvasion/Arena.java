@@ -280,6 +280,8 @@ public abstract class Arena implements Listener
 	public void SetAlive(Player player)
 	{
 		this.RemoveSpectator(player);
+		player.setHealth((double)20);
+		player.setFoodLevel(20);
 		player.teleport(this.spawnLocation);
 		player.sendMessage("[ZombieInvasion] You are now alive again!");
 
@@ -638,6 +640,8 @@ public abstract class Arena implements Listener
 		ZombieInvasion.getEconomyPlugin().ResetStats(player);
 		players.add(player);
 		player.setGameMode(GameMode.SURVIVAL);
+		player.setHealth((double)20);
+		player.setFoodLevel(20);
 		lobby.UpdateSigns();
 		scoreboard.AddPlayerScoreboard(player);
 		if (this.isRunning())

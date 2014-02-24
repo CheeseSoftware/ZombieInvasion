@@ -723,7 +723,10 @@ public abstract class Arena implements Listener
 		if (this.players.contains(event.getPlayer()))
 		{
 			if (this.isBorder(event.getBlock().getLocation().toVector()))
+			{
 				event.setCancelled(true);
+				event.getPlayer().sendMessage("Don't try to escape. You are ment to die with the monsters.");
+			}
 		}
 	}
 

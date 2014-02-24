@@ -41,7 +41,6 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import ostkaka34.OstEconomyPlugin.IOstEconomy;
@@ -69,6 +68,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		this.registerEntities();
 		this.arenas = new HashMap<String, Arena>();
 		this.lobby = new Lobby(arenas, this);
+		ZombieInvasion.economyPlugin = (IOstEconomy) Bukkit.getPluginManager().getPlugin("OstEconomyPlugin");
 
 		if (!schematicsDirectory.exists())
 			schematicsDirectory.mkdir();
@@ -86,17 +86,6 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			this.SaveConfig();
 		}
 		this.Load();
-
-		Plugin[] plugins = getServer().getPluginManager().getPlugins();
-		for (int i = 0; i < plugins.length; i++)
-		{
-			if (plugins[i] instanceof IOstEconomy)
-			{
-				economyPlugin = (IOstEconomy) plugins[i];
-				break;
-			}
-		}
-
 		getServer().getPluginManager().registerEvents(this, this);
 	}
 
@@ -559,8 +548,8 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				ZombieArena arena = (ZombieArena) a;
 				if (!arena.monsters.contains((CraftEntity) event.getEntity()))
 				{
-					if (a.ContainsPosition(event.getEntity().getLocation().toVector()))
-						if (event.getSpawnReason() == SpawnReason.NATURAL)
+					if (a.Contains(event.getEntity().getLocation().toVector()))
+						if (event.getSpawnReason() != SpawnReason.SPAWNER_EGG)
 							event.setCancelled(true);
 				}
 			}

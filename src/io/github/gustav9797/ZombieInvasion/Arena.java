@@ -231,12 +231,14 @@ public abstract class Arena implements Listener
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public void MakeSpectator(Player player)
 	{
 		if (!spectators.contains(player))
 			spectators.add(player);
 		this.spectatorInventories.put(player, player.getInventory().getContents());
 		player.getInventory().clear();
+		player.updateInventory();
 		player.setGameMode(GameMode.ADVENTURE);
 		player.setAllowFlight(true);
 		player.setFlying(true);
@@ -249,6 +251,7 @@ public abstract class Arena implements Listener
 		player.sendMessage("[ZombieInvasion] You are now a spectator.");
 	}
 
+	@SuppressWarnings("deprecation")
 	public void RemoveSpectator(Player player)
 	{
 		while (spectators.contains(player))
@@ -261,6 +264,7 @@ public abstract class Arena implements Listener
 		{
 			ItemStack[] oldContents = spectatorInventories.get(player);
 			player.getInventory().setContents(oldContents);
+			player.updateInventory();
 			spectatorInventories.remove(player);
 		}
 		player.setGameMode(GameMode.SURVIVAL);
@@ -600,18 +604,6 @@ public abstract class Arena implements Listener
 	public boolean isStarting()
 	{
 		return this.sendWavesTaskId != -1;
-	}
-
-	public boolean ContainsPosition(Vector pos)
-	{
-		if (pos.getBlockX() > this.middle.getBlockX() - this.getRadius() && pos.getBlockX() < this.middle.getBlockX() + this.getRadius())
-		{
-			if (pos.getBlockZ() > this.middle.getBlockZ() - this.getRadius() && pos.getBlockZ() < this.middle.getBlockZ() + this.getRadius())
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 
 	public void TryStart()

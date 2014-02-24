@@ -68,7 +68,7 @@ public class ZombieArena extends Arena
 			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) l.getWorld()).getHandle();
 
 			EntityMonster monster;
-			int j = r.nextInt(10);
+			int j = r.nextInt(8);
 			if (j == 0)
 				monster = new EntityBlockBreakingSkeleton(mcWorld, this);
 			else

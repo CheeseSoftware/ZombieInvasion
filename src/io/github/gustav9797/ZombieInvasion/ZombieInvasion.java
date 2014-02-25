@@ -27,6 +27,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -601,6 +602,13 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		lobby.onBlockBreak(event);
 		for (Arena a : arenas.values())
 			a.onBlockBreak(event);
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST)
+	private void onBlockPlace(BlockPlaceEvent event)
+	{
+		for(Arena a : arenas.values())
+			a.onBlockPlace(event);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)

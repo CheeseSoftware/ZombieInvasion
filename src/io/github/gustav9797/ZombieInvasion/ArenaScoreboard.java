@@ -42,10 +42,11 @@ public class ArenaScoreboard
 		for (Player player : players)
 		{
 			Objective title = player.getScoreboard().getObjective("stats");
-			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "XP:")).setScore((int) economy.getXp(player) - 1);
-			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Money:")).setScore((int) economy.getMoney(player) - 1);
-			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Game time:")).setScore((int)Math.round(arena.getTotalGameTicks() / 20) - 1);
-			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Next wave:")).setScore((int)Math.round(arena.getTicksUntilNextWave() / 20) - 1);
+			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "XP:")).setScore((int) economy.getXp(player));
+			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Money:")).setScore((int) economy.getMoney(player));
+			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Game time:")).setScore((int)Math.round(arena.getTotalGameTicks() / 20));
+			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Current wave:")).setScore(((arena instanceof ZombieArena ? ((ZombieArena)arena).getCurrentWave() : 0)));
+			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Monsters left:")).setScore(((arena instanceof ZombieArena ? ((ZombieArena)arena).monsters.size() : 0)));
 		}
 	}
 

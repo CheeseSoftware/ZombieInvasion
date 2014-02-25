@@ -22,6 +22,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
@@ -237,7 +238,7 @@ public abstract class Arena implements Listener
 	{
 		if (!spectators.contains(player))
 			spectators.add(player);
-		this.spectatorInventories.put(player, player.getInventory().getContents());
+		this.spectatorInventories.put(player, player.getInventory().getContents().clone());
 		player.getInventory().clear();
 		player.updateInventory();
 		player.setGameMode(GameMode.ADVENTURE);
@@ -283,7 +284,14 @@ public abstract class Arena implements Listener
 		this.RemoveSpectator(player);
 		player.setHealth((double) 20);
 		player.setFoodLevel(20);
-		player.teleport(this.spawnLocation);
+		List<Player> possiblePlayers = new ArrayList<Player>();
+		for (Player poss : players)
+			if (!isSpectator(poss))
+				possiblePlayers.add(poss);
+		if (possiblePlayers.size() > 0)
+			player.teleport(possiblePlayers.get(r.nextInt(possiblePlayers.size())));
+		else
+			player.teleport(this.spawnLocation);
 		player.sendMessage("[ZombieInvasion] You are now alive again!");
 
 	}
@@ -495,7 +503,7 @@ public abstract class Arena implements Listener
 						if (replacableMaterials.contains(originalBlock.getType()))
 						{
 							BorderBlock block = new BorderBlock(originalBlock.getLocation().toVector(), material, originalBlock.getType());
-							while(this.border.contains(block))
+							while (this.border.contains(block))
 								this.border.remove(block);
 							this.border.add(block);
 							world.getBlockAt(x + middle.getBlockX(), y, z + middle.getBlockZ()).setType(material);
@@ -586,6 +594,14 @@ public abstract class Arena implements Listener
 			if (loc.getBlockX() == position.getBlockX() && loc.getBlockY() == position.getBlockY() && loc.getBlockZ() == position.getBlockZ())
 				return true;
 		}
+		return false;
+	}
+
+	public boolean isOnBorder(Vector position)
+	{
+		if (position.getBlockX() == this.middle.getBlockX() - this.getRadius() + 1 || position.getBlockX() == this.middle.getBlockX() + this.getRadius() - 1 || position.getBlockZ() == this.middle.getBlockZ() - this.getRadius() + 1
+				|| position.getBlockZ() == this.middle.getBlockZ() + this.getRadius() - 1)
+			return true;
 		return false;
 	}
 
@@ -721,6 +737,19 @@ public abstract class Arena implements Listener
 			{
 				event.setCancelled(true);
 				event.getPlayer().sendMessage("Don't try to escape. You are ment to die with the monsters.");
+			}
+		}
+	}
+
+	public void onBlockPlace(BlockPlaceEvent event)
+	{
+		Player player = event.getPlayer();
+		if (this.players.contains(player))
+		{
+			if(isOnBorder(event.getBlockPlaced().getLocation().toVector()))
+			{
+				event.setCancelled(true);
+				player.sendMessage("Don't try to build on the border. You will die in here.");
 			}
 		}
 	}

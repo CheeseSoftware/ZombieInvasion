@@ -110,6 +110,11 @@ public class ZombieArena extends Arena
 		}
 		return amount;
 	}
+	
+	public int getCurrentWave()
+	{
+		return this.currentWave;
+	}
 
 	@Override
 	public void SendWave(int wave)

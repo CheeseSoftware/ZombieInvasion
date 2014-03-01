@@ -61,7 +61,7 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton
 	public void setArena(Arena arena)
 	{
 		if (arena != null)
-			this.targetSelector.a(4, new PathfinderGoalWalkToTile(this, 1.0F, arena.getSpawnLocation()));
+			this.targetSelector.a(4, new PathfinderGoalWalkToTile(this, 1.2F, arena.getSpawnLocation()));
 		this.goalSelector.a(3, new PathfinderGoalFindBreakBlock(this, arena));
 	}
 

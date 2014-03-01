@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import org.bukkit.Bukkit;
@@ -32,15 +30,18 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
+
+import ostkaka34.OstEconomyPlugin.OstEconomyPlugin;
 
 import com.sk89q.worldedit.CuboidClipboard;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.blocks.BaseBlock;
+import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.data.DataException;
 import com.sk89q.worldedit.regions.CuboidRegion;
@@ -57,6 +58,7 @@ public abstract class Arena implements Listener
 	protected Material borderMaterial;
 	protected int sendWavesTaskId = -1;
 	protected int tickTaskId = -1;
+	protected int staticTickTaskId = -1;
 	protected int ticksPassed = -1;
 	protected int oldMinutesPassed = -1;
 	protected int ticksUntilNextWave = -1;
@@ -64,16 +66,19 @@ public abstract class Arena implements Listener
 	protected int maxPlayers = 10;
 	protected int startAtPlayerCount = 1;
 	protected int secondsAfterStart = 20;
+	protected List<PotionRegion> potionRegions = new ArrayList<PotionRegion>();
 
 	public List<Player> players = new ArrayList<Player>();
 	public List<Player> spectators = new ArrayList<Player>();
-	public Map<Player, ItemStack[]> spectatorInventories = new HashMap<Player, ItemStack[]>();
+	// public Map<Player, ItemStack[]> spectatorInventories = new
+	// HashMap<Player, ItemStack[]>();
 	public ArenaScoreboard scoreboard;
 	protected ArrayList<BorderBlock> border;
 	protected Lobby lobby;
 	protected YamlConfiguration config;
 	protected File configFile;
 	protected File borderConfigFile;
+	protected File potionregionConfigFile;
 	protected File directory;
 
 	public Arena(String name, Lobby lobby)
@@ -89,6 +94,16 @@ public abstract class Arena implements Listener
 			directory.mkdir();
 		this.configFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "config.yml");
 		this.borderConfigFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "border.yml");
+		this.potionregionConfigFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "potionregions.yml");
+
+		this.staticTickTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(ZombieInvasion.getPlugin(), new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				StaticTick();
+			}
+		}, 0L, 1L);
 
 		if (!borderConfigFile.exists())
 		{
@@ -102,6 +117,20 @@ public abstract class Arena implements Listener
 			}
 			this.SaveBorderConfig();
 		}
+
+		if (!potionregionConfigFile.exists())
+		{
+			try
+			{
+				potionregionConfigFile.createNewFile();
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+			this.SavePotionregionConfig();
+		}
+
 		if (!configFile.exists())
 		{
 			try
@@ -161,19 +190,20 @@ public abstract class Arena implements Listener
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	public void LoadMap()
 	{
 		EditSession es = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
+		es.enableQueue();
 		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + "schematics" + File.separator + this.schematicFileName + ".schematic");
 		int groundLevel = 4;
 		if (schematic.exists())
 		{
 			try
 			{
-				CuboidClipboard cc = CuboidClipboard.loadSchematic(schematic);
+				CuboidClipboard cc = SchematicFormat.MCEDIT.load(schematic);
 				com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() - getRadius() + 1, groundLevel, this.middle.getBlockZ() - getRadius() + 1);
 				cc.paste(es, location, false);
+				es.flushQueue();
 			}
 			catch (MaxChangedBlocksException | DataException | IOException e)
 			{
@@ -238,7 +268,8 @@ public abstract class Arena implements Listener
 	{
 		if (!spectators.contains(player))
 			spectators.add(player);
-		this.spectatorInventories.put(player, player.getInventory().getContents().clone());
+		// this.spectatorInventories.put(player,
+		// player.getInventory().getContents().clone());
 		player.getInventory().clear();
 		player.updateInventory();
 		player.setGameMode(GameMode.ADVENTURE);
@@ -253,7 +284,6 @@ public abstract class Arena implements Listener
 		player.sendMessage("[ZombieInvasion] You are now a spectator.");
 	}
 
-	@SuppressWarnings("deprecation")
 	public void RemoveSpectator(Player player)
 	{
 		while (spectators.contains(player))
@@ -262,13 +292,13 @@ public abstract class Arena implements Listener
 		{
 			p.showPlayer(player);
 		}
-		if (spectatorInventories.containsKey(player))
-		{
-			ItemStack[] oldContents = spectatorInventories.get(player);
-			player.getInventory().setContents(oldContents);
-			player.updateInventory();
-			spectatorInventories.remove(player);
-		}
+		/*
+		 * if (spectatorInventories.containsKey(player)) { ItemStack[]
+		 * oldContents = spectatorInventories.get(player);
+		 * player.getInventory().setContents(oldContents);
+		 * player.updateInventory(); spectatorInventories.remove(player); }
+		 */
+		OstEconomyPlugin.getPlugin().ResetStats(player);
 		player.setGameMode(GameMode.SURVIVAL);
 		player.setFlying(false);
 		player.setAllowFlight(false);
@@ -301,6 +331,7 @@ public abstract class Arena implements Listener
 		for (Player player : this.players)
 		{
 			player.teleport(spawnLocation);
+			player.setHealth((double)player.getMaxHealth());
 		}
 	}
 
@@ -359,12 +390,14 @@ public abstract class Arena implements Listener
 	{
 		this.SaveConfig();
 		this.SaveBorderConfig();
+		this.SavePotionregionConfig();
 	}
 
 	public void Load()
 	{
 		this.LoadConfig();
 		this.LoadBorderConfig();
+		this.LoadPotionregionConfig();
 	}
 
 	protected void SaveConfig()
@@ -449,6 +482,39 @@ public abstract class Arena implements Listener
 		}
 	}
 
+	protected void SavePotionregionConfig()
+	{
+		config = new YamlConfiguration();
+		try
+		{
+			config.set("regions", this.potionRegions);
+			config.save(potionregionConfigFile);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	protected void LoadPotionregionConfig()
+	{
+		config = new YamlConfiguration();
+		try
+		{
+			config.load(potionregionConfigFile);
+			ArrayList<PotionRegion> temp = (ArrayList<PotionRegion>) config.getList("regions");
+			if (temp == null)
+				this.potionRegions = new ArrayList<PotionRegion>();
+			else
+				this.potionRegions = new ArrayList<PotionRegion>(temp);
+		}
+		catch (IOException | InvalidConfigurationException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
 	public void SendWaves()
 	{
 		if (this.tickTaskId != -1)
@@ -478,6 +544,28 @@ public abstract class Arena implements Listener
 			this.ticksUntilNextWave += 1;
 		else
 			this.ticksUntilNextWave = 0;
+	}
+
+	protected void StaticTick()
+	{
+		for (PotionRegion potionRegion : this.potionRegions)
+		{
+			for (Player player : this.players)
+			{
+				if (!spectators.contains(player))
+				{
+					if (potionRegion.getRegion().contains(BukkitUtil.toVector(player.getLocation())))
+					{
+						for (PotionEffect effect : potionRegion.getEffects())
+						{
+							if (player.hasPotionEffect(effect.getType()))
+								player.removePotionEffect(effect.getType());
+							player.addPotionEffect(effect);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	public void CreateBorder(Material material, int height, boolean buildRoof)
@@ -536,6 +624,23 @@ public abstract class Arena implements Listener
 		}
 		border.clear();
 		this.SaveBorderConfig();
+	}
+
+	public void AddPotionRegion(PotionRegion potionRegion)
+	{
+		this.potionRegions.add(potionRegion);
+		this.SavePotionregionConfig();
+	}
+
+	public void ClearPotionRegions()
+	{
+		this.potionRegions.clear();
+		this.SavePotionregionConfig();
+	}
+
+	public List<PotionRegion> getPotionRegions()
+	{
+		return this.potionRegions;
 	}
 
 	public void setSize(int size)
@@ -599,8 +704,8 @@ public abstract class Arena implements Listener
 
 	public boolean isOnBorder(Vector position)
 	{
-		if (position.getBlockX() == this.middle.getBlockX() - this.getRadius() + 1 || position.getBlockX() == this.middle.getBlockX() + this.getRadius() - 1 || position.getBlockZ() == this.middle.getBlockZ() - this.getRadius() + 1
-				|| position.getBlockZ() == this.middle.getBlockZ() + this.getRadius() - 1)
+		if (position.getBlockX() == this.middle.getBlockX() - this.getRadius() + 1 || position.getBlockX() == this.middle.getBlockX() + this.getRadius() - 1
+				|| position.getBlockZ() == this.middle.getBlockZ() - this.getRadius() + 1 || position.getBlockZ() == this.middle.getBlockZ() + this.getRadius() - 1)
 			return true;
 		return false;
 	}
@@ -667,12 +772,12 @@ public abstract class Arena implements Listener
 	{
 		while (players.contains(player))
 			players.remove(player);
-		if (players.size() <= 0)
+		RemoveSpectator(player);
+		if (players.size() <= 0 || players.size() == spectators.size())
 		{
 			this.Reset();
 			this.LoadMap();
 		}
-		RemoveSpectator(player);
 		player.removeMetadata("arena", ZombieInvasion.getPlugin());
 		player.teleport(lobby.getLocation());
 		player.getInventory().clear();
@@ -694,6 +799,7 @@ public abstract class Arena implements Listener
 		Player player = event.getEntity();
 		if (players.contains(player))
 		{
+			event.getDrops().clear();
 			if (this.isRunning() && !this.isStarting())
 				this.MakeSpectator(player);
 			else if (!this.isRunning())
@@ -746,7 +852,7 @@ public abstract class Arena implements Listener
 		Player player = event.getPlayer();
 		if (this.players.contains(player))
 		{
-			if(isOnBorder(event.getBlockPlaced().getLocation().toVector()))
+			if (isOnBorder(event.getBlockPlaced().getLocation().toVector()))
 			{
 				event.setCancelled(true);
 				player.sendMessage("Don't try to build on the border. You will die in here.");

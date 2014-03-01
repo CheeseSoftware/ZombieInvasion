@@ -106,7 +106,7 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 				this.ticksStoodStill++;
 				if (this.ticksStoodStill > 30)
 				{
-					if (currentBlock == null || this.getDistanceBetween(this.currentBlock.getLocation(), currentLocation) < 2)
+					if (currentBlock == null || this.getDistanceBetween(this.currentBlock.getLocation(), currentLocation) <= 2.5F)
 						this.isWalking = false;
 					else
 					{
@@ -177,11 +177,8 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 	public boolean CanFindABlock()
 	{
 		List<Block> blocks = this.getCloseBlocks();
-		for (Block block : blocks)
-		{
-			if (!nonBreakableMaterials.contains(block.getType()))
-				return true;
-		}
+		if(blocks.size() > 0)
+			return true;
 		return false;
 	}
 

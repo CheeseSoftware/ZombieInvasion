@@ -29,6 +29,7 @@ public class ZombieArena extends Arena
 	protected int currentWave = 0;
 	protected int ticksUntilNextWave = -1;
 	protected int sendWavesTaskId = -1;
+	protected int monsterSpawnLimit = 130;
 
 	protected int zombieGroups = 10;
 	protected int zombieStartAmount = 20;
@@ -65,7 +66,7 @@ public class ZombieArena extends Arena
 	public void onSpawnZombieTick()
 	{
 		Iterator<Location> i = zombiesToSpawn.iterator();
-		while (i.hasNext() && monsters.size() < 200)
+		while (i.hasNext() && monsters.size() < this.monsterSpawnLimit)
 		{
 			Location l = i.next();
 			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) l.getWorld()).getHandle();

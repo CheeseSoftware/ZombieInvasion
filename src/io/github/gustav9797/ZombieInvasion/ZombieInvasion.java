@@ -3,6 +3,8 @@ package io.github.gustav9797.ZombieInvasion;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,6 +43,15 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+
+import com.sk89q.worldedit.IncompleteRegionException;
+import com.sk89q.worldedit.LocalSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.bukkit.BukkitUtil;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 
 import ostkaka34.OstEconomyPlugin.IOstEconomy;
 import ostkaka34.OstEconomyPlugin.OstEconomyPlugin;
@@ -59,6 +70,8 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	public void onEnable()
 	{
 		ConfigurationSerialization.registerClass(BorderBlock.class, "BorderBlock");
+		ConfigurationSerialization.registerClass(PotionRegion.class, "PotionRegion");
+
 		this.configFile = new File(this.getDataFolder() + File.separator + "config.yml");
 		this.schematicsDirectory = new File(this.getDataFolder() + File.separator + "schematics");
 		this.entityTypes = new LinkedList<CustomEntityType>();
@@ -95,10 +108,13 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		this.saveConfig();
 		for (Arena a : arenas.values())
 		{
-			for (Player player : a.players)
-				player.removeMetadata("arena", this);
 			a.Reset();
 			a.LoadMap();
+			for (Player player : a.players)
+			{
+				player.removeMetadata("arena", this);
+				player.teleport(this.lobby.getLocation());
+			}
 		}
 	}
 
@@ -407,6 +423,109 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					sender.sendMessage("You don't have any arena selected.");
 				return true;
 			}
+			else if (cmd.getName().equals("clearpotionregions"))
+			{
+				if (player.hasMetadata("selectedarena"))
+				{
+					String name = player.getMetadata("selectedarena").get(0).asString();
+					if (arenas.containsKey(name))
+					{
+						Arena arena = arenas.get(name);
+						arena.ClearPotionRegions();
+						sender.sendMessage("Potion regions cleared.");
+					}
+					else
+						sender.sendMessage("Arena doesn't exist.");
+				}
+				else
+					sender.sendMessage("You don't have any arena selected.");
+				return true;
+			}
+			else if (cmd.getName().equals("addpotionregion"))
+			{
+				if (player.hasMetadata("selectedarena"))
+				{
+					if (args.length >= 3)
+					{
+						PotionEffectType type = PotionEffectType.getByName(args[0]);
+						if (type != null)
+						{
+							int duration = Integer.parseInt(args[1]);
+							int amplifier = Integer.parseInt(args[2]);
+							String name = player.getMetadata("selectedarena").get(0).asString();
+							if (arenas.containsKey(name))
+							{
+								Arena arena = arenas.get(name);
+								LocalSession session = WorldEdit.getInstance().getSession(player.getName());
+								if (session != null)
+								{
+									try
+									{
+										Region region = session.getSelection(BukkitUtil.getLocalWorld(arena.getMiddle().getWorld()));
+										CuboidRegion newRegion = new CuboidRegion(region.getWorld(), region.getMinimumPoint(), region.getMaximumPoint());
+										arena.AddPotionRegion(new PotionRegion(newRegion, new ArrayList<PotionEffect>(Arrays.asList(new PotionEffect(type, duration, amplifier)))));
+										sender.sendMessage("Potion region added.");
+									}
+									catch (IncompleteRegionException e)
+									{
+										sender.sendMessage("You have to select 2 corners.");
+									}
+								}
+								else
+									sender.sendMessage("You have to select 2 corners.");
+							}
+							else
+								sender.sendMessage("Arena doesn't exist.");
+						}
+						else
+							sender.sendMessage("Potion effect does not exist.");
+					}
+					else
+						sender.sendMessage("Usage: /addpotionregion <effect> <duration> <amplifier>");
+				}
+				else
+					sender.sendMessage("You don't have any arena selected.");
+				return true;
+			}
+			else if (cmd.getName().equals("expandpotionregion"))
+			{
+				if (args.length >= 2)
+				{
+					String axis = args[0];
+					axis = axis.toLowerCase();
+					int amount = Integer.parseInt(args[1]);
+					String name = player.getMetadata("selectedarena").get(0).asString();
+					if (arenas.containsKey(name))
+					{
+						Arena arena = arenas.get(name);
+						List<PotionRegion> regions = arena.getPotionRegions();
+						for (PotionRegion region : regions)
+						{
+							if (region.getRegion().contains(BukkitUtil.toVector(player.getLocation())))
+							{
+								com.sk89q.worldedit.Vector toUse = null;
+								if (region.getRegion().getMaximumPoint().distance(BukkitUtil.toVector(player.getLocation())) < region.getRegion().getMinimumPoint()
+										.distance(BukkitUtil.toVector(player.getLocation())))
+									toUse = region.getRegion().getMaximumPoint();
+								else
+									toUse = region.getRegion().getMinimumPoint();
+								if (toUse != null)
+								{
+									if (axis.equals("x"))
+										toUse.setX(toUse.getX() + amount);
+									else if (axis.equals("z"))
+										toUse.setZ(toUse.getZ() + amount);
+									arena.Save();
+								}
+							}
+						}
+					}
+					else
+						sender.sendMessage("You don't have any arena selected.");
+				}
+				else
+					sender.sendMessage("Usage: /expandpotionregion <axis> <amount>");
+			}
 			else if (cmd.getName().equals("setlobby"))
 			{
 				lobby.setLocation(player.getLocation());
@@ -603,11 +722,11 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		for (Arena a : arenas.values())
 			a.onBlockBreak(event);
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onBlockPlace(BlockPlaceEvent event)
 	{
-		for(Arena a : arenas.values())
+		for (Arena a : arenas.values())
 			a.onBlockPlace(event);
 	}
 

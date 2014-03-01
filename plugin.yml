@@ -72,3 +72,16 @@ commands:
       description: Selects an arena for edit.
       permission: zombieinvasion.selectarena
       permission-message: You don't have zombieinvasion.selectarena
+   clearpotionregions:
+      permission: zombieinvasion.clearpotionregions
+      permission-message: You don't have zombieinvasion.clearpotionregions
+   addpotionregion:
+      permission: zombieinvasion.addpotionregion
+      permission-message: You don't have zombieinvasion.addpotionregion
+   potionregioninfo:
+      permission: zombieinvasion.potionregioninfo
+      permission-message: You don't have zombieinvasion.potionregioninfo
+   expandpotionregion:
+      permission: zombieinvasion.expandpotionregion
+      permission-message: You don't have zombieinvasion.expandpotionregion
+      

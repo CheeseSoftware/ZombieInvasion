@@ -131,6 +131,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					if (!arenas.containsKey(name))
 					{
 						Arena a = new ZombieArena(name, this.lobby);
+						a.Load();
 						a.setMiddle(player.getLocation());
 						a.setSpawnLocation(player.getLocation());
 						a.setSize(96);
@@ -585,6 +586,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		for (String arena : temp)
 		{
 			ZombieArena a = new ZombieArena(arena, lobby);
+			a.Load();
 			arenas.put(arena, a);
 		}
 	}
@@ -727,7 +729,26 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	private void onBlockPlace(BlockPlaceEvent event)
 	{
 		for (Arena a : arenas.values())
+		{
 			a.onBlockPlace(event);
+			if(event.getBlock().getType() == Material.SPONGE)
+			{
+				Player player = event.getPlayer();
+				if(player.hasPermission("zombieinvasion.addmonsterspawnpoint"))
+				{
+					if(a.ContainsLocation(event.getBlockPlaced().getLocation()))
+					{
+						if(a instanceof ZombieArena)
+						{
+							((ZombieArena)a).AddZombieSpawnPoint(event.getBlockPlaced().getLocation().toVector());
+							player.sendMessage("Monster spawnpoint added!");
+						}
+					}
+				}
+				else
+					player.sendMessage("You don't have permission to place zombie spawnpoints!");
+			}
+		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)

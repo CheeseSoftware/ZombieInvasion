@@ -34,7 +34,7 @@ public class ArenaScoreboard
 			}
 		}, 0L, 10L);
 	}
-	
+
 	private void UpdatePlayerInfo()
 	{
 		OstEconomyPlugin economy = (OstEconomyPlugin) ZombieInvasion.getEconomyPlugin();
@@ -44,9 +44,9 @@ public class ArenaScoreboard
 			Objective title = player.getScoreboard().getObjective("stats");
 			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "XP:")).setScore((int) economy.getXp(player));
 			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Money:")).setScore((int) economy.getMoney(player));
-			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Game time:")).setScore((int)Math.round(arena.getTotalGameTicks() / 20));
-			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Current wave:")).setScore(((arena instanceof ZombieArena ? ((ZombieArena)arena).getCurrentWave() : 0)));
-			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Monsters left:")).setScore(((arena instanceof ZombieArena ? ((ZombieArena)arena).monsters.size() : 0)));
+			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Game time:")).setScore((int) Math.round(arena.getTotalGameTicks() / 20));
+			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Current wave:")).setScore(((arena instanceof ZombieArena ? ((ZombieArena) arena).getCurrentWave() : 0)));
+			title.getScore(Bukkit.getOfflinePlayer(ChatColor.GOLD + "Monsters left:")).setScore(((arena instanceof ZombieArena ? ((ZombieArena) arena).monsters.size() : 0)));
 		}
 	}
 

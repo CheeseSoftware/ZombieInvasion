@@ -25,6 +25,11 @@ public class PotionRegion implements Cloneable, ConfigurationSerializable
 		this.effects = effects;
 	}
 	
+	public void AddEffect(PotionEffect effect)
+	{
+		this.effects.add(effect);
+	}
+	
 	public Region getRegion()
 	{
 		return this.region;

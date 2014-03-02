@@ -36,7 +36,7 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 	protected static List<Vector> possiblePositions = new ArrayList<Vector>(Arrays.asList(new Vector(-1, 0, 0), new Vector(-1, 1, 0), new Vector(1, 0, 0), new Vector(1, 1, 0), new Vector(0, 0, -1),
 			new Vector(0, 1, -1), new Vector(0, 0, 1), new Vector(0, 1, 1), new Vector(0, 2, 0)));
 	private static List<Material> nonBreakableMaterials = new ArrayList<Material>(Arrays.asList(Material.WOOD_STAIRS, Material.COBBLESTONE_STAIRS, Material.SANDSTONE_STAIRS, Material.BRICK_STAIRS,
-			Material.SMOOTH_STAIRS, Material.BEDROCK, Material.WATER, Material.GRASS));
+			Material.SMOOTH_STAIRS, Material.BEDROCK, Material.WATER, Material.GRASS, Material.QUARTZ_BLOCK));
 	private static List<Material> naturalMaterials = new ArrayList<Material>(Arrays.asList(Material.GRASS, Material.DIRT, Material.LEAVES));
 	private static List<Material> priorityMaterials = new ArrayList<Material>(Arrays.asList(Material.WOOD_DOOR, Material.IRON_DOOR, Material.TRAP_DOOR, Material.CHEST, Material.THIN_GLASS,
 			Material.STAINED_GLASS, Material.STAINED_GLASS_PANE, Material.GLASS, Material.TORCH, Material.WOOL));

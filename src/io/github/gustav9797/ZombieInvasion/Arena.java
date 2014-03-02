@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -32,6 +33,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
@@ -45,6 +47,7 @@ import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.data.DataException;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.schematic.SchematicFormat;
 
 public abstract class Arena implements Listener
@@ -80,6 +83,7 @@ public abstract class Arena implements Listener
 	protected File borderConfigFile;
 	protected File potionregionConfigFile;
 	protected File directory;
+	protected File zombieSpawnPointsConfigFile;
 
 	public Arena(String name, Lobby lobby)
 	{
@@ -95,6 +99,7 @@ public abstract class Arena implements Listener
 		this.configFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "config.yml");
 		this.borderConfigFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "border.yml");
 		this.potionregionConfigFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "potionregions.yml");
+		this.zombieSpawnPointsConfigFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "zombiespawnpoints.yml");
 
 		this.staticTickTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(ZombieInvasion.getPlugin(), new Runnable()
 		{
@@ -103,7 +108,7 @@ public abstract class Arena implements Listener
 			{
 				StaticTick();
 			}
-		}, 0L, 1L);
+		}, 0L, 10L);
 
 		if (!borderConfigFile.exists())
 		{
@@ -143,7 +148,6 @@ public abstract class Arena implements Listener
 			}
 			this.SaveConfig();
 		}
-		this.Load();
 		this.scoreboard = new ArenaScoreboard(this);
 	}
 
@@ -245,7 +249,7 @@ public abstract class Arena implements Listener
 		List<Player> tempspectators = new ArrayList<Player>(this.spectators);
 		for (Player player : tempspectators)
 		{
-			this.RemoveSpectator(player);
+			this.SetAlive(player);
 			player.teleport(spawnLocation);
 		}
 		spectators.clear();
@@ -268,8 +272,6 @@ public abstract class Arena implements Listener
 	{
 		if (!spectators.contains(player))
 			spectators.add(player);
-		// this.spectatorInventories.put(player,
-		// player.getInventory().getContents().clone());
 		player.getInventory().clear();
 		player.updateInventory();
 		player.setGameMode(GameMode.ADVENTURE);
@@ -279,8 +281,6 @@ public abstract class Arena implements Listener
 		{
 			p.hidePlayer(player);
 		}
-		player.teleport(this.spawnLocation);
-		CheckSpectators();
 		player.sendMessage("[ZombieInvasion] You are now a spectator.");
 	}
 
@@ -289,19 +289,11 @@ public abstract class Arena implements Listener
 		while (spectators.contains(player))
 			spectators.remove(player);
 		for (Player p : players)
-		{
 			p.showPlayer(player);
-		}
-		/*
-		 * if (spectatorInventories.containsKey(player)) { ItemStack[]
-		 * oldContents = spectatorInventories.get(player);
-		 * player.getInventory().setContents(oldContents);
-		 * player.updateInventory(); spectatorInventories.remove(player); }
-		 */
-		OstEconomyPlugin.getPlugin().ResetStats(player);
 		player.setGameMode(GameMode.SURVIVAL);
 		player.setFlying(false);
 		player.setAllowFlight(false);
+		OstEconomyPlugin.getPlugin().ResetStats(player);
 	}
 
 	public boolean isSpectator(Player player)
@@ -322,6 +314,9 @@ public abstract class Arena implements Listener
 			player.teleport(possiblePlayers.get(r.nextInt(possiblePlayers.size())));
 		else
 			player.teleport(this.spawnLocation);
+		/*player.addPotionEffect(new PotionEffect(PotionEffectType.HEALTH_BOOST, 10, 5));
+		player.addPotionEffect(new PotionEffect(PotionEffectType.HEAL, 10, 1));
+		player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 10, 1));*/
 		player.sendMessage("[ZombieInvasion] You are now alive again!");
 
 	}
@@ -331,7 +326,7 @@ public abstract class Arena implements Listener
 		for (Player player : this.players)
 		{
 			player.teleport(spawnLocation);
-			player.setHealth((double)player.getMaxHealth());
+			player.setHealth((double) player.getMaxHealth());
 		}
 	}
 
@@ -350,6 +345,7 @@ public abstract class Arena implements Listener
 		for (Player player : players)
 		{
 			player.teleport(this.spawnLocation);
+			OstEconomyPlugin.getPlugin().ResetStats(player);
 		}
 		this.ticksPassed = -1;
 		this.ticksSinceLastWave = -1;
@@ -548,13 +544,35 @@ public abstract class Arena implements Listener
 
 	protected void StaticTick()
 	{
+		List<PotionRegion> safeRegions = new ArrayList<PotionRegion>();
+		for (PotionRegion safeRegion : this.potionRegions)
+		{
+			for (PotionEffect safeEffect : safeRegion.getEffects())
+			{
+				if (safeEffect.getType().equals(PotionEffectType.WATER_BREATHING))
+					safeRegions.add(safeRegion);
+			}
+		}
+
 		for (PotionRegion potionRegion : this.potionRegions)
 		{
-			for (Player player : this.players)
+			Iterator<Player> it = this.players.iterator();
+			while(it.hasNext())
 			{
-				if (!spectators.contains(player))
+				Player player = it.next();
+				boolean isPlayerSafe = false;
+				if (!player.isDead() && player.isOnline() && !spectators.contains(player))
 				{
-					if (potionRegion.getRegion().contains(BukkitUtil.toVector(player.getLocation())))
+					for(PotionRegion verySafeRegion : safeRegions)
+					{
+						if (verySafeRegion.getRegion().contains(BukkitUtil.toVector(player.getLocation())))
+						{
+							isPlayerSafe = true;
+							break;
+						}
+					}
+					
+					if (!isPlayerSafe && potionRegion.getRegion().contains(BukkitUtil.toVector(player.getLocation())))
 					{
 						for (PotionEffect effect : potionRegion.getEffects())
 						{
@@ -628,6 +646,20 @@ public abstract class Arena implements Listener
 
 	public void AddPotionRegion(PotionRegion potionRegion)
 	{
+		Region region = potionRegion.getRegion();
+		for (PotionRegion equalRegion : this.potionRegions)
+		{
+			if (equalRegion.equals(region))
+			{
+				for (PotionEffect effect : potionRegion.getEffects())
+				{
+					equalRegion.AddEffect(effect);
+				}
+				this.SavePotionregionConfig();
+				return;
+			}
+		}
+
 		this.potionRegions.add(potionRegion);
 		this.SavePotionregionConfig();
 	}
@@ -759,6 +791,8 @@ public abstract class Arena implements Listener
 		if (this.isRunning())
 		{
 			this.MakeSpectator(player);
+			player.teleport(this.spawnLocation);
+			CheckSpectators();
 		}
 		else
 		{
@@ -772,17 +806,18 @@ public abstract class Arena implements Listener
 	{
 		while (players.contains(player))
 			players.remove(player);
-		RemoveSpectator(player);
-		if (players.size() <= 0 || players.size() == spectators.size())
-		{
-			this.Reset();
-			this.LoadMap();
-		}
 		player.removeMetadata("arena", ZombieInvasion.getPlugin());
 		player.teleport(lobby.getLocation());
 		player.getInventory().clear();
 		scoreboard.RemovePlayerScoreboard(player);
 		lobby.UpdateSigns();
+		RemoveSpectator(player);
+		CheckSpectators();
+		if (players.size() <= 0)
+		{
+			this.Reset();
+			this.LoadMap();
+		}
 		this.Broadcast(player.getName() + " has " + reason + "!");
 	}
 
@@ -801,9 +836,11 @@ public abstract class Arena implements Listener
 		{
 			event.getDrops().clear();
 			if (this.isRunning() && !this.isStarting())
+			{
 				this.MakeSpectator(player);
-			else if (!this.isRunning())
-				this.SetAlive(player);
+				player.teleport(this.spawnLocation);
+				CheckSpectators();
+			}
 		}
 	}
 
@@ -812,6 +849,8 @@ public abstract class Arena implements Listener
 		Player player = event.getPlayer();
 		if (players.contains(player))
 		{
+			if (!this.isRunning())
+				this.SetAlive(player);
 			event.setRespawnLocation(this.spawnLocation);
 		}
 	}

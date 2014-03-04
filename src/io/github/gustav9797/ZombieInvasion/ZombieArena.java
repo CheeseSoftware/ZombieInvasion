@@ -8,9 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import net.minecraft.server.v1_7_R1.EntityMonster;
+import net.minecraft.server.v1_7_R1.EntityCreature;
 import net.minecraft.server.v1_7_R1.EntityPlayer;
-import net.minecraft.server.v1_7_R1.IMonster;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -19,16 +18,13 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
 
 public class ZombieArena extends Arena
 {
-	protected Map<UUID, EntityMonster> monsters = new HashMap<UUID, EntityMonster>();
+	protected Map<UUID, EntityCreature> monsters = new HashMap<UUID, EntityCreature>();
 	protected List<MonsterSpawnPoint> zombiesToSpawn = new ArrayList<MonsterSpawnPoint>();
 	protected SpawnPointManager spawnPointManager;
 	protected int currentWave = 0;
@@ -94,7 +90,7 @@ public class ZombieArena extends Arena
 		{
 			MonsterSpawnPoint spawnPoint = i.next();
 			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) this.middle.getWorld()).getHandle();
-			Monster monster = null;
+			EntityCreature monster = null;
 
 			if (spawnPoint.hasEntityType(EntityType.SKELETON))
 			{
@@ -202,7 +198,7 @@ public class ZombieArena extends Arena
 			Bukkit.getServer().getScheduler().cancelTask(this.sendWavesTaskId);
 			this.sendWavesTaskId = -1;
 		}
-		for (EntityMonster monster : monsters.values())
+		for (EntityCreature monster : monsters.values())
 		{
 			if (monster.isAlive())
 				monster.die();
@@ -275,10 +271,10 @@ public class ZombieArena extends Arena
 			}
 		}
 
-		Iterator<EntityMonster> i = monsters.values().iterator();
+		Iterator<EntityCreature> i = monsters.values().iterator();
 		while (i.hasNext())
 		{
-			EntityMonster monster = i.next();
+			EntityCreature monster = i.next();
 			if (!monster.isAlive())
 			{
 				i.remove();
@@ -307,7 +303,7 @@ public class ZombieArena extends Arena
 	public void MakeSpectator(Player player)
 	{
 		super.MakeSpectator(player);
-		for (EntityMonster monster : monsters.values())
+		for (EntityCreature monster : monsters.values())
 		{
 			if (monster.target != null && monster.target instanceof EntityPlayer)
 			{

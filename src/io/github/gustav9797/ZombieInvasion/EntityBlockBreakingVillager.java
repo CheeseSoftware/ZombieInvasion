@@ -7,7 +7,6 @@ import net.minecraft.server.v1_7_R1.AttributeInstance;
 import net.minecraft.server.v1_7_R1.Entity;
 import net.minecraft.server.v1_7_R1.EntityHuman;
 import net.minecraft.server.v1_7_R1.EntityVillager;
-import net.minecraft.server.v1_7_R1.EntityZombie;
 import net.minecraft.server.v1_7_R1.Navigation;
 import net.minecraft.server.v1_7_R1.PathfinderGoalFloat;
 import net.minecraft.server.v1_7_R1.PathfinderGoalHurtByTarget;

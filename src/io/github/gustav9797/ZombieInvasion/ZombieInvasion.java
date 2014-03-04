@@ -80,8 +80,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		
 		this.entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityBlockBreakingZombie.class));
 		this.entityTypes.add(new CustomEntityType("Skeleton", 51, EntityType.SKELETON, EntitySkeleton.class, EntityBlockBreakingSkeleton.class));
-		
-		this.entityTypes.add(new CustomEntityType("EvolvedZombie ", 120, EntityType.VILLAGER, EntityVillager.class, EntityBlockBreakingVillager.class));
+		this.entityTypes.add(new CustomEntityType("Villager ", 120, EntityType.VILLAGER, EntityVillager.class, EntityBlockBreakingVillager.class));
 		
 		this.registerEntities();
 		this.arenas = new HashMap<String, Arena>();

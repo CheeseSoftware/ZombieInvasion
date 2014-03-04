@@ -71,6 +71,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	{
 		ConfigurationSerialization.registerClass(BorderBlock.class, "BorderBlock");
 		ConfigurationSerialization.registerClass(PotionRegion.class, "PotionRegion");
+		ConfigurationSerialization.registerClass(MonsterSpawnPoint.class, "MonsterSpawnPoint");
 
 		this.configFile = new File(this.getDataFolder() + File.separator + "config.yml");
 		this.schematicsDirectory = new File(this.getDataFolder() + File.separator + "schematics");
@@ -118,6 +119,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
 		if (sender instanceof Player)
@@ -221,311 +223,257 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					sender.sendMessage("You haven't joined any arena!");
 				return true;
 			}
-			else if (cmd.getName().equals("startwave"))
+			else if (cmd.getName().equals("editarena"))
 			{
-				if (player.hasMetadata("arena") && arenas.containsKey(player.getMetadata("arena").get(0).asString()))
+				if (args.length > 0)
 				{
-					Arena arena = arenas.get(player.getMetadata("arena").get(0).asString());
-					arena.SendWaves();
-					this.getServer().broadcastMessage("Waves are coming! Hide!");
-				}
-				else
-					sender.sendMessage("You have to join an arena! (/joinarena)");
-				return true;
-			}
-			else if (cmd.getName().equals("setlocation"))
-			{
-				if (player.hasMetadata("selectedarena"))
-				{
-					String name = player.getMetadata("selectedarena").get(0).asString();
-					if (arenas.containsKey(name))
+					if (player.hasMetadata("selectedarena"))
 					{
-						Arena arena = arenas.get(name);
-						arena.setMiddle(player.getLocation());
-						sender.sendMessage("Arena middle was set!");
-					}
-					else
-						sender.sendMessage("Arena doesn't exist.");
-				}
-				else
-					sender.sendMessage("You don't have any arena selected.");
-				return true;
-			}
-			else if (cmd.getName().equals("setarenaspawn"))
-			{
-				if (player.hasMetadata("selectedarena"))
-				{
-					String name = player.getMetadata("selectedarena").get(0).asString();
-					if (arenas.containsKey(name))
-					{
-						Arena arena = arenas.get(name);
-						arena.setSpawnLocation(player.getLocation());
-						sender.sendMessage("Arena spawn was set!");
-					}
-					else
-						sender.sendMessage("Arena doesn't exist.");
-				}
-				else
-					sender.sendMessage("You don't have any arena selected.");
-				return true;
-			}
-			else if (cmd.getName().equals("setsize"))
-			{
-				if (player.hasMetadata("selectedarena"))
-				{
-					String name = player.getMetadata("selectedarena").get(0).asString();
-					if (arenas.containsKey(name))
-					{
-						Arena arena = arenas.get(name);
-						if (args.length > 0)
+						String name = player.getMetadata("selectedarena").get(0).asString();
+						if (arenas.containsKey(name))
 						{
-							int size = Integer.parseInt(args[0]);
-							if (size > 0 && size <= 128)
+							Arena arena = arenas.get(name);
+							if (args[0].equals("startwave"))
 							{
-								arena.setSize(size);
-								sender.sendMessage("Size was set to " + size);
+								arena.SendWaves();
+								this.getServer().broadcastMessage("Waves are coming! Hide!");
 							}
-							else
-								sender.sendMessage("Size has to be between 0 and 128.");
-						}
-						else
-							sender.sendMessage("Usage: /setsize <size>");
-					}
-					else
-						sender.sendMessage("Arena doesn't exist.");
-				}
-				else
-					sender.sendMessage("You don't have any arena selected.");
-				return true;
-			}
-			else if (cmd.getName().equals("createborder"))
-			{
-				if (player.hasMetadata("selectedarena"))
-				{
-					String name = player.getMetadata("selectedarena").get(0).asString();
-					if (arenas.containsKey(name))
-					{
-						Arena arena = arenas.get(name);
-						boolean roof = false;
-						int height = 100;
-						Material material = Material.GLASS;
-						if (args.length >= 1)
-						{
-							material = Material.getMaterial(args[0]);
-							if (material != null)
+							else if (args[0].equals("setlocation"))
+							{
+								arena.setMiddle(player.getLocation());
+								sender.sendMessage("Arena middle was set!");
+							}
+							else if (args[0].equals("setarenaspawn"))
+							{
+								arena.setSpawnLocation(player.getLocation());
+								sender.sendMessage("Arena spawn was set!");
+							}
+							else if (args[0].equals("setsize"))
+							{
+								if (args.length > 0)
+								{
+									int size = Integer.parseInt(args[0]);
+									if (size > 0 && size <= 128)
+									{
+										arena.setSize(size);
+										sender.sendMessage("Size was set to " + size);
+									}
+									else
+										sender.sendMessage("Size has to be between 0 and 128.");
+								}
+								else
+									sender.sendMessage("Usage: /setsize <size>");
+							}
+							else if (args[0].equals("createborder"))
+							{
+								boolean roof = false;
+								int height = 100;
+								Material material = Material.GLASS;
+								if (args.length >= 1)
+								{
+									material = Material.getMaterial(args[0]);
+									if (material != null)
+									{
+										if (args.length >= 2)
+											height = Integer.parseInt(args[1]);
+										if (args.length >= 3)
+											roof = Boolean.parseBoolean(args[2]);
+										arena.CreateBorder(material, height, roof);
+										sender.sendMessage("Border created.");
+									}
+									else
+										sender.sendMessage("Invalid material!");
+								}
+								else
+									sender.sendMessage("Usage: /createborder <string material> <int height> <bool buildroof=true>");
+							}
+							else if (args[0].equals("removeborder"))
+							{
+								arena.RestoreBorder();
+								sender.sendMessage("Border removed.");
+							}
+							else if (args[0].equals("reset"))
+							{
+								arena.LoadMap();
+								arena.Reset();
+							}
+							else if (args[0].equals("savemap"))
+							{
+								arena.SaveMap();
+								sender.sendMessage("Map saved.");
+							}
+							else if (args[0].equals("loadmap"))
+							{
+								arena.LoadMap();
+								sender.sendMessage("Map loaded.");
+							}
+							else if (args[0].equals("clearmap"))
+							{
+								arena.ClearMap();
+								sender.sendMessage("Map cleared.");
+							}
+							else if (args[0].equals("clearpotionregions"))
+							{
+								arena.ClearPotionRegions();
+								sender.sendMessage("Potion regions cleared.");
+							}
+							else if (args[0].equals("addpotionregion"))
+							{
+								if (args.length >= 3)
+								{
+									PotionEffectType type = PotionEffectType.getByName(args[0]);
+									if (type != null)
+									{
+										int duration = Integer.parseInt(args[1]);
+										int amplifier = Integer.parseInt(args[2]);
+										LocalSession session = WorldEdit.getInstance().getSession(player.getName());
+										if (session != null)
+										{
+											try
+											{
+												Region region = session.getSelection(BukkitUtil.getLocalWorld(arena.getMiddle().getWorld()));
+												CuboidRegion newRegion = new CuboidRegion(region.getWorld(), region.getMinimumPoint(), region.getMaximumPoint());
+												arena.AddPotionRegion(new PotionRegion(newRegion, new ArrayList<PotionEffect>(Arrays.asList(new PotionEffect(type, duration, amplifier)))));
+												sender.sendMessage("Potion region added.");
+											}
+											catch (IncompleteRegionException e)
+											{
+												sender.sendMessage("You have to select 2 corners.");
+											}
+										}
+										else
+											sender.sendMessage("You have to select 2 corners.");
+									}
+									else
+										sender.sendMessage("Potion effect does not exist.");
+								}
+								else
+									sender.sendMessage("Usage: /addpotionregion <effect> <duration> <amplifier>");
+							}
+							else if (args[0].equals("expandpotionregion"))
 							{
 								if (args.length >= 2)
-									height = Integer.parseInt(args[1]);
-								if (args.length >= 3)
-									roof = Boolean.parseBoolean(args[2]);
-								arena.CreateBorder(material, height, roof);
-								sender.sendMessage("Border created.");
-							}
-							else
-								sender.sendMessage("Invalid material!");
-						}
-						else
-							sender.sendMessage("Usage: /createborder <string material> <int height> <bool buildroof=true>");
-					}
-					else
-						sender.sendMessage("Arena doesn't exist.");
-				}
-				else
-					sender.sendMessage("You don't have any arena selected.");
-				return true;
-			}
-			else if (cmd.getName().equals("removeborder"))
-			{
-				if (player.hasMetadata("selectedarena"))
-				{
-					String name = player.getMetadata("selectedarena").get(0).asString();
-					if (arenas.containsKey(name))
-					{
-						Arena arena = arenas.get(name);
-						arena.RestoreBorder();
-						sender.sendMessage("Border removed.");
-					}
-					else
-						sender.sendMessage("Arena doesn't exist.");
-				}
-				else
-					sender.sendMessage("You don't have any arena selected.");
-				return true;
-			}
-			else if (cmd.getName().equals("reset"))
-			{
-				if (player.hasMetadata("selectedarena"))
-				{
-					String name = player.getMetadata("selectedarena").get(0).asString();
-					if (arenas.containsKey(name))
-					{
-						Arena arena = arenas.get(name);
-						arena.LoadMap();
-						arena.Reset();
-					}
-					else
-						sender.sendMessage("Arena doesn't exist.");
-				}
-				else
-					sender.sendMessage("You don't have any arena selected.");
-				return true;
-			}
-			else if (cmd.getName().equals("savemap"))
-			{
-				if (player.hasMetadata("selectedarena"))
-				{
-					String name = player.getMetadata("selectedarena").get(0).asString();
-					if (arenas.containsKey(name))
-					{
-						Arena arena = arenas.get(name);
-						arena.SaveMap();
-						sender.sendMessage("Map saved.");
-					}
-					else
-						sender.sendMessage("Arena doesn't exist.");
-				}
-				else
-					sender.sendMessage("You don't have any arena selected.");
-				return true;
-			}
-			else if (cmd.getName().equals("loadmap"))
-			{
-				if (player.hasMetadata("selectedarena"))
-				{
-					String name = player.getMetadata("selectedarena").get(0).asString();
-					if (arenas.containsKey(name))
-					{
-						Arena arena = arenas.get(name);
-						arena.LoadMap();
-						sender.sendMessage("Map loaded.");
-					}
-					else
-						sender.sendMessage("Arena doesn't exist.");
-				}
-				else
-					sender.sendMessage("You don't have any arena selected.");
-				return true;
-			}
-			else if (cmd.getName().equals("clearmap"))
-			{
-				if (player.hasMetadata("selectedarena"))
-				{
-					String name = player.getMetadata("selectedarena").get(0).asString();
-					if (arenas.containsKey(name))
-					{
-						Arena arena = arenas.get(name);
-						arena.ClearMap();
-						sender.sendMessage("Map cleared.");
-					}
-					else
-						sender.sendMessage("Arena doesn't exist.");
-				}
-				else
-					sender.sendMessage("You don't have any arena selected.");
-				return true;
-			}
-			else if (cmd.getName().equals("clearpotionregions"))
-			{
-				if (player.hasMetadata("selectedarena"))
-				{
-					String name = player.getMetadata("selectedarena").get(0).asString();
-					if (arenas.containsKey(name))
-					{
-						Arena arena = arenas.get(name);
-						arena.ClearPotionRegions();
-						sender.sendMessage("Potion regions cleared.");
-					}
-					else
-						sender.sendMessage("Arena doesn't exist.");
-				}
-				else
-					sender.sendMessage("You don't have any arena selected.");
-				return true;
-			}
-			else if (cmd.getName().equals("addpotionregion"))
-			{
-				if (player.hasMetadata("selectedarena"))
-				{
-					if (args.length >= 3)
-					{
-						PotionEffectType type = PotionEffectType.getByName(args[0]);
-						if (type != null)
-						{
-							int duration = Integer.parseInt(args[1]);
-							int amplifier = Integer.parseInt(args[2]);
-							String name = player.getMetadata("selectedarena").get(0).asString();
-							if (arenas.containsKey(name))
-							{
-								Arena arena = arenas.get(name);
-								LocalSession session = WorldEdit.getInstance().getSession(player.getName());
-								if (session != null)
 								{
-									try
+									String axis = args[0];
+									axis = axis.toLowerCase();
+									int amount = Integer.parseInt(args[1]);
+									List<PotionRegion> regions = arena.getPotionRegions();
+									for (PotionRegion region : regions)
 									{
-										Region region = session.getSelection(BukkitUtil.getLocalWorld(arena.getMiddle().getWorld()));
-										CuboidRegion newRegion = new CuboidRegion(region.getWorld(), region.getMinimumPoint(), region.getMaximumPoint());
-										arena.AddPotionRegion(new PotionRegion(newRegion, new ArrayList<PotionEffect>(Arrays.asList(new PotionEffect(type, duration, amplifier)))));
-										sender.sendMessage("Potion region added.");
-									}
-									catch (IncompleteRegionException e)
-									{
-										sender.sendMessage("You have to select 2 corners.");
+										if (region.getRegion().contains(BukkitUtil.toVector(player.getLocation())))
+										{
+											com.sk89q.worldedit.Vector toUse = null;
+											if (region.getRegion().getMaximumPoint().distance(BukkitUtil.toVector(player.getLocation())) < region.getRegion().getMinimumPoint()
+													.distance(BukkitUtil.toVector(player.getLocation())))
+												toUse = region.getRegion().getMaximumPoint();
+											else
+												toUse = region.getRegion().getMinimumPoint();
+											if (toUse != null)
+											{
+												if (axis.equals("x"))
+													toUse.setX(toUse.getX() + amount);
+												else if (axis.equals("z"))
+													toUse.setZ(toUse.getZ() + amount);
+												arena.Save();
+											}
+										}
 									}
 								}
 								else
-									sender.sendMessage("You have to select 2 corners.");
+									sender.sendMessage("Usage: /expandpotionregion <axis> <amount>");
 							}
-							else
-								sender.sendMessage("Arena doesn't exist.");
-						}
-						else
-							sender.sendMessage("Potion effect does not exist.");
-					}
-					else
-						sender.sendMessage("Usage: /addpotionregion <effect> <duration> <amplifier>");
-				}
-				else
-					sender.sendMessage("You don't have any arena selected.");
-				return true;
-			}
-			else if (cmd.getName().equals("expandpotionregion"))
-			{
-				if (args.length >= 2)
-				{
-					String axis = args[0];
-					axis = axis.toLowerCase();
-					int amount = Integer.parseInt(args[1]);
-					String name = player.getMetadata("selectedarena").get(0).asString();
-					if (arenas.containsKey(name))
-					{
-						Arena arena = arenas.get(name);
-						List<PotionRegion> regions = arena.getPotionRegions();
-						for (PotionRegion region : regions)
-						{
-							if (region.getRegion().contains(BukkitUtil.toVector(player.getLocation())))
+							else if (args[0].equals("closestmonsterspawnpoint"))
 							{
-								com.sk89q.worldedit.Vector toUse = null;
-								if (region.getRegion().getMaximumPoint().distance(BukkitUtil.toVector(player.getLocation())) < region.getRegion().getMinimumPoint()
-										.distance(BukkitUtil.toVector(player.getLocation())))
-									toUse = region.getRegion().getMaximumPoint();
-								else
-									toUse = region.getRegion().getMinimumPoint();
-								if (toUse != null)
+								if (arena instanceof ZombieArena)
 								{
-									if (axis.equals("x"))
-										toUse.setX(toUse.getX() + amount);
-									else if (axis.equals("z"))
-										toUse.setZ(toUse.getZ() + amount);
-									arena.Save();
+									ZombieArena zombieArena = (ZombieArena) arena;
+									SpawnPointManager manager = zombieArena.getSpawnPointManager();
+									double closestDistance = Integer.MAX_VALUE;
+									MonsterSpawnPoint closestSpawnPoint = null;
+									for (MonsterSpawnPoint p : manager.getMonsterSpawnPoints())
+									{
+										double distance = p.getPosition().distance(player.getLocation().toVector());
+										if (distance < closestDistance)
+										{
+											closestDistance = distance;
+											closestSpawnPoint = p;
+										}
+									}
+									if (closestSpawnPoint != null)
+									{
+										String s = "";
+										if (closestSpawnPoint.getEntityTypes().size() > 0)
+											for (EntityType e : closestSpawnPoint.getEntityTypes())
+												s += e.toString() + ",";
+										else
+											s = "No monsters";
+										sender.sendMessage(closestSpawnPoint.getId() + ": " + s);
+									}
+									else
+										sender.sendMessage("Could not find any spawn points!");
 								}
 							}
+							else if (args[0].equals("addspawnpointmonster"))
+							{
+								if (args.length > 2)
+								{
+									if (arena instanceof ZombieArena)
+									{
+										int id = Integer.parseInt(args[1]);
+										String monster = args[2];
+										EntityType monsterType = EntityType.fromName(monster);
+										if (monsterType != null)
+										{
+											ZombieArena zombieArena = (ZombieArena) arena;
+											SpawnPointManager manager = zombieArena.getSpawnPointManager();
+											MonsterSpawnPoint spawnPoint = (MonsterSpawnPoint)manager.getSpawnPoint(id);
+											if (spawnPoint != null)
+											{
+												spawnPoint.AddEntityType(monsterType);
+												sender.sendMessage("Added monstertype " + monsterType.toString());
+												manager.Save();
+											}
+											else
+												sender.sendMessage("MonsterSpawnPoint does not exist.");
+										}
+										else
+											sender.sendMessage("Monster type does not exist.");
+									}
+								}
+								else
+									sender.sendMessage("Usage: /editarena addspawnpointmonster <id> <monsterType>");
+							}
+							else if (args[0].equals("showmonsterspawnpoints"))
+							{
+								if (arena instanceof ZombieArena)
+								{
+									ZombieArena zombieArena = (ZombieArena) arena;
+									SpawnPointManager manager = zombieArena.getSpawnPointManager();
+									manager.Show(player);
+									player.sendMessage("Monster spawn points shown.");
+								}
+							}
+							else if (args[0].equals("hidemonsterspawnpoints"))
+							{
+								if (arena instanceof ZombieArena)
+								{
+									ZombieArena zombieArena = (ZombieArena) arena;
+									SpawnPointManager manager = zombieArena.getSpawnPointManager();
+									manager.Hide(player);
+									player.sendMessage("Monster spawn points hidden.");
+								}
+							}
+							else
+								sender.sendMessage("Command doesn't exist.");
 						}
+						else
+							sender.sendMessage("Arena doesn't exist.");
 					}
 					else
 						sender.sendMessage("You don't have any arena selected.");
 				}
 				else
-					sender.sendMessage("Usage: /expandpotionregion <axis> <amount>");
+					sender.sendMessage("Usage: /editarena <something>");
 			}
 			else if (cmd.getName().equals("setlobby"))
 			{
@@ -731,17 +679,20 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		for (Arena a : arenas.values())
 		{
 			a.onBlockPlace(event);
-			if(event.getBlock().getType() == Material.SPONGE)
+			if (event.getBlock().getType() == Material.SPONGE)
 			{
 				Player player = event.getPlayer();
-				if(player.hasPermission("zombieinvasion.addmonsterspawnpoint"))
+				if (player.hasPermission("zombieinvasion.addmonsterspawnpoint"))
 				{
-					if(a.ContainsLocation(event.getBlockPlaced().getLocation()))
+					if (a.ContainsLocation(event.getBlockPlaced().getLocation()))
 					{
-						if(a instanceof ZombieArena)
+						if (a instanceof ZombieArena)
 						{
-							((ZombieArena)a).AddZombieSpawnPoint(event.getBlockPlaced().getLocation().toVector());
-							player.sendMessage("Monster spawnpoint added!");
+							SpawnPointManager manager = ((ZombieArena) a).getSpawnPointManager();
+							int id = manager.getFreeSpawnPointId();
+							manager.AddSpawnPoint(id, new MonsterSpawnPoint(id, event.getBlockPlaced().getLocation().toVector()));
+							player.sendMessage("Monster spawnpoint ID " + id + " added!");
+							a.getMiddle().getWorld().getBlockAt(event.getBlock().getLocation()).setType(Material.AIR);
 						}
 					}
 				}

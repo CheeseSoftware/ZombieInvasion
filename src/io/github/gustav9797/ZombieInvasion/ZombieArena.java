@@ -1,6 +1,5 @@
 package io.github.gustav9797.ZombieInvasion;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,15 +18,15 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
-import org.bukkit.util.Vector;
 
 public class ZombieArena extends Arena
 {
 	protected Map<UUID, EntityMonster> monsters = new HashMap<UUID, EntityMonster>();
-	protected List<Location> zombiesToSpawn = new ArrayList<Location>();
-	public List<Vector> monsterSpawnPoints = new ArrayList<Vector>();
+	protected List<MonsterSpawnPoint> zombiesToSpawn = new ArrayList<MonsterSpawnPoint>();
+	protected SpawnPointManager spawnPointManager;
 	protected int currentWave = 0;
 	protected int ticksUntilNextWave = -1;
 	protected int sendWavesTaskId = -1;
@@ -41,121 +40,77 @@ public class ZombieArena extends Arena
 	protected int waveIncrease = 1;
 	protected int ticksBetweenZombieSpawns = 20;
 
-	protected File zombieSpawnPointsConfigFile;
-
 	public ZombieArena(String name, Lobby lobby)
 	{
 		super(name, lobby);
-
-		zombieSpawnPointsConfigFile = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + name + File.separator + "zombiespawnpoints.yml");
-		if (!zombieSpawnPointsConfigFile.exists())
-		{
-			try
-			{
-				zombieSpawnPointsConfigFile.createNewFile();
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
-			this.SaveMonsterSpawnPointsConfig();
-		}
+		spawnPointManager = new SpawnPointManager(this);
 	}
 
 	@Override
 	public void Load()
 	{
 		super.Load();
-		this.LoadMonsterSpawnPointsConfig();
+		this.spawnPointManager.Load();
 	}
 
 	@Override
 	public void Save()
 	{
 		super.Save();
-		this.SaveMonsterSpawnPointsConfig();
+		this.spawnPointManager.Save();
 	}
 
-	public void SaveMonsterSpawnPointsConfig()
+	public SpawnPointManager getSpawnPointManager()
 	{
-		config = new YamlConfiguration();
-		try
-		{
-			config.set("monsterSpawnPoints", this.monsterSpawnPoints);
-			config.save(this.zombieSpawnPointsConfigFile);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+		return this.spawnPointManager;
 	}
 
-	@SuppressWarnings("unchecked")
-	public void LoadMonsterSpawnPointsConfig()
+	public void SpawnZombie(MonsterSpawnPoint spawnPoint)
 	{
-		config = new YamlConfiguration();
-		try
-		{
-			config.load(zombieSpawnPointsConfigFile);
-			List<Vector> temp = (List<Vector>) config.getList("monsterSpawnPoints");
-			if (temp != null)
-				this.monsterSpawnPoints = new ArrayList<Vector>(temp);
-		}
-		catch (IOException | InvalidConfigurationException e)
-		{
-			e.printStackTrace();
-		}
+		zombiesToSpawn.add(spawnPoint);
 	}
 
-	public void AddZombieSpawnPoint(Vector l)
-	{
-		this.monsterSpawnPoints.add(l);
-		this.SaveMonsterSpawnPointsConfig();
-	}
-
-	public void SpawnZombie(Location l)
-	{
-		zombiesToSpawn.add(l);
-	}
-
-	public void SpawnZombieGroup(Location l, int amount)
+	public void SpawnZombieGroup(MonsterSpawnPoint spawnPoint, int amount)
 	{
 		int delay = 1;
 		for (int i = 0; i < amount; i++)
 		{
-			Location pos = new Location(l.getWorld(), l.getBlockX(), l.getBlockY(), l.getBlockZ());
-			while (pos.getWorld().getBlockAt(pos).getType() == Material.AIR)
-				pos.setY(pos.getBlockY() - 1);
-			pos.setY(pos.getBlockY() + 2);
-			new SpawnZombieTask(pos, this).runTaskLater(ZombieInvasion.getPlugin(), delay);
+			while (this.middle.getWorld().getBlockAt(spawnPoint.getPosition().toLocation(this.middle.getWorld())).getType() == Material.AIR)
+				spawnPoint.getPosition().setY(spawnPoint.getPosition().getBlockY() - 1);
+			spawnPoint.getPosition().setY(spawnPoint.getPosition().getBlockY() + 2);
+			new SpawnMonsterTask(spawnPoint, this).runTaskLater(ZombieInvasion.getPlugin(), delay);
 			delay += this.ticksBetweenZombieSpawns;
 		}
 	}
 
 	public void onSpawnZombieTick()
 	{
-		Iterator<Location> i = zombiesToSpawn.iterator();
+		Iterator<MonsterSpawnPoint> i = zombiesToSpawn.iterator();
 		while (i.hasNext() && monsters.size() < this.monsterSpawnLimit)
 		{
-			Location l = i.next();
-			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) l.getWorld()).getHandle();
+			MonsterSpawnPoint spawnPoint = i.next();
+			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) this.middle.getWorld()).getHandle();
+			EntityMonster monster = null;
 
-			EntityMonster monster;
-			int j = r.nextInt(8);
-			if (j == 0)
+			if (spawnPoint.hasEntityType(EntityType.SKELETON))
 			{
 				monster = new EntityBlockBreakingSkeleton(mcWorld);
 				((EntityBlockBreakingSkeleton) monster).setArena(this);
 			}
-			else
+			else if (spawnPoint.hasEntityType(EntityType.ZOMBIE))
 			{
 				monster = new EntityBlockBreakingZombie(mcWorld);
 				((EntityBlockBreakingZombie) monster).setArena(this);
 			}
-			monster.setPosition(l.getBlockX(), l.getBlockY(), l.getBlockZ());
-			monsters.put(monster.getBukkitEntity().getUniqueId(), monster);
-			mcWorld.addEntity(monster);
+
+			if (monster != null)
+			{
+				monster.getBukkitEntity().teleport(spawnPoint.getPosition().toLocation(this.middle.getWorld()));
+				monsters.put(monster.getBukkitEntity().getUniqueId(), monster);
+				mcWorld.addEntity(monster);
+			}
 			i.remove();
+			break;
 		}
 	}
 
@@ -189,10 +144,11 @@ public class ZombieArena extends Arena
 	@Override
 	public void SendWave(int wave)
 	{
+		int spawnPointsSize = this.getSpawnPointManager().getMonsterSpawnPoints().size();
 		for (int i = 0; i < zombieGroups; i++)
 		{
-			if (this.monsterSpawnPoints.size() > 0)
-				SpawnZombieGroup(this.monsterSpawnPoints.get(r.nextInt(this.monsterSpawnPoints.size())).toLocation(middle.getWorld()), getZombieSpawnAmount(wave) / zombieGroups);
+			if (spawnPointsSize > 0)
+				SpawnZombieGroup(this.getSpawnPointManager().getRandomMonsterSpawnPoint(), getZombieSpawnAmount(wave) / zombieGroups);
 			else
 			{
 				int x = Integer.MAX_VALUE;
@@ -203,7 +159,10 @@ public class ZombieArena extends Arena
 					z = r.nextInt(size - 4) - this.size / 2 + 2;
 				}
 				Location groupLocation = new Location(middle.getWorld(), x + middle.getBlockX(), r.nextInt(size) + middle.getBlockY(), z + middle.getBlockZ());
-				SpawnZombieGroup(groupLocation, getZombieSpawnAmount(wave) / zombieGroups);
+				MonsterSpawnPoint s = new MonsterSpawnPoint(-1, groupLocation.toVector());
+				for(EntityType e : EntityType.values())
+					s.AddEntityType(e);
+				SpawnZombieGroup(s, getZombieSpawnAmount(wave) / zombieGroups);
 
 			}
 		}

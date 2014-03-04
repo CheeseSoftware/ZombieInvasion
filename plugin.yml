@@ -23,32 +23,8 @@ commands:
       description: Spawns custom zombie.
       permission: zombieinvasion.zombie
       permission-message: You don't have zombieinvasion.zombie
-   startwave:
-      description: Starts a wave.
-      permission: zombieinvasion.startwave
-      permission-message: You don't have zombieinvasion.startwave
-   setlocation:
-      description: Sets the location of the arena.
-      permission: zombieinvasion.setlocation
-      permission-message: You don't have zombieinvasion.setlocation
-   setsize:
-      description: Sets the size of the arena.
-      permission: zombieinvasion.setsize
-      permission-message: You don't have zombieinvasion.setsize
-   createborder:
-      description: Creates a border around the arena.
-      permission: zombieinvasion.createborder
-      permission-message: You don't have zombieinvasion.createborder
-   removeborder:
-      description: Removes the border around the arena.
-      permission: zombieinvasion.removeborder
-      permission-message: You don't have zombieinvasion.removeborder
-   reset:
-      description: Resets the arena.
-      permission: zombieinvasion.reset
-      permission-message: You don't have zombieinvasion.reset
    setlobby:
-      description: Sets the lobby's location.
+      description: Sets the lobby position.
       permission: zombieinvasion.setlobby
       permission-message: You don't have zombieinvasion.setlobby
    setarenaspawn:
@@ -59,29 +35,12 @@ commands:
       description: Sets the arena's spawn location.
       permission: zombieinvasion.setarenaspawn
       permission-message: You don't have zombieinvasion.setarenaspawn
-   savemap:
-      permission: zombieinvasion.savemap
-      permission-message: You don't have zombieinvasion.savemap
-   loadmap:
-      permission: zombieinvasion.loadmap
-      permission-message: You don't have zombieinvasion.loadmap
-   clearmap:
-      permission: zombieinvasion.clearmap
-      permission-message: You don't have zombieinvasion.clearmap
    selectarena:
       description: Selects an arena for edit.
       permission: zombieinvasion.selectarena
       permission-message: You don't have zombieinvasion.selectarena
-   clearpotionregions:
-      permission: zombieinvasion.clearpotionregions
-      permission-message: You don't have zombieinvasion.clearpotionregions
-   addpotionregion:
-      permission: zombieinvasion.addpotionregion
-      permission-message: You don't have zombieinvasion.addpotionregion
-   potionregioninfo:
-      permission: zombieinvasion.potionregioninfo
-      permission-message: You don't have zombieinvasion.potionregioninfo
-   expandpotionregion:
-      permission: zombieinvasion.expandpotionregion
-      permission-message: You don't have zombieinvasion.expandpotionregion
+   editarena:
+      description: Has many commands for editing the arena.
+      permission: zombieinvasion.editarena
+      permission-message: You don't have zombieinvasion.editarena
       

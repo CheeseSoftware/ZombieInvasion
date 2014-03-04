@@ -6,6 +6,7 @@ import java.util.Random;
 import net.minecraft.server.v1_7_R1.AttributeInstance;
 import net.minecraft.server.v1_7_R1.Entity;
 import net.minecraft.server.v1_7_R1.EntityHuman;
+import net.minecraft.server.v1_7_R1.EntityVillager;
 import net.minecraft.server.v1_7_R1.EntityZombie;
 import net.minecraft.server.v1_7_R1.Navigation;
 import net.minecraft.server.v1_7_R1.PathfinderGoalFloat;
@@ -18,12 +19,15 @@ import net.minecraft.server.v1_7_R1.PathfinderGoalSelector;
 import net.minecraft.server.v1_7_R1.World;
 
 import org.bukkit.craftbukkit.v1_7_R1.util.UnsafeList;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
-public class EntityBlockBreakingZombie extends EntityZombie implements ICustomMonster
+public class EntityBlockBreakingVillager extends EntityVillager implements ICustomMonster
 {
 	private Random r = new Random();
 
-	public EntityBlockBreakingZombie(World world)
+	public EntityBlockBreakingVillager(World world)
 	{
 		super(world);
 
@@ -48,6 +52,39 @@ public class EntityBlockBreakingZombie extends EntityZombie implements ICustomMo
 		catch (Exception e)
 		{
 			e.printStackTrace();
+		}
+		
+		int profession = this.getProfession();
+		
+		switch(profession)
+		{
+		case 0: //farmer
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING,0,8));
+			break;
+		case 1: //Librarian
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.JUMP,0,8));
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,0,2));
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,0,1));
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS,0,1));
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING,0,1));
+			break;
+		case 2:	// Priest
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.HEALTH_BOOST,0,1));
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,0,1));
+			//heal others!
+			break;
+		case 3: //Blacksmith
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,0,2));
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,0,1));
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,0,1));
+			break;
+		case 4: //Butcher
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE,0,1));
+			break;
+		case 5: //Generic
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.SPEED,0,2));
+			((LivingEntity)this).addPotionEffect(new PotionEffect(PotionEffectType.JUMP,0,2));
+			break;
 		}
 
 		this.getNavigation().b(true);
@@ -88,4 +125,16 @@ public class EntityBlockBreakingZombie extends EntityZombie implements ICustomMo
 	{
 		return super.findTarget();
 	}
+	
+	@Override
+	public int aV() {
+        int i = super.aV() + 2;
+
+        if (i > 80) {
+            i = 80;
+        }
+
+        return i;
+    }
+	
 }

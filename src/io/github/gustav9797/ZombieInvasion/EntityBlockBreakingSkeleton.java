@@ -17,7 +17,7 @@ import net.minecraft.server.v1_7_R1.PathfinderGoalRandomLookaround;
 import net.minecraft.server.v1_7_R1.PathfinderGoalSelector;
 import net.minecraft.server.v1_7_R1.World;
 
-public class EntityBlockBreakingSkeleton extends EntitySkeleton
+public class EntityBlockBreakingSkeleton extends EntitySkeleton implements ICustomMonster
 {
 	private Random r = new Random();
 

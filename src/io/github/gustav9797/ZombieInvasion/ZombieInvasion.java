@@ -13,6 +13,7 @@ import java.util.Random;
 
 import net.minecraft.server.v1_7_R1.BiomeBase;
 import net.minecraft.server.v1_7_R1.BiomeMeta;
+import net.minecraft.server.v1_7_R1.EntityVillager;
 import net.minecraft.server.v1_7_R1.EntityZombie;
 import net.minecraft.server.v1_7_R1.EntitySkeleton;
 
@@ -76,8 +77,12 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		this.configFile = new File(this.getDataFolder() + File.separator + "config.yml");
 		this.schematicsDirectory = new File(this.getDataFolder() + File.separator + "schematics");
 		this.entityTypes = new LinkedList<CustomEntityType>();
+		
 		this.entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityBlockBreakingZombie.class));
 		this.entityTypes.add(new CustomEntityType("Skeleton", 51, EntityType.SKELETON, EntitySkeleton.class, EntityBlockBreakingSkeleton.class));
+		
+		this.entityTypes.add(new CustomEntityType("EvolvedZombie ", 120, EntityType.VILLAGER, EntityVillager.class, EntityBlockBreakingVillager.class));
+		
 		this.registerEntities();
 		this.arenas = new HashMap<String, Arena>();
 		this.lobby = new Lobby(arenas, this);

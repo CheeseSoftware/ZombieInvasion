@@ -5,10 +5,11 @@ import java.util.Map;
 
 import net.minecraft.server.v1_7_R1.EntityInsentient;
 import net.minecraft.server.v1_7_R1.EntityTypes;
+import net.minecraft.server.v1_7_R1.IMonster;
 
 import org.bukkit.entity.EntityType;
 
-public class CustomEntityType
+public class CustomEntityType implements IMonster
 {
 	// SKELETON("Skeleton", 51, EntityType.SKELETON, EntitySkeleton.class,
 	// CustomEntitySkeleton.class),

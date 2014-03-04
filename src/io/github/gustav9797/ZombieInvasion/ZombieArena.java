@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import net.minecraft.server.v1_7_R1.EntityMonster;
 import net.minecraft.server.v1_7_R1.EntityPlayer;
+import net.minecraft.server.v1_7_R1.IMonster;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -18,7 +19,10 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
 
@@ -90,7 +94,7 @@ public class ZombieArena extends Arena
 		{
 			MonsterSpawnPoint spawnPoint = i.next();
 			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) this.middle.getWorld()).getHandle();
-			EntityMonster monster = null;
+			Monster monster = null;
 
 			if (spawnPoint.hasEntityType(EntityType.SKELETON))
 			{
@@ -101,6 +105,11 @@ public class ZombieArena extends Arena
 			{
 				monster = new EntityBlockBreakingZombie(mcWorld);
 				((EntityBlockBreakingZombie) monster).setArena(this);
+			}
+			else if (spawnPoint.hasEntityType(EntityType.VILLAGER))
+			{
+				monster = new EntityBlockBreakingVillager(mcWorld);
+				((EntityBlockBreakingVillager) monster).setArena(this);
 			}
 
 			if (monster != null)

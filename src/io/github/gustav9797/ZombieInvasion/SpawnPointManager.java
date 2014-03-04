@@ -12,6 +12,7 @@ import java.util.Random;
 import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 public class SpawnPointManager
@@ -42,10 +43,10 @@ public class SpawnPointManager
 		YamlConfiguration config = new YamlConfiguration();
 		try
 		{
-			List<MonsterSpawnPoint> temp = new ArrayList<MonsterSpawnPoint>();
+			List<SpawnPoint> temp = new ArrayList<SpawnPoint>();
 			for (SpawnPoint s : this.spawnPoints.values())
-				if (s instanceof MonsterSpawnPoint)
-					temp.add((MonsterSpawnPoint) s);
+				if (s instanceof SpawnPoint)
+					temp.add((SpawnPoint) s);
 			config.set("monsterSpawnPoints", temp);
 			config.save(this.configFile);
 		}
@@ -63,21 +64,22 @@ public class SpawnPointManager
 		{
 			config.load(this.configFile);
 			this.spawnPoints.clear();
-			List<MonsterSpawnPoint> monsterSpawnPoints = (List<MonsterSpawnPoint>) config.getList("monsterSpawnPoints");
-			// List<SpawnPoint> temp = (List<SpawnPoint>)
-			// config.getList("monsterSpawnPoints");
-			if (monsterSpawnPoints != null)
+			List<SpawnPoint> spawnPoints = (List<SpawnPoint>) config.getList("monsterSpawnPoints");
+			if (spawnPoints != null)
 			{
-				for (MonsterSpawnPoint m : monsterSpawnPoints)
+				for (SpawnPoint m : spawnPoints)
 					this.spawnPoints.put(m.getId(), m);
-				// for(SpawnPoint spawnPoint : temp)
-				// this.spawnPoints.put(spawnPoint.getId(), spawnPoint);
 			}
 		}
 		catch (IOException | InvalidConfigurationException e)
 		{
 			e.printStackTrace();
 		}
+	}
+	
+	public boolean HasSpawnPoint(int id)
+	{
+		return this.spawnPoints.containsKey(id);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -110,15 +112,6 @@ public class SpawnPointManager
 		this.Save();
 	}
 
-	public Collection<MonsterSpawnPoint> getMonsterSpawnPoints()
-	{
-		List<MonsterSpawnPoint> temp = new ArrayList<MonsterSpawnPoint>();
-		for (SpawnPoint s : this.spawnPoints.values())
-			if (s instanceof MonsterSpawnPoint)
-				temp.add((MonsterSpawnPoint) s);
-		return temp;
-	}
-
 	public Collection<SpawnPoint> getSpawnPoints()
 	{
 		return this.spawnPoints.values();
@@ -131,12 +124,33 @@ public class SpawnPointManager
 		return null;
 	}
 
-	public MonsterSpawnPoint getRandomMonsterSpawnPoint()
+	public SpawnPoint getRandomSpawnPoint()
 	{
-		List<MonsterSpawnPoint> temp = new ArrayList<MonsterSpawnPoint>();
+		List<SpawnPoint> temp = new ArrayList<SpawnPoint>();
 		for (SpawnPoint p : this.spawnPoints.values())
-			if (p instanceof MonsterSpawnPoint)
-				temp.add((MonsterSpawnPoint) p);
+			temp.add((SpawnPoint) p);
+		if (temp.size() > 0)
+			return temp.get(r.nextInt(temp.size()));
+		return null;
+	}
+
+	public SpawnPoint getRandomPlayerSpawnPoint()
+	{
+		List<SpawnPoint> temp = new ArrayList<SpawnPoint>();
+		for (SpawnPoint p : this.spawnPoints.values())
+			if (p.hasEntityType(EntityType.PLAYER))
+				temp.add((SpawnPoint) p);
+		if (temp.size() > 0)
+			return temp.get(r.nextInt(temp.size()));
+		return null;
+	}
+
+	public SpawnPoint getRandomMonsterSpawnPoint()
+	{
+		List<SpawnPoint> temp = new ArrayList<SpawnPoint>();
+		for (SpawnPoint p : this.spawnPoints.values())
+			if (!p.hasEntityType(EntityType.PLAYER))
+				temp.add((SpawnPoint) p);
 		if (temp.size() > 0)
 			return temp.get(r.nextInt(temp.size()));
 		return null;

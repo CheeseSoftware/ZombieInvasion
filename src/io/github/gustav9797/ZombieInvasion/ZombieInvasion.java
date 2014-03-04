@@ -72,16 +72,16 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	{
 		ConfigurationSerialization.registerClass(BorderBlock.class, "BorderBlock");
 		ConfigurationSerialization.registerClass(PotionRegion.class, "PotionRegion");
-		ConfigurationSerialization.registerClass(MonsterSpawnPoint.class, "MonsterSpawnPoint");
+		ConfigurationSerialization.registerClass(SpawnPoint.class, "SpawnPoint");
 
 		this.configFile = new File(this.getDataFolder() + File.separator + "config.yml");
 		this.schematicsDirectory = new File(this.getDataFolder() + File.separator + "schematics");
 		this.entityTypes = new LinkedList<CustomEntityType>();
-		
+
 		this.entityTypes.add(new CustomEntityType("Zombie", 54, EntityType.ZOMBIE, EntityZombie.class, EntityBlockBreakingZombie.class));
 		this.entityTypes.add(new CustomEntityType("Skeleton", 51, EntityType.SKELETON, EntitySkeleton.class, EntityBlockBreakingSkeleton.class));
 		this.entityTypes.add(new CustomEntityType("Villager ", 120, EntityType.VILLAGER, EntityVillager.class, EntityBlockBreakingVillager.class));
-		
+
 		this.registerEntities();
 		this.arenas = new HashMap<String, Arena>();
 		this.lobby = new Lobby(arenas, this);
@@ -256,7 +256,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 							{
 								if (args.length > 0)
 								{
-									int size = Integer.parseInt(args[0]);
+									int size = Integer.parseInt(args[1]);
 									if (size > 0 && size <= 128)
 									{
 										arena.setSize(size);
@@ -273,15 +273,15 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 								boolean roof = false;
 								int height = 100;
 								Material material = Material.GLASS;
-								if (args.length >= 1)
+								if (args.length >= 2)
 								{
-									material = Material.getMaterial(args[0]);
+									material = Material.getMaterial(args[1]);
 									if (material != null)
 									{
-										if (args.length >= 2)
-											height = Integer.parseInt(args[1]);
 										if (args.length >= 3)
-											roof = Boolean.parseBoolean(args[2]);
+											height = Integer.parseInt(args[2]);
+										if (args.length >= 4)
+											roof = Boolean.parseBoolean(args[3]);
 										arena.CreateBorder(material, height, roof);
 										sender.sendMessage("Border created.");
 									}
@@ -323,13 +323,13 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 							}
 							else if (args[0].equals("addpotionregion"))
 							{
-								if (args.length >= 3)
+								if (args.length >= 4)
 								{
-									PotionEffectType type = PotionEffectType.getByName(args[0]);
+									PotionEffectType type = PotionEffectType.getByName(args[1]);
 									if (type != null)
 									{
-										int duration = Integer.parseInt(args[1]);
-										int amplifier = Integer.parseInt(args[2]);
+										int duration = Integer.parseInt(args[2]);
+										int amplifier = Integer.parseInt(args[3]);
 										LocalSession session = WorldEdit.getInstance().getSession(player.getName());
 										if (session != null)
 										{
@@ -356,11 +356,11 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 							}
 							else if (args[0].equals("expandpotionregion"))
 							{
-								if (args.length >= 2)
+								if (args.length >= 3)
 								{
-									String axis = args[0];
+									String axis = args[1];
 									axis = axis.toLowerCase();
-									int amount = Integer.parseInt(args[1]);
+									int amount = Integer.parseInt(args[2]);
 									List<PotionRegion> regions = arena.getPotionRegions();
 									for (PotionRegion region : regions)
 									{
@@ -386,15 +386,15 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 								else
 									sender.sendMessage("Usage: /expandpotionregion <axis> <amount>");
 							}
-							else if (args[0].equals("closestmonsterspawnpoint"))
+							else if (args[0].equals("closestspawnpoint"))
 							{
 								if (arena instanceof ZombieArena)
 								{
 									ZombieArena zombieArena = (ZombieArena) arena;
 									SpawnPointManager manager = zombieArena.getSpawnPointManager();
 									double closestDistance = Integer.MAX_VALUE;
-									MonsterSpawnPoint closestSpawnPoint = null;
-									for (MonsterSpawnPoint p : manager.getMonsterSpawnPoints())
+									SpawnPoint closestSpawnPoint = null;
+									for (SpawnPoint p : manager.getSpawnPoints())
 									{
 										double distance = p.getPosition().distance(player.getLocation().toVector());
 										if (distance < closestDistance)
@@ -417,54 +417,74 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 										sender.sendMessage("Could not find any spawn points!");
 								}
 							}
-							else if (args[0].equals("addspawnpointmonster"))
+							else if (args[0].equals("addspawnpointentity"))
 							{
-								if (args.length > 2)
+								if (args.length > 3)
 								{
 									if (arena instanceof ZombieArena)
 									{
 										int id = Integer.parseInt(args[1]);
+										int chance = Integer.parseInt(args[3]);
 										String monster = args[2];
 										EntityType monsterType = EntityType.fromName(monster);
 										if (monsterType != null)
 										{
 											ZombieArena zombieArena = (ZombieArena) arena;
 											SpawnPointManager manager = zombieArena.getSpawnPointManager();
-											MonsterSpawnPoint spawnPoint = (MonsterSpawnPoint)manager.getSpawnPoint(id);
+											SpawnPoint spawnPoint = manager.getSpawnPoint(id);
 											if (spawnPoint != null)
 											{
-												spawnPoint.AddEntityType(monsterType);
-												sender.sendMessage("Added monstertype " + monsterType.toString());
+												spawnPoint.AddEntityType(monsterType, chance);
+												sender.sendMessage("Added entitytype " + monsterType.toString() + " with chance " + chance);
 												manager.Save();
 											}
 											else
-												sender.sendMessage("MonsterSpawnPoint does not exist.");
+												sender.sendMessage("Spawn point does not exist.");
 										}
 										else
-											sender.sendMessage("Monster type does not exist.");
+											sender.sendMessage("Entity type does not exist.");
 									}
 								}
 								else
-									sender.sendMessage("Usage: /editarena addspawnpointmonster <id> <monsterType>");
+									sender.sendMessage("Usage: /editarena addspawnpointentity <id> <entityType> <chance>");
 							}
-							else if (args[0].equals("showmonsterspawnpoints"))
+							else if (args[0].equals("showspawnpoints"))
 							{
 								if (arena instanceof ZombieArena)
 								{
 									ZombieArena zombieArena = (ZombieArena) arena;
 									SpawnPointManager manager = zombieArena.getSpawnPointManager();
 									manager.Show(player);
-									player.sendMessage("Monster spawn points shown.");
+									player.sendMessage("Spawn points shown.");
 								}
 							}
-							else if (args[0].equals("hidemonsterspawnpoints"))
+							else if (args[0].equals("hidespawnpoints"))
 							{
 								if (arena instanceof ZombieArena)
 								{
 									ZombieArena zombieArena = (ZombieArena) arena;
 									SpawnPointManager manager = zombieArena.getSpawnPointManager();
 									manager.Hide(player);
-									player.sendMessage("Monster spawn points hidden.");
+									player.sendMessage("Spawn points hidden.");
+								}
+							}
+							else if (args[0].equals("removespawnpoint"))
+							{
+								if (arena instanceof ZombieArena)
+								{
+									if (args.length > 1)
+									{
+										ZombieArena zombieArena = (ZombieArena) arena;
+										int id = Integer.parseInt(args[1]);
+										SpawnPointManager manager = zombieArena.getSpawnPointManager();
+										if (manager.HasSpawnPoint(id))
+										{
+											manager.RemoveSpawnPoint(id);
+											sender.sendMessage("Spawn point removed.");
+										}
+										else
+											sender.sendMessage("Spawn point does not exist.");
+									}
 								}
 							}
 							else
@@ -694,7 +714,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 						{
 							SpawnPointManager manager = ((ZombieArena) a).getSpawnPointManager();
 							int id = manager.getFreeSpawnPointId();
-							manager.AddSpawnPoint(id, new MonsterSpawnPoint(id, event.getBlockPlaced().getLocation().toVector()));
+							manager.AddSpawnPoint(id, new SpawnPoint(id, event.getBlockPlaced().getLocation().toVector()));
 							player.sendMessage("Monster spawnpoint ID " + id + " added!");
 							a.getMiddle().getWorld().getBlockAt(event.getBlock().getLocation()).setType(Material.AIR);
 						}

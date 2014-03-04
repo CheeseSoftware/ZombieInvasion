@@ -23,6 +23,7 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 	int findRadius = 10;
 	int findHeight = 2;
 	int ticksStoodStill = 0;
+	int blockDamageIncrease = 5;
 	boolean isBreaking = false;
 	boolean isWalking = false;
 	Block currentBlock = null;
@@ -32,17 +33,19 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 	boolean couldNotWalkToBlock = false;
 	List<Block> blocksNotWalkable = new ArrayList<Block>();
 	Random r = new Random();
-	
+
 	@SuppressWarnings("deprecation")
-	private static List<Material> nonBreakableMaterials = new ArrayList<Material>(Arrays.asList(Material.BEDROCK, Material.getMaterial(8), Material.getMaterial(9), Material.GRASS, Material.SAND, Material.AIR, Material.QUARTZ_BLOCK));
+	private static List<Material> nonBreakableMaterials = new ArrayList<Material>(Arrays.asList(Material.BEDROCK, Material.getMaterial(8), Material.getMaterial(9), Material.GRASS, Material.SAND,
+			Material.AIR, Material.QUARTZ_BLOCK));
 	private static List<Material> naturalMaterials = new ArrayList<Material>(Arrays.asList(Material.GRASS, Material.DIRT, Material.LEAVES));
 	private static List<Material> priorityMaterials = new ArrayList<Material>(Arrays.asList(Material.WOOD_DOOR, Material.IRON_DOOR, Material.TRAP_DOOR, Material.CHEST, Material.THIN_GLASS,
 			Material.STAINED_GLASS, Material.STAINED_GLASS_PANE, Material.GLASS, Material.TORCH, Material.WOOL));
 
-	public PathfinderGoalFindBreakBlock(EntityInsentient entity, Arena arena)
+	public PathfinderGoalFindBreakBlock(EntityInsentient entity, Arena arena, int blockDamageIncrease)
 	{
 		this.entity = entity;
 		this.arena = arena;
+		this.blockDamageIncrease = blockDamageIncrease;
 	}
 
 	@Override
@@ -119,6 +122,7 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 						return;
 					}
 					this.ticksStoodStill = 0;
+					return;
 				}
 			}
 		}
@@ -134,18 +138,22 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 					isBreaking = true;
 					blockBroken = false;
 				}
-				Location temp = new Location(this.entity.getBukkitEntity().getWorld(), currentBlock.getX() + 0.5F, currentBlock.getY() + 0.5F, currentBlock.getZ() + 0.5F);
-
-				boolean foundPath = this.entity.getNavigation().a(temp.getBlockX(), temp.getBlockY(), temp.getBlockZ(), 1);
-				if (foundPath)
+				if (currentBlock != null)
 				{
-					this.isWalking = true;
+					Location temp = new Location(this.entity.getBukkitEntity().getWorld(), currentBlock.getX() + 0.5F, currentBlock.getY() + 0.5F, currentBlock.getZ() + 0.5F);
+
+					boolean foundPath = this.entity.getNavigation().a(temp.getBlockX(), temp.getBlockY(), temp.getBlockZ(), 1);
+					if (foundPath)
+					{
+						this.isWalking = true;
+						return;
+					}
 				}
 			}
 
-			if (currentBlock != null && currentBlock.getType() != Material.AIR)
+			if (currentBlock != null && this.isBreaking && currentBlock.getType() != Material.AIR)
 			{
-				currentBlockDamage += 5;
+				currentBlockDamage += this.blockDamageIncrease;
 				if (this.entity.aI().nextInt(300) == 0)
 					this.entity.world.triggerEffect(1010, currentBlock.getX(), currentBlock.getY(), currentBlock.getZ(), 0);
 				int i = (int) ((float) this.currentBlockDamage / 240.0F * 10.0F);
@@ -165,6 +173,8 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 			}
 			else
 			{
+				if (this.currentBlock != null)
+					this.entity.world.d(entity.getId(), currentBlock.getX(), currentBlock.getY(), currentBlock.getZ(), 0);
 				currentBlock = null;
 				isBreaking = false;
 				this.blockBroken = true;
@@ -177,7 +187,7 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 	public boolean CanFindABlock()
 	{
 		List<Block> blocks = this.getCloseBlocks();
-		if(blocks.size() > 0)
+		if (blocks.size() > 0)
 			return true;
 		return false;
 	}

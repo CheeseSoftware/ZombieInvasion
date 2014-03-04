@@ -49,7 +49,8 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton implements ICust
 		}
 
 		this.getNavigation().b(true);
-		//this.goalSelector.a(2, new PathfinderGoalMeleeAttack(this, EntityHuman.class, 1.0D, false));
+		// this.goalSelector.a(2, new PathfinderGoalMeleeAttack(this,
+		// EntityHuman.class, 1.0D, false));
 		this.goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
 		this.goalSelector.a(1, new PathfinderGoalRandomLookaround(this));
 		this.goalSelector.a(1, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0, true));
@@ -62,7 +63,7 @@ public class EntityBlockBreakingSkeleton extends EntitySkeleton implements ICust
 	{
 		if (arena != null)
 			this.targetSelector.a(4, new PathfinderGoalWalkToTile(this, 1.2F, arena.getSpawnLocation()));
-		this.goalSelector.a(3, new PathfinderGoalFindBreakBlock(this, arena));
+		this.goalSelector.a(3, new PathfinderGoalFindBreakBlock(this, arena, 5));
 	}
 
 	public EntityHuman findNearbyVulnerablePlayer(double d0, double d1, double d2)

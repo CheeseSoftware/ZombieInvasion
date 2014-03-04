@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import net.minecraft.server.v1_7_R1.EntityCreature;
 import net.minecraft.server.v1_7_R1.EntityInsentient;
-import net.minecraft.server.v1_7_R1.EntityMonster;
 import net.minecraft.server.v1_7_R1.PathfinderGoal;
 
 import org.bukkit.Bukkit;
@@ -51,9 +51,9 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 
 	public boolean a() // canExecute
 	{
-		if (this.entity instanceof EntityMonster)
+		if (this.entity instanceof EntityCreature)
 		{
-			EntityMonster monster = (EntityMonster) this.entity;
+			EntityCreature monster = (EntityCreature) this.entity;
 			if (monster.getGoalTarget() == null || !monster.getGoalTarget().isAlive())
 				return false;
 			return true;
@@ -72,9 +72,9 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 
 	public boolean b() // canContinue
 	{
-		if (this.entity instanceof EntityMonster)
+		if (this.entity instanceof EntityCreature)
 		{
-			EntityMonster monster = (EntityMonster) this.entity;
+			EntityCreature monster = (EntityCreature) this.entity;
 			if (monster.getGoalTarget() == null || !monster.getGoalTarget().isAlive())
 				return false;
 			return true;
@@ -100,9 +100,9 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 		if (currentLocation.getBlockX() == oldLocation.getBlockX() && currentLocation.getBlockY() == oldLocation.getBlockY() && currentLocation.getBlockZ() == oldLocation.getBlockZ())
 		{
 			Entity entity = this.entity.getBukkitEntity();
-			if (this.entity instanceof EntityMonster)
+			if (this.entity instanceof EntityCreature)
 			{
-				EntityMonster monster = (EntityMonster) this.entity;
+				EntityCreature monster = (EntityCreature) this.entity;
 				if (monster.getGoalTarget() == null || !monster.getGoalTarget().isAlive())
 					return;
 			}
@@ -150,9 +150,9 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 
 	private Block getRandomCloseBlock()
 	{
-		if (this.entity instanceof EntityMonster)
+		if (this.entity instanceof EntityCreature)
 		{
-			EntityMonster zombie = (EntityMonster) this.entity;
+			EntityCreature zombie = (EntityCreature) this.entity;
 			if (zombie.target != null && zombie.target.isAlive())
 			{
 				Set<Block> blocks = this.getCloseBlocks();

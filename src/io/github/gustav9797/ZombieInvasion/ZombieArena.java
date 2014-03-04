@@ -25,7 +25,7 @@ import org.bukkit.scheduler.BukkitScheduler;
 public class ZombieArena extends Arena
 {
 	protected Map<UUID, EntityCreature> monsters = new HashMap<UUID, EntityCreature>();
-	protected List<MonsterSpawnPoint> zombiesToSpawn = new ArrayList<MonsterSpawnPoint>();
+	protected List<SpawnPoint> monstersToSpawn = new ArrayList<SpawnPoint>();
 	protected SpawnPointManager spawnPointManager;
 	protected int currentWave = 0;
 	protected int ticksUntilNextWave = -1;
@@ -65,12 +65,12 @@ public class ZombieArena extends Arena
 		return this.spawnPointManager;
 	}
 
-	public void SpawnZombie(MonsterSpawnPoint spawnPoint)
+	public void SpawnMonster(SpawnPoint spawnPoint)
 	{
-		zombiesToSpawn.add(spawnPoint);
+		monstersToSpawn.add(spawnPoint);
 	}
 
-	public void SpawnZombieGroup(MonsterSpawnPoint spawnPoint, int amount)
+	public void SpawnMonsterGroup(SpawnPoint spawnPoint, int amount)
 	{
 		int delay = 1;
 		for (int i = 0; i < amount; i++)
@@ -85,34 +85,38 @@ public class ZombieArena extends Arena
 
 	public void onSpawnZombieTick()
 	{
-		Iterator<MonsterSpawnPoint> i = zombiesToSpawn.iterator();
+		Iterator<SpawnPoint> i = monstersToSpawn.iterator();
 		while (i.hasNext() && monsters.size() < this.monsterSpawnLimit)
 		{
-			MonsterSpawnPoint spawnPoint = i.next();
+			SpawnPoint spawnPoint = i.next();
 			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) this.middle.getWorld()).getHandle();
 			EntityCreature monster = null;
 
-			if (spawnPoint.hasEntityType(EntityType.SKELETON))
+			EntityType entityType = spawnPoint.getRandomEntityType();
+			if (entityType != null)
 			{
-				monster = new EntityBlockBreakingSkeleton(mcWorld);
-				((EntityBlockBreakingSkeleton) monster).setArena(this);
-			}
-			else if (spawnPoint.hasEntityType(EntityType.ZOMBIE))
-			{
-				monster = new EntityBlockBreakingZombie(mcWorld);
-				((EntityBlockBreakingZombie) monster).setArena(this);
-			}
-			else if (spawnPoint.hasEntityType(EntityType.VILLAGER))
-			{
-				monster = new EntityBlockBreakingVillager(mcWorld);
-				((EntityBlockBreakingVillager) monster).setArena(this);
-			}
+				switch (entityType)
+				{
+					case SKELETON:
+						monster = new EntityBlockBreakingSkeleton(mcWorld);
+						break;
+					case ZOMBIE:
+						monster = new EntityBlockBreakingZombie(mcWorld);
+						break;
+					case VILLAGER:
+						monster = new EntityBlockBreakingVillager(mcWorld);
+						break;
+					default:
+						break;
+				}
 
-			if (monster != null)
-			{
-				monster.getBukkitEntity().teleport(spawnPoint.getPosition().toLocation(this.middle.getWorld()));
-				monsters.put(monster.getBukkitEntity().getUniqueId(), monster);
-				mcWorld.addEntity(monster);
+				if (monster != null)
+				{
+					((ICustomMonster)monster).setArena(this);
+					monster.getBukkitEntity().teleport(spawnPoint.getPosition().toLocation(this.middle.getWorld()));
+					monsters.put(monster.getBukkitEntity().getUniqueId(), monster);
+					mcWorld.addEntity(monster);
+				}
 			}
 			i.remove();
 			break;
@@ -149,11 +153,11 @@ public class ZombieArena extends Arena
 	@Override
 	public void SendWave(int wave)
 	{
-		int spawnPointsSize = this.getSpawnPointManager().getMonsterSpawnPoints().size();
+		int spawnPointsSize = this.getSpawnPointManager().getSpawnPoints().size();
 		for (int i = 0; i < zombieGroups; i++)
 		{
 			if (spawnPointsSize > 0)
-				SpawnZombieGroup(this.getSpawnPointManager().getRandomMonsterSpawnPoint(), getZombieSpawnAmount(wave) / zombieGroups);
+				SpawnMonsterGroup(this.getSpawnPointManager().getRandomMonsterSpawnPoint(), getZombieSpawnAmount(wave) / zombieGroups);
 			else
 			{
 				int x = Integer.MAX_VALUE;
@@ -164,10 +168,10 @@ public class ZombieArena extends Arena
 					z = r.nextInt(size - 4) - this.size / 2 + 2;
 				}
 				Location groupLocation = new Location(middle.getWorld(), x + middle.getBlockX(), r.nextInt(size) + middle.getBlockY(), z + middle.getBlockZ());
-				MonsterSpawnPoint s = new MonsterSpawnPoint(-1, groupLocation.toVector());
-				for(EntityType e : EntityType.values())
-					s.AddEntityType(e);
-				SpawnZombieGroup(s, getZombieSpawnAmount(wave) / zombieGroups);
+				SpawnPoint s = new SpawnPoint(-1, groupLocation.toVector());
+				for (EntityType e : EntityType.values())
+					s.AddEntityType(e, 1);
+				SpawnMonsterGroup(s, getZombieSpawnAmount(wave) / zombieGroups);
 
 			}
 		}

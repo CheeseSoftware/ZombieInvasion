@@ -33,7 +33,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
@@ -207,7 +206,6 @@ public abstract class Arena implements Listener
 				CuboidClipboard cc = SchematicFormat.MCEDIT.load(schematic);
 				com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() - getRadius() + 1, groundLevel, this.middle.getBlockZ() - getRadius() + 1);
 				cc.paste(es, location, false);
-				es.flushQueue();
 			}
 			catch (MaxChangedBlocksException | DataException | IOException e)
 			{
@@ -260,11 +258,16 @@ public abstract class Arena implements Listener
 	{
 		if (this.spectators.size() >= this.players.size())
 		{
-			Broadcast("Everyone have died. Reseting arena...");
-			this.Reset();
-			this.LoadMap();
-			this.TryStart();
+			Restart("Everyone have died. Reseting arena...");
 		}
+	}
+
+	private void Restart(String message)
+	{
+		Broadcast(message);
+		this.Reset();
+		this.LoadMap();
+		this.TryStart();
 	}
 
 	@SuppressWarnings("deprecation")
@@ -306,17 +309,7 @@ public abstract class Arena implements Listener
 		this.RemoveSpectator(player);
 		player.setHealth((double) 20);
 		player.setFoodLevel(20);
-		List<Player> possiblePlayers = new ArrayList<Player>();
-		for (Player poss : players)
-			if (!isSpectator(poss))
-				possiblePlayers.add(poss);
-		if (possiblePlayers.size() > 0)
-			player.teleport(possiblePlayers.get(r.nextInt(possiblePlayers.size())));
-		else
-			player.teleport(this.spawnLocation);
-		/*player.addPotionEffect(new PotionEffect(PotionEffectType.HEALTH_BOOST, 10, 5));
-		player.addPotionEffect(new PotionEffect(PotionEffectType.HEAL, 10, 1));
-		player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 10, 1));*/
+		this.TeleportPlayerToRandomPlayer(player);
 		player.sendMessage("[ZombieInvasion] You are now alive again!");
 
 	}
@@ -325,8 +318,11 @@ public abstract class Arena implements Listener
 	{
 		for (Player player : this.players)
 		{
-			player.teleport(spawnLocation);
-			player.setHealth((double) player.getMaxHealth());
+			if (!player.isDead())
+			{
+				player.teleport(spawnLocation);
+				player.setHealth((double) player.getMaxHealth());
+			}
 		}
 	}
 
@@ -344,8 +340,11 @@ public abstract class Arena implements Listener
 		}
 		for (Player player : players)
 		{
-			player.teleport(this.spawnLocation);
-			OstEconomyPlugin.getPlugin().ResetStats(player);
+			if (!player.isDead())
+			{
+				player.teleport(this.spawnLocation);
+				OstEconomyPlugin.getPlugin().ResetStats(player);
+			}
 		}
 		this.ticksPassed = -1;
 		this.ticksSinceLastWave = -1;
@@ -399,24 +398,16 @@ public abstract class Arena implements Listener
 	protected void SaveConfig()
 	{
 		config = new YamlConfiguration();
-		try
-		{
-			config.set("world", middle.getWorld().getName());
-			config.set("size", this.size);
-			config.set("startAtPlayerCount", this.startAtPlayerCount);
-			config.set("maxPlayers", this.maxPlayers);
-			config.set("secondsAfterStart", this.secondsAfterStart);
-			config.set("spawnLocation", this.spawnLocation.toVector());
-			config.set("spawnLocationYaw", this.spawnLocation.getYaw());
-			config.set("spawnLocationPitch", this.spawnLocation.getPitch());
-			config.set("location", middle.toVector());
-			config.set("schematicFileName", this.schematicFileName);
-			config.save(configFile);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+		config.set("world", middle.getWorld().getName());
+		config.set("size", this.size);
+		config.set("startAtPlayerCount", this.startAtPlayerCount);
+		config.set("maxPlayers", this.maxPlayers);
+		config.set("secondsAfterStart", this.secondsAfterStart);
+		config.set("spawnLocation", this.spawnLocation.toVector());
+		config.set("spawnLocationYaw", this.spawnLocation.getYaw());
+		config.set("spawnLocationPitch", this.spawnLocation.getPitch());
+		config.set("location", middle.toVector());
+		config.set("schematicFileName", this.schematicFileName);
 	}
 
 	protected void LoadConfig()
@@ -547,23 +538,20 @@ public abstract class Arena implements Listener
 		List<PotionRegion> safeRegions = new ArrayList<PotionRegion>();
 		for (PotionRegion safeRegion : this.potionRegions)
 		{
-			for (PotionEffect safeEffect : safeRegion.getEffects())
-			{
-				if (safeEffect.getType().equals(PotionEffectType.WATER_BREATHING))
-					safeRegions.add(safeRegion);
-			}
+			if (safeRegion != null && safeRegion.isNeutral())
+				safeRegions.add(safeRegion);
 		}
 
 		for (PotionRegion potionRegion : this.potionRegions)
 		{
 			Iterator<Player> it = this.players.iterator();
-			while(it.hasNext())
+			while (it.hasNext())
 			{
 				Player player = it.next();
 				boolean isPlayerSafe = false;
-				if (!player.isDead() && player.isOnline() && !spectators.contains(player))
+				if (!player.isDead() && player.isOnline() && !spectators.contains(player) && player.getGameMode() == GameMode.SURVIVAL)
 				{
-					for(PotionRegion verySafeRegion : safeRegions)
+					for (PotionRegion verySafeRegion : safeRegions)
 					{
 						if (verySafeRegion.getRegion().contains(BukkitUtil.toVector(player.getLocation())))
 						{
@@ -571,14 +559,12 @@ public abstract class Arena implements Listener
 							break;
 						}
 					}
-					
+
 					if (!isPlayerSafe && potionRegion.getRegion().contains(BukkitUtil.toVector(player.getLocation())))
 					{
 						for (PotionEffect effect : potionRegion.getEffects())
 						{
-							if (player.hasPotionEffect(effect.getType()))
-								player.removePotionEffect(effect.getType());
-							player.addPotionEffect(effect);
+							player.addPotionEffect(effect, true);
 						}
 					}
 				}
@@ -725,13 +711,8 @@ public abstract class Arena implements Listener
 
 	public boolean isBorder(Vector position)
 	{
-		for (BorderBlock block : this.border)
-		{
-			Vector loc = block.getLocation();
-			if (loc.getBlockX() == position.getBlockX() && loc.getBlockY() == position.getBlockY() && loc.getBlockZ() == position.getBlockZ())
-				return true;
-		}
-		return false;
+		return (position.getBlockX() == (this.middle.getBlockX() + this.getRadius())) || (position.getBlockX() == (this.middle.getBlockX() - this.getRadius()))
+				|| (position.getBlockZ() == (this.middle.getBlockZ() + this.getRadius())) || (position.getBlockZ() == (this.middle.getBlockZ() - this.getRadius()));
 	}
 
 	public boolean isOnBorder(Vector position)
@@ -775,6 +756,18 @@ public abstract class Arena implements Listener
 			}
 		}
 	}
+	
+	public void TeleportPlayerToRandomPlayer(Player player)
+	{
+		List<Player> possiblePlayers = new ArrayList<Player>();
+		for (Player poss : players)
+			if (!isSpectator(poss) && poss != player)
+				possiblePlayers.add(poss);
+		if (possiblePlayers.size() > 0)
+			player.teleport(possiblePlayers.get(r.nextInt(possiblePlayers.size())));
+		else
+			player.teleport(this.spawnLocation);
+	}
 
 	public void JoinPlayer(Player player)
 	{
@@ -788,27 +781,27 @@ public abstract class Arena implements Listener
 		player.setFoodLevel(20);
 		lobby.UpdateSigns();
 		scoreboard.AddPlayerScoreboard(player);
+		this.TeleportPlayerToRandomPlayer(player);
+
 		if (this.isRunning())
 		{
 			this.MakeSpectator(player);
-			player.teleport(this.spawnLocation);
 			CheckSpectators();
 		}
 		else
 		{
-			player.teleport(this.spawnLocation);
 			this.Broadcast(player.getName() + " has joined the arena!");
 			TryStart();
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public void RemovePlayer(Player player, String reason)
 	{
 		while (players.contains(player))
 			players.remove(player);
 		player.removeMetadata("arena", ZombieInvasion.getPlugin());
 		player.teleport(lobby.getLocation());
-		player.getInventory().clear();
 		scoreboard.RemovePlayerScoreboard(player);
 		lobby.UpdateSigns();
 		RemoveSpectator(player);
@@ -818,6 +811,8 @@ public abstract class Arena implements Listener
 			this.Reset();
 			this.LoadMap();
 		}
+		player.getInventory().clear();
+		player.updateInventory();
 		this.Broadcast(player.getName() + " has " + reason + "!");
 	}
 
@@ -837,9 +832,10 @@ public abstract class Arena implements Listener
 			event.getDrops().clear();
 			if (this.isRunning() && !this.isStarting())
 			{
-				this.MakeSpectator(player);
-				player.teleport(this.spawnLocation);
-				CheckSpectators();
+				if (this.spectators.size() >= this.players.size() - 1)
+					Restart("Everyone have died. Reseting arena...");
+				else
+					this.MakeSpectator(player);
 			}
 		}
 	}

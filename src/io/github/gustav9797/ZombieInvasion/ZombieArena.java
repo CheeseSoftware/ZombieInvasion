@@ -113,7 +113,10 @@ public class ZombieArena extends Arena
 				if (monster != null)
 				{
 					((ICustomMonster)monster).setArena(this);
-					monster.getBukkitEntity().teleport(spawnPoint.getPosition().toLocation(this.middle.getWorld()));
+					double xd = r.nextDouble()/10;
+					double zd = r.nextDouble()/10;
+					Location l = new Location(this.middle.getWorld(), spawnPoint.getPosition().getBlockX() + xd, spawnPoint.getPosition().getBlockY(), spawnPoint.getPosition().getBlockZ() + zd);
+					monster.getBukkitEntity().teleport(l);
 					monsters.put(monster.getBukkitEntity().getUniqueId(), monster);
 					mcWorld.addEntity(monster);
 				}
@@ -197,6 +200,7 @@ public class ZombieArena extends Arena
 	public void Reset()
 	{
 		super.Reset();
+		this.currentWave = 0;
 		if (this.sendWavesTaskId != -1)
 		{
 			Bukkit.getServer().getScheduler().cancelTask(this.sendWavesTaskId);

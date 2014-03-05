@@ -325,8 +325,9 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 							{
 								if (args.length >= 4)
 								{
-									PotionEffectType type = PotionEffectType.getByName(args[1]);
-									if (type != null)
+									String typeString = args[1];
+									typeString = typeString.toUpperCase();
+									if (typeString.equals("NONE") || PotionEffectType.getByName(typeString) != null)
 									{
 										int duration = Integer.parseInt(args[2]);
 										int amplifier = Integer.parseInt(args[3]);
@@ -337,8 +338,19 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 											{
 												Region region = session.getSelection(BukkitUtil.getLocalWorld(arena.getMiddle().getWorld()));
 												CuboidRegion newRegion = new CuboidRegion(region.getWorld(), region.getMinimumPoint(), region.getMaximumPoint());
-												arena.AddPotionRegion(new PotionRegion(newRegion, new ArrayList<PotionEffect>(Arrays.asList(new PotionEffect(type, duration, amplifier)))));
-												sender.sendMessage("Potion region added.");
+												PotionEffectType type = PotionEffectType.getByName(typeString);
+												if (typeString.equals("NONE"))
+												{
+													arena.AddPotionRegion(new PotionRegion(newRegion, new ArrayList<PotionEffect>()));
+													sender.sendMessage("Neutral potion region added.");
+												}
+												else if (type != null)
+												{
+													arena.AddPotionRegion(new PotionRegion(newRegion, new ArrayList<PotionEffect>(Arrays.asList(new PotionEffect(type, duration, amplifier)))));
+													sender.sendMessage("Potion region added.");
+												}
+												else
+													sender.sendMessage("Potion effect type does not exist.");
 											}
 											catch (IncompleteRegionException e)
 											{

@@ -52,9 +52,13 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 	public boolean a() // canExecute
 	{
 		this.ticksPassed++;
-		if (this.ticksPassed < 5)
+		if (this.ticksPassed < 50)
 			return false;
-		return !this.isBreaking && this.CanFindABlock();
+		else
+		{
+			this.ticksPassed = 0;
+			return !this.isBreaking && this.CanFindABlock();
+		}
 	}
 
 	@Override
@@ -84,7 +88,8 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 	@Override
 	public boolean b() // canContinue
 	{
-		return !this.couldNotWalkToBlock && (this.isBreaking || this.isWalking || this.CanFindABlock());
+		return true;
+		//return !this.couldNotWalkToBlock && (this.isBreaking || this.isWalking || this.CanFindABlock());
 	}
 
 	@Override

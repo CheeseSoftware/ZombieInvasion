@@ -206,6 +206,7 @@ public abstract class Arena implements Listener
 				CuboidClipboard cc = SchematicFormat.MCEDIT.load(schematic);
 				com.sk89q.worldedit.Vector location = new com.sk89q.worldedit.Vector(this.middle.getBlockX() - getRadius() + 1, groundLevel, this.middle.getBlockZ() - getRadius() + 1);
 				cc.paste(es, location, false);
+				es.flushQueue();
 			}
 			catch (MaxChangedBlocksException | DataException | IOException e)
 			{

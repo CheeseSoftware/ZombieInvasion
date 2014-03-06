@@ -124,4 +124,16 @@ public class EntityBlockBreakingVillager extends EntityVillager implements ICust
 		}
 		return null;
 	}
+
+	@Override
+	public int aV() {
+		int i = super.aV() + 2;
+
+		if (i > 80) {
+	       i = 80;
+	    }
+	
+		return i;
+	}
+
 }

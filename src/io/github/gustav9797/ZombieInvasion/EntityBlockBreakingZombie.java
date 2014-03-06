@@ -11,8 +11,6 @@ import net.minecraft.server.v1_7_R1.Navigation;
 import net.minecraft.server.v1_7_R1.PathfinderGoalFloat;
 import net.minecraft.server.v1_7_R1.PathfinderGoalHurtByTarget;
 import net.minecraft.server.v1_7_R1.PathfinderGoalLookAtPlayer;
-import net.minecraft.server.v1_7_R1.PathfinderGoalMeleeAttack;
-import net.minecraft.server.v1_7_R1.PathfinderGoalNearestAttackableTarget;
 import net.minecraft.server.v1_7_R1.PathfinderGoalRandomLookaround;
 import net.minecraft.server.v1_7_R1.PathfinderGoalSelector;
 import net.minecraft.server.v1_7_R1.World;
@@ -52,20 +50,28 @@ public class EntityBlockBreakingZombie extends EntityZombie implements ICustomMo
 
 		this.getNavigation().b(true);
 		this.goalSelector.a(6, new PathfinderGoalFloat(this));
-		this.goalSelector.a(7, new PathfinderGoalMeleeAttack(this, EntityHuman.class, 1.0D, false));
+		this.goalSelector.a(7, new PathfinderGoalCustomMeleeAttack(this, EntityHuman.class, 1.0D, false));
 		this.goalSelector.a(8, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
 		this.goalSelector.a(8, new PathfinderGoalRandomLookaround(this));
 		this.targetSelector.a(1, new PathfinderGoalHurtByTarget(this, true));
-		this.targetSelector.a(0, new PathfinderGoalNearestAttackableTarget(this, EntityHuman.class, 0, true));
 		this.a(0.6F, 1.8F);
-		
+
 	}
-	
+
 	public void setArena(Arena arena)
 	{
-		if(arena != null)
+		if (arena != null)
 			this.targetSelector.a(0, new PathfinderGoalWalkToTile(this, 1.0F, arena.getSpawnLocation()));
 		this.goalSelector.a(1, new PathfinderGoalBreakBlock(this, arena));
+		this.targetSelector.a(0, new PathfinderGoalCustomNearestAttackableTarget(this, 0, arena));
+	}
+
+	@Override
+	protected Entity findTarget()
+	{
+		EntityHuman entityhuman = this.findNearbyVulnerablePlayer(128, 128, 128);
+
+		return entityhuman != null && this.o(entityhuman) ? entityhuman : null;
 	}
 
 	public EntityHuman findNearbyVulnerablePlayer(double d0, double d1, double d2)
@@ -81,11 +87,5 @@ public class EntityBlockBreakingZombie extends EntityZombie implements ICustomMo
 			}
 		}
 		return null;
-	}
-
-	@Override
-	public Entity findTarget()
-	{
-		return super.findTarget();
 	}
 }

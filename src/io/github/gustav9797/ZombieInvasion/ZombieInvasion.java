@@ -13,6 +13,7 @@ import java.util.Random;
 
 import net.minecraft.server.v1_7_R1.BiomeBase;
 import net.minecraft.server.v1_7_R1.BiomeMeta;
+import net.minecraft.server.v1_7_R1.EntityCreature;
 import net.minecraft.server.v1_7_R1.EntityVillager;
 import net.minecraft.server.v1_7_R1.EntityZombie;
 import net.minecraft.server.v1_7_R1.EntitySkeleton;
@@ -24,6 +25,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -33,6 +35,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -645,23 +648,57 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	private void onCreatureSpawn(CreatureSpawnEvent event)
 	{
-		boolean monsterIsPartOfAnyArena = false;
-		for (Arena a : this.arenas.values())
+		//Bukkit.getServer().getPlayer("gustav9797").sendMessage("spawnreason " + event.getSpawnReason().toString() + " type " + event.getEntityType().toString());
+		if(event.getSpawnReason() == SpawnReason.CUSTOM)
+			return;
+		if (event.getSpawnReason() == SpawnReason.SPAWNER_EGG)
 		{
-			if (a instanceof ZombieArena)
+			event.setCancelled(true);
+			EntityCreature monster = null;
+			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) event.getLocation().getWorld()).getHandle();
+
+			switch (event.getEntityType())
 			{
-				ZombieArena arena = (ZombieArena) a;
-				if (arena.monsters.containsKey(event.getEntity().getUniqueId()))
-				{
-					monsterIsPartOfAnyArena = true;
-					if (!a.ContainsLocation(event.getLocation()))
-						event.setCancelled(true);
+				case SKELETON:
+					monster = new EntityBlockBreakingSkeleton(mcWorld);
 					break;
-				}
+				case ZOMBIE:
+					monster = new EntityBlockBreakingZombie(mcWorld);
+					break;
+				case VILLAGER:
+					monster = new EntityBlockBreakingVillager(mcWorld);
+					break;
+				default:
+					break;
+			}
+
+			if (monster != null)
+			{
+				monster.getBukkitEntity().teleport(event.getLocation());
+				((ICustomMonster)monster).setArena(null);
+				mcWorld.addEntity(monster, SpawnReason.CUSTOM);
 			}
 		}
-		if (!monsterIsPartOfAnyArena)
-			event.setCancelled(true);
+		else
+		{
+			boolean monsterIsPartOfAnyArena = false;
+			for (Arena a : this.arenas.values())
+			{
+				if (a instanceof ZombieArena)
+				{
+					ZombieArena arena = (ZombieArena) a;
+					if (arena.monsters.containsKey(event.getEntity().getUniqueId()))
+					{
+						monsterIsPartOfAnyArena = true;
+						if (!a.ContainsLocation(event.getLocation()))
+							event.setCancelled(true);
+						break;
+					}
+				}
+			}
+			if (!monsterIsPartOfAnyArena)
+				event.setCancelled(true);
+		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)

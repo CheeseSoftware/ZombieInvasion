@@ -35,10 +35,21 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 	protected Block block;
 	protected static List<Vector> possiblePositions = new ArrayList<Vector>(Arrays.asList(new Vector(-1, 0, 0), new Vector(-1, 1, 0), new Vector(1, 0, 0), new Vector(1, 1, 0), new Vector(0, 0, -1),
 			new Vector(0, 1, -1), new Vector(0, 0, 1), new Vector(0, 1, 1), new Vector(0, 2, 0)));
-	private static List<Material> nonBreakableMaterials = new ArrayList<Material>(Arrays.asList(Material.WOOD_STAIRS, Material.COBBLESTONE_STAIRS, Material.SANDSTONE_STAIRS, Material.BRICK_STAIRS,
-			Material.SMOOTH_STAIRS, Material.BEDROCK, Material.WATER, Material.GRASS, Material.QUARTZ_BLOCK));
-	private static List<Material> naturalMaterials = new ArrayList<Material>(Arrays.asList(Material.GRASS, Material.DIRT, Material.LEAVES));
-	private static List<Material> priorityMaterials = new ArrayList<Material>(Arrays.asList(Material.WOOD_DOOR, Material.IRON_DOOR, Material.TRAP_DOOR, Material.CHEST, Material.THIN_GLASS,
+	/*
+	 * private static List<Material> nonBreakableMaterials = new
+	 * ArrayList<Material>(Arrays.asList(Material.WOOD_STAIRS,
+	 * Material.COBBLESTONE_STAIRS, Material.SANDSTONE_STAIRS,
+	 * Material.BRICK_STAIRS, Material.SMOOTH_STAIRS, Material.BEDROCK,
+	 * Material.WATER, Material.GRASS, Material.QUARTZ_BLOCK)); private static
+	 * List<Material> naturalMaterials = new
+	 * ArrayList<Material>(Arrays.asList(Material.GRASS, Material.DIRT,
+	 * Material.LEAVES)); private static List<Material> priorityMaterials = new
+	 * ArrayList<Material>(Arrays.asList(Material.WOOD_DOOR, Material.IRON_DOOR,
+	 * Material.TRAP_DOOR, Material.CHEST, Material.THIN_GLASS,
+	 * Material.STAINED_GLASS, Material.STAINED_GLASS_PANE, Material.GLASS,
+	 * Material.TORCH, Material.WOOL));
+	 */
+	private static List<Material> breakableMaterials = new ArrayList<Material>(Arrays.asList(Material.WOOD_DOOR, Material.IRON_DOOR, Material.TRAP_DOOR, Material.CHEST, Material.THIN_GLASS,
 			Material.STAINED_GLASS, Material.STAINED_GLASS_PANE, Material.GLASS, Material.TORCH, Material.WOOL));
 
 	private Location oldLocation = null;
@@ -153,11 +164,11 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 		if (this.entity instanceof EntityCreature)
 		{
 			EntityCreature zombie = (EntityCreature) this.entity;
-			if (zombie.target != null && zombie.target.isAlive())
+			if (zombie.getGoalTarget() != null && zombie.getGoalTarget().isAlive())
 			{
 				Set<Block> blocks = this.getCloseBlocks();
 				Location monsterLocation = zombie.getBukkitEntity().getLocation();
-				Location targetLocation = zombie.target.getBukkitEntity().getLocation();
+				Location targetLocation = zombie.getGoalTarget().getBukkitEntity().getLocation();
 				if (targetLocation.getBlockY() > monsterLocation.getBlockY())
 				{
 					Location above = this.entity.getBukkitEntity().getLocation();
@@ -165,39 +176,57 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 					blocks.add(above.getBlock());
 				}
 
-				Set<Block> innaturalBlocks = new HashSet<Block>();
+				// //Set<Block> innaturalBlocks = new HashSet<Block>();
+				// //Set<Block> priorityBlocks = new HashSet<Block>();
+				// //Set<Block> hatedBlocks = new HashSet<Block>();
+				// for (Block block : blocks)
+				// {
+				// //if (!nonBreakableMaterials.contains(block.getType()) &&
+				// (arena == null ||
+				// arena.ContainsLocation(block.getLocation())))
+				// {
+				// Location l = block.getLocation();
+				// l.setY(l.getY() + 1);
+				// Block above =
+				// this.entity.getBukkitEntity().getWorld().getBlockAt(l);
+				// if (above == null ||
+				// (!priorityMaterials.contains(block.getType()) &&
+				// above.getType() == Material.AIR))
+				// hatedBlocks.add(block);
+				// else if (priorityBlocks.contains(block.getType()))
+				// priorityBlocks.add(block);
+				// else if (!naturalMaterials.contains(block.getType()))
+				// innaturalBlocks.add(block);
+				// }
+				// }
+
+				// if (priorityBlocks.size() > 0)
+				// return (Block)
+				// priorityBlocks.toArray()[r.nextInt(priorityBlocks.size())];
+				// else if (innaturalBlocks.size() > 0)
+				// return (Block)
+				// innaturalBlocks.toArray()[r.nextInt(innaturalBlocks.size())];
+				// else if (hatedBlocks.size() > 0 && blocks.size() <=
+				// hatedBlocks.size())
+				// {
+				// int i = r.nextInt(400);
+				// if (i == 0)
+				// {
+				// return (Block)
+				// hatedBlocks.toArray()[r.nextInt(hatedBlocks.size())];
+				// }
+				// }
+				// else
 				Set<Block> priorityBlocks = new HashSet<Block>();
-				Set<Block> hatedBlocks = new HashSet<Block>();
 				for (Block block : blocks)
 				{
-					if (!nonBreakableMaterials.contains(block.getType()) && (arena == null || arena.ContainsLocation(block.getLocation())))
-					{
-						Location l = block.getLocation();
-						l.setY(l.getY() + 1);
-						Block above = this.entity.getBukkitEntity().getWorld().getBlockAt(l);
-						if (above == null || (!priorityMaterials.contains(block.getType()) && above.getType() == Material.AIR))
-							hatedBlocks.add(block);
-						else if (priorityBlocks.contains(block.getType()))
-							priorityBlocks.add(block);
-						else if (!naturalMaterials.contains(block.getType()))
-							innaturalBlocks.add(block);
-					}
+					if (breakableMaterials.contains(block.getType()))
+						priorityBlocks.add(block);
 				}
-
 				if (priorityBlocks.size() > 0)
 					return (Block) priorityBlocks.toArray()[r.nextInt(priorityBlocks.size())];
-				else if (innaturalBlocks.size() > 0)
-					return (Block) innaturalBlocks.toArray()[r.nextInt(innaturalBlocks.size())];
-				else if (hatedBlocks.size() > 0 && blocks.size() <= hatedBlocks.size())
-				{
-					int i = r.nextInt(400);
-					if (i == 0)
-					{
-						return (Block) hatedBlocks.toArray()[r.nextInt(hatedBlocks.size())];
-					}
-				}
-				else if (blocks.size() > 0)
-					return (Block) blocks.toArray()[r.nextInt(blocks.size())];
+				//if (blocks.size() > 0)
+					//return (Block) blocks.toArray()[r.nextInt(blocks.size())];
 			}
 		}
 		return null;

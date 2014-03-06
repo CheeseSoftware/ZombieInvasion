@@ -24,6 +24,7 @@ public class PathfinderGoalCustomMeleeAttack extends PathfinderGoal
 	private double i;
 	private double j;
 	private double k;
+	private int ticksPassed = 0;
 
 	@SuppressWarnings("rawtypes")
 	public PathfinderGoalCustomMeleeAttack(EntityCreature entitycreature, Class oclass, double d0, boolean flag)
@@ -60,8 +61,14 @@ public class PathfinderGoalCustomMeleeAttack extends PathfinderGoal
 		}
 		else
 		{
-			this.pathEntity = this.entityCreature.getNavigation().a(entityliving);
-			return this.pathEntity != null;
+			this.ticksPassed++;
+			if (this.ticksPassed >= 20)
+			{
+				this.pathEntity = this.entityCreature.getNavigation().a(entityliving);
+				this.ticksPassed = 0;
+				return this.pathEntity != null;
+			}
+			return false;
 		}
 	}
 
@@ -125,7 +132,7 @@ public class PathfinderGoalCustomMeleeAttack extends PathfinderGoal
 			}
 
 			this.entityCreature.m(entityliving);
-			this.entityCreature.getGoalTarget().damageEntity(DamageSource.a(this.entityCreature), (float)this.d);
+			this.entityCreature.getGoalTarget().damageEntity(DamageSource.a(this.entityCreature), (float) this.d);
 		}
 	}
 }

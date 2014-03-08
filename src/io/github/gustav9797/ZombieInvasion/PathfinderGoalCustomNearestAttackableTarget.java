@@ -1,8 +1,5 @@
 package io.github.gustav9797.ZombieInvasion;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.bukkit.GameMode;
 import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
@@ -31,15 +28,14 @@ public class PathfinderGoalCustomNearestAttackableTarget extends PathfinderGoalC
 		{
 			return false;
 		}
-		else if (arena != null)
+		else if (arena != null && this.entity.getGoalTarget() == null)
 		//else if(this.entity.getGoalTarget() == null)
 		{
 			// this.target = (EntityLiving) list.get(0);
-			List<Player> players = new ArrayList<Player>(arena.players);
 			//Player[] players = Bukkit.getServer().getOnlinePlayers();
 			Player closestPlayer = null;
 			double closestPlayerDistance = Double.MAX_VALUE;
-			for(Player player : players)
+			for(Player player : arena.players)
 			{
 				double distance = player.getLocation().distance(this.entity.getBukkitEntity().getLocation());
 				if(distance < closestPlayerDistance && player.getGameMode() == GameMode.SURVIVAL)

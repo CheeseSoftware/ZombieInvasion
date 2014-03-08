@@ -20,6 +20,7 @@ import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.scheduler.BukkitScheduler;
 
 public class ZombieArena extends Arena
@@ -118,7 +119,7 @@ public class ZombieArena extends Arena
 					Location l = new Location(this.middle.getWorld(), spawnPoint.getPosition().getBlockX() + xd, spawnPoint.getPosition().getBlockY(), spawnPoint.getPosition().getBlockZ() + zd);
 					monster.getBukkitEntity().teleport(l);
 					monsters.put(monster.getBukkitEntity().getUniqueId(), monster);
-					mcWorld.addEntity(monster);
+					mcWorld.addEntity(monster, SpawnReason.CUSTOM);
 				}
 			}
 			i.remove();

@@ -21,6 +21,7 @@ import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.util.Vector;
 
 public class ZombieArena extends Arena
 {
@@ -73,12 +74,17 @@ public class ZombieArena extends Arena
 	public void SpawnMonsterGroup(SpawnPoint spawnPoint, int amount)
 	{
 		int delay = 1;
+		Vector spawnPosition = spawnPoint.getPosition();
+		
 		for (int i = 0; i < amount; i++)
 		{
 			while (this.middle.getWorld().getBlockAt(spawnPoint.getPosition().toLocation(this.middle.getWorld())).getType() == Material.AIR)
-				spawnPoint.getPosition().setY(spawnPoint.getPosition().getBlockY() - 1);
-			spawnPoint.getPosition().setY(spawnPoint.getPosition().getBlockY() + 2);
+				spawnPosition.setY(spawnPosition.getBlockY() - 1);
+			
+			spawnPosition.setY(spawnPosition.getBlockY() + 2);
+			
 			new SpawnMonsterTask(spawnPoint, this).runTaskLater(ZombieInvasion.getPlugin(), delay);
+			
 			delay += this.ticksBetweenZombieSpawns;
 		}
 	}
@@ -101,7 +107,8 @@ public class ZombieArena extends Arena
 						monster = new EntityBlockBreakingSkeleton(mcWorld);
 						break;
 					case ZOMBIE:
-						monster = new EntityBlockBreakingZombie(mcWorld);
+						if (this.getCurrentWave() < 10)
+							monster = new EntityBlockBreakingZombie(mcWorld);
 						break;
 					case VILLAGER:
 						monster = new EntityBlockBreakingVillager(mcWorld);
@@ -115,7 +122,12 @@ public class ZombieArena extends Arena
 					((ICustomMonster)monster).setArena(this);
 					double xd = r.nextDouble()/10;
 					double zd = r.nextDouble()/10;
-					Location l = new Location(this.middle.getWorld(), spawnPoint.getPosition().getBlockX() + xd, spawnPoint.getPosition().getBlockY(), spawnPoint.getPosition().getBlockZ() + zd);
+					
+					Location l = new Location(this.middle.getWorld(),
+							spawnPoint.getPosition().getBlockX() + xd,
+							spawnPoint.getPosition().getBlockY(),
+							spawnPoint.getPosition().getBlockZ() + zd);
+					
 					monster.getBukkitEntity().teleport(l);
 					monsters.put(monster.getBukkitEntity().getUniqueId(), monster);
 					mcWorld.addEntity(monster);
@@ -140,11 +152,14 @@ public class ZombieArena extends Arena
 	{
 		int amount = this.zombieStartAmount;
 		int increase = this.zombieAmountIncrease;
-		for (int i = 1; i <= wave; i++)
-		{
-			amount += increase;
-			increase++;
-		}
+		int virtualWave = wave%10;
+		
+		amount += virtualWave*(virtualWave - 1)/2;
+		// ^^ Siffertriangel, -1 betyder att det startar på 0, /2 betyder att det är en triangel.
+		
+		amount += virtualWave*increase;
+		// ^^ det ökar också med "increase" på varje wave
+
 		return amount;
 	}
 

@@ -56,6 +56,7 @@ import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
+import com.sun.media.sound.WaveExtensibleFileReader;
 
 import ostkaka34.OstEconomyPlugin.IOstEconomy;
 import ostkaka34.OstEconomyPlugin.OstEconomyPlugin;

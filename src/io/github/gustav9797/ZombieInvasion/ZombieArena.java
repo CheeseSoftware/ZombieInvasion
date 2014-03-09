@@ -1,5 +1,10 @@
 package io.github.gustav9797.ZombieInvasion;
 
+import io.github.gustav9797.ZombieInvasion.Entity.EntityBlockBreakingSkeleton;
+import io.github.gustav9797.ZombieInvasion.Entity.EntityBlockBreakingVillager;
+import io.github.gustav9797.ZombieInvasion.Entity.EntityBlockBreakingZombie;
+import io.github.gustav9797.ZombieInvasion.Entity.ICustomMonster;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;

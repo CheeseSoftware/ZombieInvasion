@@ -97,7 +97,7 @@ public class EntityBlockBreakingVillager extends EntityVillager implements ICust
 
 		this.getNavigation().b(true);
 		this.goalSelector.a(6, new PathfinderGoalFloat(this));
-		this.goalSelector.a(7, new PathfinderGoalCustomMeleeAttack(this, EntityHuman.class, 1.0D, false));
+		this.goalSelector.a(7, new PathfinderGoalMeleeAttack(this, EntityHuman.class, 1.0D, false));
 		this.goalSelector.a(8, new PathfinderGoalRandomStroll(this, 1.0D));
 		this.goalSelector.a(8, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
 		this.goalSelector.a(8, new PathfinderGoalRandomLookaround(this));

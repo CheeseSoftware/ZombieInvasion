@@ -2,7 +2,6 @@ package io.github.gustav9797.ZombieInvasion.Entity;
 
 import io.github.gustav9797.ZombieInvasion.Arena;
 import io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalBreakBlock;
-import io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalCustomMeleeAttack;
 import io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalFindBreakBlock;
 import io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalWalkToTile;
 
@@ -17,6 +16,7 @@ import net.minecraft.server.v1_7_R1.Navigation;
 import net.minecraft.server.v1_7_R1.PathfinderGoalFloat;
 import net.minecraft.server.v1_7_R1.PathfinderGoalHurtByTarget;
 import net.minecraft.server.v1_7_R1.PathfinderGoalLookAtPlayer;
+import net.minecraft.server.v1_7_R1.PathfinderGoalMeleeAttack;
 import net.minecraft.server.v1_7_R1.PathfinderGoalNearestAttackableTarget;
 import net.minecraft.server.v1_7_R1.PathfinderGoalRandomLookaround;
 import net.minecraft.server.v1_7_R1.PathfinderGoalRandomStroll;

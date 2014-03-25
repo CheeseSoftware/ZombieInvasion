@@ -110,11 +110,14 @@ public class ZombieArena extends Arena
 				switch (entityType)
 				{
 					case SKELETON:
-						monster = new EntityBlockBreakingSkeleton(mcWorld);
+						if (this.getCurrentWave() >= 4)
+							monster = new EntityBlockBreakingSkeleton(mcWorld);
 						break;
 					case ZOMBIE:
 						if (this.getCurrentWave() < 10)
 							monster = new EntityBlockBreakingZombie(mcWorld);
+						else
+							monster = new EntityBlockBreakingVillager(mcWorld);
 						break;
 					case VILLAGER:
 						monster = new EntityBlockBreakingVillager(mcWorld);
@@ -156,7 +159,18 @@ public class ZombieArena extends Arena
 
 	private int getZombieSpawnAmount(int wave)
 	{
-		int amount = this.zombieStartAmount;
+		// y = ax² + bx + c
+		// y = (25x² + 205x + 330)/28
+		// y = 25x²/28 + 205x/28 + 165x/14
+		
+		int x = wave%10;
+		float a = 25/28;
+		float b = 205/28;
+		float c = 165/14;
+		
+		return (int)Math.floor(a*x*x + b*x + c);
+		
+		/*int amount = this.zombieStartAmount;
 		int increase = this.zombieAmountIncrease;
 		int virtualWave = wave%10;
 		
@@ -165,8 +179,8 @@ public class ZombieArena extends Arena
 		
 		amount += virtualWave*increase;
 		// ^^ det ökar också med "increase" på varje wave
-
-		return amount;
+		
+		return amount;*/
 	}
 
 	public int getCurrentWave()

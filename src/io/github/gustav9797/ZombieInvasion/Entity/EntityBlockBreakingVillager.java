@@ -1,7 +1,6 @@
 package io.github.gustav9797.ZombieInvasion.Entity;
 
 import io.github.gustav9797.ZombieInvasion.Arena;
-import io.github.gustav9797.ZombieInvasion.PathfinderGoalCustomMeleeAttack;
 import io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalBreakBlock;
 import io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalFindBreakBlock;
 import io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalWalkToTile;
@@ -17,7 +16,6 @@ import net.minecraft.server.v1_7_R1.Navigation;
 import net.minecraft.server.v1_7_R1.PathfinderGoalFloat;
 import net.minecraft.server.v1_7_R1.PathfinderGoalHurtByTarget;
 import net.minecraft.server.v1_7_R1.PathfinderGoalLookAtPlayer;
-import net.minecraft.server.v1_7_R1.PathfinderGoalMeleeAttack;
 import net.minecraft.server.v1_7_R1.PathfinderGoalNearestAttackableTarget;
 import net.minecraft.server.v1_7_R1.PathfinderGoalRandomLookaround;
 import net.minecraft.server.v1_7_R1.PathfinderGoalRandomStroll;
@@ -98,7 +96,7 @@ public class EntityBlockBreakingVillager extends EntityVillager implements ICust
 
 		this.getNavigation().b(true);
 		this.goalSelector.a(6, new PathfinderGoalFloat(this));
-		this.goalSelector.a(7, new PathfinderGoalCustomMeleeAttack(this, EntityHuman.class, 1.0D, false));
+		this.goalSelector.a(7, new io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalCustomMeleeAttack(this, EntityHuman.class, 1.0D, false));
 		this.goalSelector.a(8, new PathfinderGoalRandomStroll(this, 1.0D));
 		this.goalSelector.a(8, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
 		this.goalSelector.a(8, new PathfinderGoalRandomLookaround(this));

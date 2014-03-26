@@ -250,6 +250,7 @@ public abstract class Arena implements Listener
 		{
 			this.SetAlive(player);
 			player.teleport(spawnLocation);
+			player.addPotionEffect(arg0)
 		}
 		spectators.clear();
 		tempspectators.clear();

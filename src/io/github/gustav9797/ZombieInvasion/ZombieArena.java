@@ -324,9 +324,10 @@ public class ZombieArena extends Arena
 			}
 		}
 
-		if (this.monsters.size() <= 20 && this.ticksSinceLastWave >= 20 * 20 && this.ticksUntilNextWave == -1)
+		if (this.monsters.size() < 10 && this.ticksSinceLastWave >= 20 * 20 && this.ticksUntilNextWave == -1)
 		{
-			this.ticksUntilNextWave = 3 * 20;
+			this.ResetSpectators();//>.<
+			this.ticksUntilNextWave = 60 * 20;//>.<
 			this.ResetSpectators();
 			this.Broadcast("Below 20 zombies left, prepare for the next wave in 3 seconds!");
 		}

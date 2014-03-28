@@ -33,6 +33,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
@@ -250,7 +251,12 @@ public abstract class Arena implements Listener
 		{
 			this.SetAlive(player);
 			player.teleport(spawnLocation);
-			player.addPotionEffect(arg0)
+			player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION,20*30,2));			//30s absorption 2
+			player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,20*30,2));	//30s damage resistance 2
+			player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE,20*10,1));		//10s fire resistance 1
+			player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED,20*10,1));           	//10s speed 1
+			player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP,20*30,2));            	//30s jump 2
+			player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY,20*10,1));        //10s invisibility 1
 		}
 		spectators.clear();
 		tempspectators.clear();

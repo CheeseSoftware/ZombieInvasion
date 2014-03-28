@@ -46,6 +46,10 @@ public class ZombieArena extends Arena
 	protected int startWave = 1;
 	protected int waveIncrease = 1;
 	protected int ticksBetweenZombieSpawns = 20;
+	
+	protected int zombiesToSpawn = 0;
+	protected int skeletonsToSpawn = 0;
+	protected int villagersToSpawn = 0;
 
 	public ZombieArena(String name, Lobby lobby)
 	{
@@ -82,6 +86,24 @@ public class ZombieArena extends Arena
 		int delay = 1;
 		Vector spawnPosition = spawnPoint.getPosition();
 		
+		if (currentWave > 5)
+		{
+			skeletonsToSpawn += amount/20;
+			if (currentWave > 10)
+			{
+				villagersToSpawn += amount-amount/20;
+			}
+			else
+			{
+				villagersToSpawn += amount/20;
+				zombiesToSpawn += amount-((amount/20)<<1);
+			}
+		}
+		else
+		{
+			zombiesToSpawn += amount;
+		}
+		
 		for (int i = 0; i < amount; i++)
 		{
 			while (this.middle.getWorld().getBlockAt(spawnPoint.getPosition().toLocation(this.middle.getWorld())).getType() == Material.AIR)
@@ -110,17 +132,30 @@ public class ZombieArena extends Arena
 				switch (entityType)
 				{
 					case SKELETON:
-						if (this.getCurrentWave() >= 4)
+						if (this.getCurrentWave() >= 5 && skeletonsToSpawn > 0)
+						{
 							monster = new EntityBlockBreakingSkeleton(mcWorld);
+							skeletonsToSpawn--;
+						}
 						break;
 					case ZOMBIE:
-						if (this.getCurrentWave() < 10)
+						if (this.getCurrentWave() < 10 && zombiesToSpawn > 0 || (villagersToSpawn == 0 && skeletonsToSpawn == 0))
+						{
 							monster = new EntityBlockBreakingZombie(mcWorld);
-						else
+							zombiesToSpawn--;
+						}
+						else if (villagersToSpawn > 0)
+						{
 							monster = new EntityBlockBreakingVillager(mcWorld);
+							villagersToSpawn--;
+						}
 						break;
 					case VILLAGER:
-						monster = new EntityBlockBreakingVillager(mcWorld);
+						if (villagersToSpawn > 0)
+						{
+							monster = new EntityBlockBreakingVillager(mcWorld);
+							villagersToSpawn--;
+						}
 						break;
 					default:
 						break;
@@ -192,6 +227,12 @@ public class ZombieArena extends Arena
 	public void SendWave(int wave)
 	{
 		int spawnPointsSize = this.getSpawnPointManager().getSpawnPoints().size();
+		
+		zombiesToSpawn = 0;
+		skeletonsToSpawn = 0;
+		villagersToSpawn = 0;
+		
+		
 		for (int i = 0; i < zombieGroups; i++)
 		{
 			if (spawnPointsSize > 0)

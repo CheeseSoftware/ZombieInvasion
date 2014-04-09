@@ -86,18 +86,29 @@ public class ZombieArena extends Arena
 		int delay = 1;
 		Vector spawnPosition = spawnPoint.getPosition();
 		
-		if (currentWave > 5)
+		/*if (currentWave > 5)
 		{
-			skeletonsToSpawn += amount/20;
+			skeletonsToSpawn += amount/40;
 			if (currentWave > 10)
 			{
-				villagersToSpawn += amount-amount/20;
+				villagersToSpawn += amount-amount/40;
 			}
 			else
 			{
 				villagersToSpawn += amount/20;
-				zombiesToSpawn += amount-((amount/20)<<1);
+				zombiesToSpawn += amount - amount/20 - amount/40;
 			}
+		}*/
+		if (currentWave > 10)
+		{
+			skeletonsToSpawn += amount/20;
+			villagersToSpawn += amount-amount/20;
+		}
+		else if (currentWave >= 5)
+		{
+			skeletonsToSpawn += amount/40;
+			villagersToSpawn += amount/20;
+			zombiesToSpawn += amount - amount/20 - amount/40;
 		}
 		else
 		{

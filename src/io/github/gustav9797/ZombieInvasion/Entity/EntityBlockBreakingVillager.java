@@ -9,6 +9,8 @@ import java.lang.reflect.Field;
 import java.util.Random;
 
 import net.minecraft.server.v1_7_R1.AttributeInstance;
+import net.minecraft.server.v1_7_R1.DamageSource;
+import net.minecraft.server.v1_7_R1.Entity;
 import net.minecraft.server.v1_7_R1.EntityHuman;
 import net.minecraft.server.v1_7_R1.EntityVillager;
 import net.minecraft.server.v1_7_R1.GenericAttributes;
@@ -22,8 +24,11 @@ import net.minecraft.server.v1_7_R1.PathfinderGoalRandomStroll;
 import net.minecraft.server.v1_7_R1.PathfinderGoalSelector;
 import net.minecraft.server.v1_7_R1.World;
 
+import org.bukkit.Sound;
 import org.bukkit.craftbukkit.v1_7_R1.util.UnsafeList;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Snowball;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -60,37 +65,59 @@ public class EntityBlockBreakingVillager extends EntityVillager implements ICust
 		}
 
 		this.setProfession(r.nextInt(6));
+		
+		if (random.nextInt(4) != 0) // 75% villagers, 25% random
+			this.setProfession(5);
+		
 		int profession = this.getProfession();
 
 		switch (profession)
 		{
 			case 0: // farmer
-				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, Integer.MAX_VALUE, 8));
+				//((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, Integer.MAX_VALUE, 8));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 3));
 				break;
 			case 1: // Librarian
-				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 8));
-				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, Integer.MAX_VALUE, 2));
 				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, Integer.MAX_VALUE, 1));
-				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 1));
-				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, Integer.MAX_VALUE, 1));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 1));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 2));
+
+				//((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 8));
+				//((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, Integer.MAX_VALUE, 2));
+				//((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, Integer.MAX_VALUE, 1));
+				//((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 1));
+				//((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, Integer.MAX_VALUE, 1));
 				break;
 			case 2: // Priest
-				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.HEALTH_BOOST, Integer.MAX_VALUE, 1));
-				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, Integer.MAX_VALUE, 1)); // heal
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 8));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 2));
+				//((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.HEALTH_BOOST, Integer.MAX_VALUE, 1));
+				//((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, Integer.MAX_VALUE, 1)); // heal
 				// others!
 				break;
 			case 3: // Blacksmith
-				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Integer.MAX_VALUE, 2));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Integer.MAX_VALUE, 1));
 				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1));
-				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, Integer.MAX_VALUE, 1));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, Integer.MAX_VALUE, 4));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, Integer.MAX_VALUE, 1));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.HEALTH_BOOST, Integer.MAX_VALUE, 2));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, Integer.MAX_VALUE, 1));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 1));
 				break;
 			case 4: // Butcher
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, Integer.MAX_VALUE, 2));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 1));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1));
+				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, Integer.MAX_VALUE, 1));
 				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 1));
 				break;
 			case 5:
-				// Generic
-				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 2));
-				((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 2));
+				// Generic, "villager"
+				//((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
+				//((LivingEntity) this.getBukkitEntity()).addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 1));
 				break;
 		}
 
@@ -109,7 +136,7 @@ public class EntityBlockBreakingVillager extends EntityVillager implements ICust
 	{
 		if (arena != null)
 			this.targetSelector.a(0, new PathfinderGoalWalkToTile(this, 1.0F, arena.getSpawnLocation()));
-		if (this.getProfession() == 0)
+		if (this.getProfession() == 3)
 			this.goalSelector.a(3, new PathfinderGoalFindBreakBlock(this, arena, 50));
 		else if(this.getProfession() == 5)
 			this.goalSelector.a(3, new PathfinderGoalBreakBlock(this, arena));
@@ -140,5 +167,36 @@ public class EntityBlockBreakingVillager extends EntityVillager implements ICust
 	
 		return i;
 	}
+	
+	@Override
+	public boolean damageEntity(DamageSource arg0, float arg1) {
+		// TODO Auto-generated method stub
+		
+		
+		//1:librarian slender
+		if (this.getProfession() == 1 && random.nextInt(8) == 0)
+		{
+			Entity e = arg0.getEntity();
+			if (e instanceof Snowball)
+			{
+				e = (Entity) ((Snowball)e).getShooter();
+			}
+			
+			if (e instanceof Player)
+			{
+				this.enderTeleportTo(e.locX, e.locY, e.locZ);
+				((Player)e).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 60, 1));
+				
+				((Player)e).playSound(((Player) e).getLocation(), Sound.GHAST_SCREAM, 1, 0.125F);
+				((Player)e).playSound(((Player) e).getLocation(), Sound.ENDERDRAGON_DEATH, 2, 0.25F);
+			}
+		}
+		return super.damageEntity(arg0, arg1);
+	}
+
+
+
+	
+	
 
 }

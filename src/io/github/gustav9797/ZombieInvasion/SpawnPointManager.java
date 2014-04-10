@@ -12,7 +12,6 @@ import java.util.Random;
 import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 public class SpawnPointManager
@@ -134,7 +133,7 @@ public class SpawnPointManager
 		return null;
 	}
 
-	public SpawnPoint getRandomPlayerSpawnPoint()
+	/*public SpawnPoint getRandomPlayerSpawnPoint()
 	{
 		List<SpawnPoint> temp = new ArrayList<SpawnPoint>();
 		for (SpawnPoint p : this.spawnPoints.values())
@@ -143,14 +142,13 @@ public class SpawnPointManager
 		if (temp.size() > 0)
 			return temp.get(r.nextInt(temp.size()));
 		return null;
-	}
+	}*/
 
 	public SpawnPoint getRandomMonsterSpawnPoint()
 	{
 		List<SpawnPoint> temp = new ArrayList<SpawnPoint>();
 		for (SpawnPoint p : this.spawnPoints.values())
-			if (!p.hasEntityType(EntityType.PLAYER))
-				temp.add((SpawnPoint) p);
+			temp.add((SpawnPoint) p);
 		if (temp.size() > 0)
 			return temp.get(r.nextInt(temp.size()));
 		return null;

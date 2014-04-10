@@ -1,11 +1,10 @@
 package io.github.gustav9797.ZombieInvasion;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
-import java.util.Set;
 
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.EntityType;
@@ -15,7 +14,7 @@ public class SpawnPoint implements Cloneable, ConfigurationSerializable
 {
 	protected int id;
 	protected Vector position;
-	protected Map<EntityType, Integer> entityTypes = new HashMap<EntityType, Integer>();
+	protected List<EntityType> entityTypeWhitelist = new ArrayList<EntityType>();
 	protected Random r = new Random();
 
 	public SpawnPoint(int id, Vector position)
@@ -34,20 +33,22 @@ public class SpawnPoint implements Cloneable, ConfigurationSerializable
 		return this.position;
 	}
 
-	public void AddEntityType(EntityType entityType, int chance)
+	public void WhitelistEntity(EntityType entityType)
 	{
-		this.entityTypes.put(entityType, chance);
+		this.entityTypeWhitelist.add(entityType);
 	}
 
-	public void RemoveEntityType(EntityType entityType)
+	public void RemoveWhitelistEntity(EntityType entityType)
 	{
-		if (this.entityTypes.containsKey(entityType))
-			this.entityTypes.remove(entityType);
+		if (this.entityTypeWhitelist.contains(entityType))
+			this.entityTypeWhitelist.remove(entityType);
 	}
 
-	public boolean hasEntityType(EntityType entityType)
+	public boolean canSpawnEntity(EntityType entityType)
 	{
-		for (EntityType e : this.entityTypes.keySet())
+		if(this.entityTypeWhitelist.size() <= 0)
+			return true;
+		for (EntityType e : this.entityTypeWhitelist)
 		{
 			if (e.equals(entityType))
 				return true;
@@ -55,52 +56,9 @@ public class SpawnPoint implements Cloneable, ConfigurationSerializable
 		return false;
 	}
 
-	public Set<EntityType> getEntityTypes()
+	public List<EntityType> getEntityTypes()
 	{
-		return this.entityTypes.keySet();
-	}
-
-	public EntityType getRandomEntityType()
-	{
-		if (this.entityTypes.size() > 0)
-		{
-			Map<EntityType, Integer> bottomChances = new HashMap<EntityType, Integer>();
-			Map<EntityType, Integer> topChances = new HashMap<EntityType, Integer>();
-
-			int currentChance = 0;
-			for (Entry<EntityType, Integer> pair : this.entityTypes.entrySet())
-			{
-				bottomChances.put(pair.getKey(), currentChance);
-				topChances.put(pair.getKey(), pair.getValue() + currentChance);
-				currentChance += pair.getValue();
-			}
-			int totalChance = currentChance;
-			int selected = r.nextInt(totalChance);
-
-			for (Entry<EntityType, Integer> pair : bottomChances.entrySet())
-			{
-				if (selected >= pair.getValue())
-				{
-					int topChance = topChances.get(pair.getKey());
-					if (selected < topChance)
-					{
-						return pair.getKey();
-					}
-				}
-			}
-		}
-		return null;
-	}
-
-	public int getChancePercentage(EntityType entityType)
-	{
-		int totalChance = 0;
-		for (int chance : this.entityTypes.values())
-			totalChance += chance;
-
-		if (this.entityTypes.containsKey(entityType))
-			return this.entityTypes.get(entityType) / totalChance * 100;
-		return 0;
+		return this.entityTypeWhitelist;
 	}
 
 	@Override
@@ -109,9 +67,9 @@ public class SpawnPoint implements Cloneable, ConfigurationSerializable
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
 		result.put("id", this.id);
 		result.put("position", this.position);
-		Map<String, Integer> temp = new HashMap<String, Integer>();
-		for (Entry<EntityType, Integer> pair : this.entityTypes.entrySet())
-			temp.put(pair.getKey().toString(), pair.getValue());
+		List<String> temp = new ArrayList<String>();
+		for (EntityType e : this.entityTypeWhitelist)
+			temp.add(e.toString());
 		result.put("entitytypes", temp);
 		return result;
 	}
@@ -124,11 +82,11 @@ public class SpawnPoint implements Cloneable, ConfigurationSerializable
 		if (position != null)
 		{
 			SpawnPoint spawnPoint = new SpawnPoint((int) args.get("id"), position);
-			Map<String, Integer> temp = (Map<String, Integer>) args.get("entitytypes");
+			List<String> temp = (List<String>) args.get("entitytypes");
 			if (temp != null)
 			{
-				for (Entry<String, Integer> pair : temp.entrySet())
-					spawnPoint.AddEntityType(EntityType.fromName(pair.getKey()), pair.getValue());
+				for (String s : temp)
+					spawnPoint.WhitelistEntity(EntityType.fromName(s));
 			}
 			return spawnPoint;
 		}

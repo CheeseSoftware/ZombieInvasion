@@ -437,25 +437,24 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 										sender.sendMessage("Could not find any spawn points!");
 								}
 							}
-							else if (args[0].equals("addspawnpointentity"))
+							else if (args[0].equals("whitelistentity"))
 							{
-								if (args.length > 3)
+								if (args.length > 2)
 								{
 									if (arena instanceof ZombieArena)
 									{
 										int id = Integer.parseInt(args[1]);
-										int chance = Integer.parseInt(args[3]);
 										String monster = args[2];
-										EntityType monsterType = EntityType.fromName(monster);
-										if (monsterType != null)
+										EntityType entityType = EntityType.fromName(monster);
+										if (entityType != null)
 										{
 											ZombieArena zombieArena = (ZombieArena) arena;
 											SpawnPointManager manager = zombieArena.getSpawnPointManager();
 											SpawnPoint spawnPoint = manager.getSpawnPoint(id);
 											if (spawnPoint != null)
 											{
-												spawnPoint.AddEntityType(monsterType, chance);
-												sender.sendMessage("Added entitytype " + monsterType.toString() + " with chance " + chance);
+												spawnPoint.WhitelistEntity(entityType);
+												sender.sendMessage("Whitelisted entitytype " + entityType.toString());
 												manager.Save();
 											}
 											else

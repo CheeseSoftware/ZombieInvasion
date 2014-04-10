@@ -1,7 +1,7 @@
 package io.github.gustav9797.ZombieInvasion.Entity;
 
 import io.github.gustav9797.ZombieInvasion.Arena;
-import net.minecraft.server.v1_7_R1.EntityHuman;
+import net.minecraft.server.v1_7_R2.EntityHuman;
 
 public interface ICustomMonster
 {

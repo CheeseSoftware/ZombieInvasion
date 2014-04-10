@@ -16,12 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import net.minecraft.server.v1_7_R1.BiomeBase;
-import net.minecraft.server.v1_7_R1.BiomeMeta;
-import net.minecraft.server.v1_7_R1.EntityCreature;
-import net.minecraft.server.v1_7_R1.EntityVillager;
-import net.minecraft.server.v1_7_R1.EntityZombie;
-import net.minecraft.server.v1_7_R1.EntitySkeleton;
+import net.minecraft.server.v1_7_R2.BiomeBase;
+import net.minecraft.server.v1_7_R2.BiomeMeta;
+import net.minecraft.server.v1_7_R2.EntityCreature;
+import net.minecraft.server.v1_7_R2.EntityVillager;
+import net.minecraft.server.v1_7_R2.EntityZombie;
+import net.minecraft.server.v1_7_R2.EntitySkeleton;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -30,7 +30,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R2.CraftWorld;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -145,10 +145,10 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 					if (!arenas.containsKey(name))
 					{
 						Arena a = new ZombieArena(name, this.lobby);
-						a.Load();
 						a.setMiddle(player.getLocation());
 						a.setSpawnLocation(player.getLocation());
 						a.setSize(96);
+						a.Save();
 						arenas.put(name, a);
 						this.Save();
 						sender.sendMessage("Arena " + name + " created!");
@@ -659,7 +659,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		{
 			event.setCancelled(true);
 			EntityCreature monster = null;
-			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) event.getLocation().getWorld()).getHandle();
+			net.minecraft.server.v1_7_R2.World mcWorld = ((CraftWorld) event.getLocation().getWorld()).getHandle();
 
 			switch (event.getEntityType())
 			{

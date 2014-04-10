@@ -1,13 +1,15 @@
 package io.github.gustav9797.ZombieInvasion.PathfinderGoal;
 
+import java.util.Random;
+
 import io.github.gustav9797.ZombieInvasion.Arena;
 
 import org.bukkit.GameMode;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_7_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
-import net.minecraft.server.v1_7_R1.EntityCreature;
-import net.minecraft.server.v1_7_R1.EntityLiving;
+import net.minecraft.server.v1_7_R2.EntityCreature;
+import net.minecraft.server.v1_7_R2.EntityLiving;
 
 public class PathfinderGoalCustomNearestAttackableTarget extends PathfinderGoalCustomTarget
 {
@@ -15,6 +17,7 @@ public class PathfinderGoalCustomNearestAttackableTarget extends PathfinderGoalC
 	private final int attackCheckFrequency;
 	private EntityLiving target;
 	private Arena arena;
+	private Random r = new Random();
 
 	public PathfinderGoalCustomNearestAttackableTarget(EntityCreature entitycreature, int attackCheckFrequency, Arena arena)
 	{
@@ -26,7 +29,7 @@ public class PathfinderGoalCustomNearestAttackableTarget extends PathfinderGoalC
 
 	public boolean a() // canExecute
 	{
-		if (this.attackCheckFrequency > 0 && this.entity.aI().nextInt(this.attackCheckFrequency) != 0)
+		if (this.attackCheckFrequency > 0 && r.nextInt(this.attackCheckFrequency) != 0)
 		{
 			return false;
 		}

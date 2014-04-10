@@ -14,8 +14,8 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.event.block.LeavesDecayEvent;
 
-import net.minecraft.server.v1_7_R1.EntityInsentient;
-import net.minecraft.server.v1_7_R1.PathfinderGoal;
+import net.minecraft.server.v1_7_R2.EntityInsentient;
+import net.minecraft.server.v1_7_R2.PathfinderGoal;
 
 public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 {
@@ -160,7 +160,7 @@ public class PathfinderGoalFindBreakBlock extends PathfinderGoal
 			if (currentBlock != null && this.isBreaking && currentBlock.getType() != Material.AIR)
 			{
 				currentBlockDamage += this.blockDamageIncrease;
-				if (this.entity.aI().nextInt(300) == 0)
+				if (r.nextInt(300) == 0)
 					this.entity.world.triggerEffect(1010, currentBlock.getX(), currentBlock.getY(), currentBlock.getZ(), 0);
 				int i = (int) ((float) this.currentBlockDamage / 240.0F * 10.0F);
 				this.entity.world.d(entity.getId(), currentBlock.getX(), currentBlock.getY(), currentBlock.getZ(), i);

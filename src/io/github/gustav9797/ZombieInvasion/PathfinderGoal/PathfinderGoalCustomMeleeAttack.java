@@ -1,13 +1,15 @@
 package io.github.gustav9797.ZombieInvasion.PathfinderGoal;
 
-import net.minecraft.server.v1_7_R1.DamageSource;
-import net.minecraft.server.v1_7_R1.Entity;
-import net.minecraft.server.v1_7_R1.EntityCreature;
-import net.minecraft.server.v1_7_R1.EntityLiving;
-import net.minecraft.server.v1_7_R1.MathHelper;
-import net.minecraft.server.v1_7_R1.PathEntity;
-import net.minecraft.server.v1_7_R1.PathfinderGoal;
-import net.minecraft.server.v1_7_R1.World;
+import java.util.Random;
+
+import net.minecraft.server.v1_7_R2.DamageSource;
+import net.minecraft.server.v1_7_R2.Entity;
+import net.minecraft.server.v1_7_R2.EntityCreature;
+import net.minecraft.server.v1_7_R2.EntityLiving;
+import net.minecraft.server.v1_7_R2.MathHelper;
+import net.minecraft.server.v1_7_R2.PathEntity;
+import net.minecraft.server.v1_7_R2.PathfinderGoal;
+import net.minecraft.server.v1_7_R2.World;
 
 public class PathfinderGoalCustomMeleeAttack extends PathfinderGoal
 {
@@ -25,6 +27,7 @@ public class PathfinderGoalCustomMeleeAttack extends PathfinderGoal
 	private double j;
 	private double k;
 	private int ticksPassed = 0;
+	private Random r = new Random();
 
 	@SuppressWarnings("rawtypes")
 	public PathfinderGoalCustomMeleeAttack(EntityCreature entitycreature, Class oclass, double d0, boolean flag)
@@ -101,12 +104,12 @@ public class PathfinderGoalCustomMeleeAttack extends PathfinderGoal
 
 		--this.h;
 		if ((this.e || this.entityCreature.getEntitySenses().canSee(entityliving)) && this.h <= 0
-				&& (this.i == 0.0D && this.j == 0.0D && this.k == 0.0D || entityliving.e(this.i, this.j, this.k) >= 1.0D || this.entityCreature.aI().nextFloat() < 0.05F))
+				&& (this.i == 0.0D && this.j == 0.0D && this.k == 0.0D || entityliving.e(this.i, this.j, this.k) >= 1.0D || r.nextFloat() < 0.05F))
 		{
 			this.i = entityliving.locX;
 			this.j = entityliving.boundingBox.b;
 			this.k = entityliving.locZ;
-			this.h = 4 + this.entityCreature.aI().nextInt(7);
+			this.h = 4 + r.nextInt(7);
 			if (d0 > 1024.0D)
 			{
 				this.h += 10;
@@ -126,10 +129,6 @@ public class PathfinderGoalCustomMeleeAttack extends PathfinderGoal
 		if (d0 <= d1 && this.c <= 20)
 		{
 			this.c = 20;
-			if (this.entityCreature.be() != null)
-			{
-				this.entityCreature.ba();
-			}
 
 			this.entityCreature.m(entityliving);
 			this.entityCreature.getGoalTarget().damageEntity(DamageSource.a(this.entityCreature), (float) this.d);

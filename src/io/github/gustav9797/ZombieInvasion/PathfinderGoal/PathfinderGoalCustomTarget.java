@@ -1,18 +1,20 @@
 package io.github.gustav9797.ZombieInvasion.PathfinderGoal;
 
+import java.util.Random;
+
 import org.bukkit.Location;
 
-import net.minecraft.server.v1_7_R1.AttributeInstance;
-import net.minecraft.server.v1_7_R1.EntityCreature;
-import net.minecraft.server.v1_7_R1.EntityHuman;
-import net.minecraft.server.v1_7_R1.EntityLiving;
-import net.minecraft.server.v1_7_R1.EntityOwnable;
-import net.minecraft.server.v1_7_R1.EntityPlayer;
-import net.minecraft.server.v1_7_R1.GenericAttributes;
-import net.minecraft.server.v1_7_R1.MathHelper;
-import net.minecraft.server.v1_7_R1.PathEntity;
-import net.minecraft.server.v1_7_R1.PathPoint;
-import net.minecraft.server.v1_7_R1.PathfinderGoal;
+import net.minecraft.server.v1_7_R2.AttributeInstance;
+import net.minecraft.server.v1_7_R2.EntityCreature;
+import net.minecraft.server.v1_7_R2.EntityHuman;
+import net.minecraft.server.v1_7_R2.EntityLiving;
+import net.minecraft.server.v1_7_R2.EntityOwnable;
+import net.minecraft.server.v1_7_R2.EntityPlayer;
+import net.minecraft.server.v1_7_R2.GenericAttributes;
+import net.minecraft.server.v1_7_R2.MathHelper;
+import net.minecraft.server.v1_7_R2.PathEntity;
+import net.minecraft.server.v1_7_R2.PathPoint;
+import net.minecraft.server.v1_7_R2.PathfinderGoal;
 import net.minecraft.util.org.apache.commons.lang3.StringUtils;
 
 public abstract class PathfinderGoalCustomTarget extends PathfinderGoal
@@ -27,6 +29,7 @@ public abstract class PathfinderGoalCustomTarget extends PathfinderGoal
 	private Location oldLocation = null;
 	private int ticksStoodStill = 0;
 	private boolean isWalking = true;
+	private Random r = new Random();
 
 	public PathfinderGoalCustomTarget(EntityCreature entitycreature)
 	{
@@ -182,7 +185,7 @@ public abstract class PathfinderGoalCustomTarget extends PathfinderGoal
 
 	private boolean canWalkToTarget(EntityLiving target) // canExecute
 	{
-		this.e = 10 + this.entity.aI().nextInt(5);
+		this.e = 10 + r.nextInt(5);
 		PathEntity pathentity = this.entity.getNavigation().a(target);
 
 		if (pathentity == null)

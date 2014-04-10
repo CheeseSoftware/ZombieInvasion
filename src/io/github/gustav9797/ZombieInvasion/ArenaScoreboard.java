@@ -35,6 +35,7 @@ public class ArenaScoreboard
 		}, 0L, 10L);
 	}
 
+	@SuppressWarnings("deprecation")
 	private void UpdatePlayerInfo()
 	{
 		OstEconomyPlugin economy = (OstEconomyPlugin) ZombieInvasion.getEconomyPlugin();

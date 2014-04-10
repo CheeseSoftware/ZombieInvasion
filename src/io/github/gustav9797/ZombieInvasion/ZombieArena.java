@@ -13,16 +13,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import net.minecraft.server.v1_7_R1.EntityCreature;
-import net.minecraft.server.v1_7_R1.EntityPlayer;
+import net.minecraft.server.v1_7_R2.EntityCreature;
+import net.minecraft.server.v1_7_R2.EntityPlayer;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_7_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R2.entity.CraftPlayer;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
@@ -122,7 +122,7 @@ public class ZombieArena extends Arena
 		while (i.hasNext() && monsters.size() < this.monsterSpawnLimit)
 		{
 			SpawnPoint spawnPoint = i.next();
-			net.minecraft.server.v1_7_R1.World mcWorld = ((CraftWorld) this.middle.getWorld()).getHandle();
+			net.minecraft.server.v1_7_R2.World mcWorld = ((CraftWorld) this.middle.getWorld()).getHandle();
 			EntityCreature monster = null;
 
 			ArrayList<String> possibleEntityTypes = new ArrayList<String>();
@@ -132,7 +132,7 @@ public class ZombieArena extends Arena
 				possibleEntityTypes.add("SKELETON");
 			if(this.villagersToSpawn > 0)
 				possibleEntityTypes.add("VILLAGER");
-			EntityType entityType = EntityType.fromName(possibleEntityTypes.get(r.nextInt(3)));
+			EntityType entityType = EntityType.fromName(possibleEntityTypes.get(r.nextInt(possibleEntityTypes.size())));
 
 			if (entityType != null)
 			{

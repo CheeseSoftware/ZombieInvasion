@@ -8,24 +8,24 @@ import io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalWalkToTi
 import java.lang.reflect.Field;
 import java.util.Random;
 
-import net.minecraft.server.v1_7_R1.AttributeInstance;
-import net.minecraft.server.v1_7_R1.DamageSource;
-import net.minecraft.server.v1_7_R1.Entity;
-import net.minecraft.server.v1_7_R1.EntityHuman;
-import net.minecraft.server.v1_7_R1.EntityVillager;
-import net.minecraft.server.v1_7_R1.GenericAttributes;
-import net.minecraft.server.v1_7_R1.Navigation;
-import net.minecraft.server.v1_7_R1.PathfinderGoalFloat;
-import net.minecraft.server.v1_7_R1.PathfinderGoalHurtByTarget;
-import net.minecraft.server.v1_7_R1.PathfinderGoalLookAtPlayer;
-import net.minecraft.server.v1_7_R1.PathfinderGoalNearestAttackableTarget;
-import net.minecraft.server.v1_7_R1.PathfinderGoalRandomLookaround;
-import net.minecraft.server.v1_7_R1.PathfinderGoalRandomStroll;
-import net.minecraft.server.v1_7_R1.PathfinderGoalSelector;
-import net.minecraft.server.v1_7_R1.World;
+import net.minecraft.server.v1_7_R2.AttributeInstance;
+import net.minecraft.server.v1_7_R2.DamageSource;
+import net.minecraft.server.v1_7_R2.Entity;
+import net.minecraft.server.v1_7_R2.EntityHuman;
+import net.minecraft.server.v1_7_R2.EntityVillager;
+import net.minecraft.server.v1_7_R2.GenericAttributes;
+import net.minecraft.server.v1_7_R2.Navigation;
+import net.minecraft.server.v1_7_R2.PathfinderGoalFloat;
+import net.minecraft.server.v1_7_R2.PathfinderGoalHurtByTarget;
+import net.minecraft.server.v1_7_R2.PathfinderGoalLookAtPlayer;
+import net.minecraft.server.v1_7_R2.PathfinderGoalNearestAttackableTarget;
+import net.minecraft.server.v1_7_R2.PathfinderGoalRandomLookaround;
+import net.minecraft.server.v1_7_R2.PathfinderGoalRandomStroll;
+import net.minecraft.server.v1_7_R2.PathfinderGoalSelector;
+import net.minecraft.server.v1_7_R2.World;
 
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_7_R1.util.UnsafeList;
+import org.bukkit.craftbukkit.v1_7_R2.util.UnsafeList;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
@@ -155,17 +155,6 @@ public class EntityBlockBreakingVillager extends EntityVillager implements ICust
 			}
 		}
 		return null;
-	}
-
-	@Override
-	public int aV() {
-		int i = super.aV() + 2;
-
-		if (i > 80) {
-	       i = 80;
-	    }
-	
-		return i;
 	}
 	
 	@Override

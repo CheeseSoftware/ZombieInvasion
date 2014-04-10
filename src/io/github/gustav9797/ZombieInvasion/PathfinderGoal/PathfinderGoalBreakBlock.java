@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import net.minecraft.server.v1_7_R1.EntityCreature;
-import net.minecraft.server.v1_7_R1.EntityInsentient;
-import net.minecraft.server.v1_7_R1.PathfinderGoal;
+import net.minecraft.server.v1_7_R2.EntityCreature;
+import net.minecraft.server.v1_7_R2.EntityInsentient;
+import net.minecraft.server.v1_7_R2.PathfinderGoal;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -119,7 +119,7 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 
 			if (block != null && block.getType() != Material.AIR)
 			{
-				if (this.entity.aI().nextInt(300) == 0)
+				if (r.nextInt(300) == 0)
 				{
 					this.entity.world.triggerEffect(1010, block.getX(), block.getY(), block.getZ(), 0);
 				}
@@ -140,7 +140,7 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 					block.setType(Material.AIR);
 					this.entity.world.triggerEffect(1012, block.getX(), block.getY(), block.getZ(), 0);
 					this.entity.world.triggerEffect(2001, block.getX(), block.getY(), block.getZ(),
-							net.minecraft.server.v1_7_R1.Block.b(this.entity.world.getType(block.getX(), block.getY(), block.getZ())));
+							net.minecraft.server.v1_7_R2.Block.b(this.entity.world.getType(block.getX(), block.getY(), block.getZ())));
 					block = null;
 				}
 			}

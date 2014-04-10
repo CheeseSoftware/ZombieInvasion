@@ -329,7 +329,7 @@ public abstract class Arena implements Listener
 			if (!player.isDead())
 			{
 				player.teleport(spawnLocation);
-				player.setHealth((double) player.getMaxHealth());
+				player.setHealth((float) player.getMaxHealth());
 			}
 		}
 	}
@@ -406,16 +406,24 @@ public abstract class Arena implements Listener
 	protected void SaveConfig()
 	{
 		config = new YamlConfiguration();
-		config.set("world", middle.getWorld().getName());
-		config.set("size", this.size);
-		config.set("startAtPlayerCount", this.startAtPlayerCount);
-		config.set("maxPlayers", this.maxPlayers);
-		config.set("secondsAfterStart", this.secondsAfterStart);
-		config.set("spawnLocation", this.spawnLocation.toVector());
-		config.set("spawnLocationYaw", this.spawnLocation.getYaw());
-		config.set("spawnLocationPitch", this.spawnLocation.getPitch());
-		config.set("location", middle.toVector());
-		config.set("schematicFileName", this.schematicFileName);
+		try
+		{
+			config.set("world", middle.getWorld().getName());
+			config.set("size", this.size);
+			config.set("startAtPlayerCount", this.startAtPlayerCount);
+			config.set("maxPlayers", this.maxPlayers);
+			config.set("secondsAfterStart", this.secondsAfterStart);
+			config.set("spawnLocation", this.spawnLocation.toVector());
+			config.set("spawnLocationYaw", this.spawnLocation.getYaw());
+			config.set("spawnLocationPitch", this.spawnLocation.getPitch());
+			config.set("location", middle.toVector());
+			config.set("schematicFileName", this.schematicFileName);
+			config.save(this.configFile);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	protected void LoadConfig()

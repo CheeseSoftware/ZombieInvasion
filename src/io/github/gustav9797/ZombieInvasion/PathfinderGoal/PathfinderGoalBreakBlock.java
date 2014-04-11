@@ -23,30 +23,62 @@ import org.bukkit.util.Vector;
 
 public class PathfinderGoalBreakBlock extends PathfinderGoal
 {
+	float g;
+	float h;
+	Random r = new Random();
+	int i;
+	Arena arena;
+	int j = -1;
+	boolean isStrongBreaker; // false: only breakable materials
+	
 	protected EntityInsentient entity;
 	protected int x;
 	protected int y;
 	protected int z;
 	boolean f;
-	float g;
-	float h;
-	Random r = new Random();
-	private int i;
-	private Arena arena;
-	private int j = -1;
+
 	protected Block block;
 	protected static List<Vector> possiblePositions = new ArrayList<Vector>(Arrays.asList(new Vector(-1, 0, 0), new Vector(-1, 1, 0), new Vector(1, 0, 0), new Vector(1, 1, 0), new Vector(0, 0, -1),
 			new Vector(0, 1, -1), new Vector(0, 0, 1), new Vector(0, 1, 1), new Vector(0, 2, 0)));
 
-	private static List<Material> breakableMaterials = new ArrayList<Material>(Arrays.asList(Material.WOOD_DOOR, Material.IRON_DOOR, Material.TRAP_DOOR, Material.CHEST, Material.THIN_GLASS,
-			Material.STAINED_GLASS, Material.STAINED_GLASS_PANE, Material.GLASS, Material.TORCH, Material.WOOL));
+	//
+	private static List<Material> nonBreakableMaterials = new ArrayList<Material>(Arrays.asList(
+			Material.BEDROCK, Material.getMaterial(8), Material.getMaterial(9), Material.GRASS,
+			Material.SAND, Material.AIR, Material.QUARTZ_BLOCK, Material.STONE));
+	private static List<Material> naturalMaterials = new ArrayList<Material>(Arrays.asList(
+			Material.GRASS, Material.DIRT, Material.LEAVES));
+	
+	private static List<Material> breakableMaterials = new ArrayList<Material>(Arrays.asList(
+			Material.WOOD_DOOR, Material.IRON_DOOR, Material.TRAP_DOOR, Material.THIN_GLASS,
+			Material.STAINED_GLASS, Material.STAINED_GLASS_PANE, Material.GLASS, Material.TORCH/*, Material.WOOL*/));
 
 	private Location oldLocation = null;
 
+	public PathfinderGoalBreakBlock(EntityInsentient entity, Arena arena, boolean isStrongBreaker)
+	{
+		this.arena = arena;
+		this.entity = entity;
+		this.isStrongBreaker = isStrongBreaker;
+	}
+	
 	public PathfinderGoalBreakBlock(EntityInsentient entity, Arena arena)
 	{
 		this.arena = arena;
 		this.entity = entity;
+		this.isStrongBreaker = false;
+	}
+	
+	private boolean canBreak(Material material)
+	{
+		if (isStrongBreaker)
+		{
+			return (!nonBreakableMaterials.contains(material) && !naturalMaterials.contains(material));
+		}
+		else
+		{
+			return (breakableMaterials.contains(material));
+		}
+		
 	}
 
 	public boolean a() // canExecute
@@ -209,8 +241,10 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 				Set<Block> priorityBlocks = new HashSet<Block>();
 				for (Block block : blocks)
 				{
-					if (breakableMaterials.contains(block.getType()))
+					if (canBreak(block.getType()))
 						priorityBlocks.add(block);
+					//if (breakableMaterials.contains(block.getType()))
+					//	priorityBlocks.add(block);
 				}
 				if (priorityBlocks.size() > 0)
 					return (Block) priorityBlocks.toArray()[r.nextInt(priorityBlocks.size())];

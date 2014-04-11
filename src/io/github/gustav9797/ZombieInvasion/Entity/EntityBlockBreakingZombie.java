@@ -13,6 +13,7 @@ import net.minecraft.server.v1_7_R2.AttributeInstance;
 import net.minecraft.server.v1_7_R2.Entity;
 import net.minecraft.server.v1_7_R2.EntityHuman;
 import net.minecraft.server.v1_7_R2.EntityZombie;
+import net.minecraft.server.v1_7_R2.ItemStack;
 import net.minecraft.server.v1_7_R2.Navigation;
 import net.minecraft.server.v1_7_R2.PathfinderGoalFloat;
 import net.minecraft.server.v1_7_R2.PathfinderGoalHurtByTarget;
@@ -70,7 +71,16 @@ public class EntityBlockBreakingZombie extends EntityZombie implements ICustomMo
 			this.targetSelector.a(0, new PathfinderGoalWalkToTile(this, 1.0F, arena.getSpawnLocation()));
 		
 		if (random.nextInt(8) == 0)
+		{
+			//ItemStack[] equipment = this.getEquipment();
+			//vågar inte göra något mer:/ skeletonhuvuden!
+			
+			this.goalSelector.a(1, new PathfinderGoalBreakBlock(this, arena, true));
+		}
+		else
+		{
 			this.goalSelector.a(1, new PathfinderGoalBreakBlock(this, arena));
+		}
 		
 		this.targetSelector.a(0, new PathfinderGoalCustomNearestAttackableTarget(this, 0, arena));
 	}

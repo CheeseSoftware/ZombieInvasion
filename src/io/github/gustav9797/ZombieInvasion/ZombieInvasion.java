@@ -93,7 +93,12 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		this.registerEntities();
 		this.arenas = new HashMap<String, Arena>();
 		this.lobby = new Lobby(arenas, this);
+		
 		ZombieInvasion.economyPlugin = (IOstEconomy) Bukkit.getPluginManager().getPlugin("OstEconomyPlugin");
+		if(ZombieInvasion.economyPlugin == null)
+		{
+			this.getServer().getLogger().severe("Could not load economy!");
+		}
 
 		if (!schematicsDirectory.exists())
 			schematicsDirectory.mkdir();

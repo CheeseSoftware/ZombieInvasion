@@ -86,21 +86,7 @@ public class ZombieArena extends Arena
 		int delay = 1;
 		Vector spawnPosition = spawnPoint.getPosition();
 		
-		if (currentWave > 10)
-		{
-			skeletonsToSpawn += amount/20;
-			villagersToSpawn += amount-amount/20;
-		}
-		else if (currentWave >= 5)
-		{
-			skeletonsToSpawn += amount/40;
-			villagersToSpawn += amount/20;
-			zombiesToSpawn += amount - amount/20 - amount/40;
-		}
-		else
-		{
-			zombiesToSpawn += amount;
-		}
+
 		
 		for (int i = 0; i < amount; i++)
 		{
@@ -139,7 +125,7 @@ public class ZombieArena extends Arena
 				switch (entityType)
 				{
 					case SKELETON:
-						if (this.getCurrentWave() >= 5 && skeletonsToSpawn > 0)
+						if (skeletonsToSpawn > 0)
 						{
 							monster = new EntityBlockBreakingSkeleton(mcWorld);
 							skeletonsToSpawn--;
@@ -238,15 +224,35 @@ public class ZombieArena extends Arena
 	{
 		int spawnPointsSize = this.getSpawnPointManager().getSpawnPoints().size();
 		
+		int amount = getZombieSpawnAmount(wave);
+		
 		zombiesToSpawn = 0;
 		skeletonsToSpawn = 0;
 		villagersToSpawn = 0;
 		
+		if (currentWave > 10)
+		{
+			skeletonsToSpawn = amount/20;
+			villagersToSpawn = amount - skeletonsToSpawn;
+		}
+		else if (currentWave >= 5)
+		{
+			skeletonsToSpawn = amount/40;
+			villagersToSpawn = amount/20;
+			zombiesToSpawn = amount - skeletonsToSpawn - villagersToSpawn;
+		}
+		else
+		{
+			zombiesToSpawn = amount;
+		}
+		
 		
 		for (int i = 0; i < zombieGroups; i++)
 		{
+			int groupAmount = amount / zombieGroups + ((i <= amount % zombieGroups)? 1:0);
+			
 			if (spawnPointsSize > 0)
-				SpawnMonsterGroup(this.getSpawnPointManager().getRandomMonsterSpawnPoint(), getZombieSpawnAmount(wave) / zombieGroups);
+				SpawnMonsterGroup(this.getSpawnPointManager().getRandomMonsterSpawnPoint(), groupAmount);
 			else
 			{
 				int x = Integer.MAX_VALUE;
@@ -258,7 +264,7 @@ public class ZombieArena extends Arena
 				}
 				Location groupLocation = new Location(middle.getWorld(), x + middle.getBlockX(), r.nextInt(size) + middle.getBlockY(), z + middle.getBlockZ());
 				SpawnPoint s = new SpawnPoint(-1, groupLocation.toVector());
-				SpawnMonsterGroup(s, getZombieSpawnAmount(wave) / zombieGroups);
+				SpawnMonsterGroup(s, groupAmount);
 
 			}
 		}

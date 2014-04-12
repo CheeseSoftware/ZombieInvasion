@@ -169,16 +169,16 @@ public abstract class Arena implements Listener
 
 	public void SaveMap()
 	{
-		int topY = 0;
-		if (!border.isEmpty())
+		int topY = 256;
+		/*if (!border.isEmpty())
 		{
 			for (BorderBlock borderBlock : border)
 				if (borderBlock.getLocation().getBlockY() > topY)
 					topY = borderBlock.getLocation().getBlockY();
 			topY--;
 		}
-		else
-			topY = 100;
+		else*/
+		//topY = 256;
 		int groundLevel = 4;
 		EditSession session = new EditSession(new BukkitWorld(middle.getWorld()), 999999999);
 		File schematic = new File(ZombieInvasion.getPlugin().getDataFolder() + File.separator + "schematics" + File.separator + this.schematicFileName + ".schematic");

@@ -42,6 +42,7 @@ public class PathfinderGoalBreakBlock extends PathfinderGoal
 			new Vector(0, 1, -1), new Vector(0, 0, 1), new Vector(0, 1, 1), new Vector(0, 2, 0)));
 
 	//
+	@SuppressWarnings("deprecation")
 	private static List<Material> nonBreakableMaterials = new ArrayList<Material>(Arrays.asList(
 			Material.BEDROCK, Material.getMaterial(8), Material.getMaterial(9), Material.GRASS,
 			Material.SAND, Material.AIR, Material.QUARTZ_BLOCK, Material.STONE));

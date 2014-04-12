@@ -13,7 +13,6 @@ import net.minecraft.server.v1_7_R2.AttributeInstance;
 import net.minecraft.server.v1_7_R2.Entity;
 import net.minecraft.server.v1_7_R2.EntityHuman;
 import net.minecraft.server.v1_7_R2.EntityZombie;
-import net.minecraft.server.v1_7_R2.ItemStack;
 import net.minecraft.server.v1_7_R2.Navigation;
 import net.minecraft.server.v1_7_R2.PathfinderGoalFloat;
 import net.minecraft.server.v1_7_R2.PathfinderGoalHurtByTarget;

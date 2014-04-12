@@ -46,7 +46,7 @@ public class ZombieArena extends Arena
 	protected int startWave = 1;
 	protected int waveIncrease = 1;
 	protected int ticksBetweenZombieSpawns = 20;
-	
+
 	protected int zombiesToSpawn = 0;
 	protected int skeletonsToSpawn = 0;
 	protected int villagersToSpawn = 0;
@@ -85,18 +85,16 @@ public class ZombieArena extends Arena
 	{
 		int delay = 1;
 		Vector spawnPosition = spawnPoint.getPosition();
-		
 
-		
 		for (int i = 0; i < amount; i++)
 		{
 			while (this.middle.getWorld().getBlockAt(spawnPoint.getPosition().toLocation(this.middle.getWorld())).getType() == Material.AIR)
 				spawnPosition.setY(spawnPosition.getBlockY() - 1);
-			
+
 			spawnPosition.setY(spawnPosition.getBlockY() + 2);
-			
+
 			new SpawnMonsterTask(spawnPoint, this).runTaskLater(ZombieInvasion.getPlugin(), delay);
-			
+
 			delay += this.ticksBetweenZombieSpawns;
 		}
 	}
@@ -112,65 +110,65 @@ public class ZombieArena extends Arena
 			EntityCreature monster = null;
 
 			ArrayList<String> possibleEntityTypes = new ArrayList<String>();
-			if(this.zombiesToSpawn > 0)
+			if (this.zombiesToSpawn > 0)
 				possibleEntityTypes.add("ZOMBIE");
-			if(this.skeletonsToSpawn > 0)
+			if (this.skeletonsToSpawn > 0)
 				possibleEntityTypes.add("SKELETON");
-			if(this.villagersToSpawn > 0)
+			if (this.villagersToSpawn > 0)
 				possibleEntityTypes.add("VILLAGER");
-			EntityType entityType = EntityType.fromName(possibleEntityTypes.get(r.nextInt(possibleEntityTypes.size())));
-
-			if (entityType != null)
+			if (possibleEntityTypes.size() > 0)
 			{
-				switch (entityType)
-				{
-					case SKELETON:
-						if (skeletonsToSpawn > 0)
-						{
-							monster = new EntityBlockBreakingSkeleton(mcWorld);
-							skeletonsToSpawn--;
-						}
-						break;
-					case ZOMBIE:
-						if (this.getCurrentWave() < 10 && zombiesToSpawn > 0 || (villagersToSpawn == 0 && skeletonsToSpawn == 0))
-						{
-							monster = new EntityBlockBreakingZombie(mcWorld);
-							zombiesToSpawn--;
-						}
-						else if (villagersToSpawn > 0)
-						{
-							monster = new EntityBlockBreakingVillager(mcWorld);
-							villagersToSpawn--;
-						}
-						break;
-					case VILLAGER:
-						if (villagersToSpawn > 0)
-						{
-							monster = new EntityBlockBreakingVillager(mcWorld);
-							villagersToSpawn--;
-						}
-						break;
-					case SNOWMAN:
-						
-						break;
-					default:
-						break;
-				}
+				EntityType entityType = EntityType.fromName(possibleEntityTypes.get(r.nextInt(possibleEntityTypes.size())));
 
-				if (monster != null)
+				if (entityType != null)
 				{
-					((ICustomMonster)monster).setArena(this);
-					double xd = r.nextDouble()/10;
-					double zd = r.nextDouble()/10;
-					
-					Location l = new Location(this.middle.getWorld(),
-							spawnPoint.getPosition().getBlockX() + xd,
-							spawnPoint.getPosition().getBlockY(),
-							spawnPoint.getPosition().getBlockZ() + zd);
-					
-					monster.getBukkitEntity().teleport(l);
-					monsters.put(monster.getBukkitEntity().getUniqueId(), monster);
-					mcWorld.addEntity(monster, SpawnReason.CUSTOM);
+					switch (entityType)
+					{
+						case SKELETON:
+							if (skeletonsToSpawn > 0)
+							{
+								monster = new EntityBlockBreakingSkeleton(mcWorld);
+								skeletonsToSpawn--;
+							}
+							break;
+						case ZOMBIE:
+							if (this.getCurrentWave() < 10 && zombiesToSpawn > 0 || (villagersToSpawn == 0 && skeletonsToSpawn == 0))
+							{
+								monster = new EntityBlockBreakingZombie(mcWorld);
+								zombiesToSpawn--;
+							}
+							else if (villagersToSpawn > 0)
+							{
+								monster = new EntityBlockBreakingVillager(mcWorld);
+								villagersToSpawn--;
+							}
+							break;
+						case VILLAGER:
+							if (villagersToSpawn > 0)
+							{
+								monster = new EntityBlockBreakingVillager(mcWorld);
+								villagersToSpawn--;
+							}
+							break;
+						case SNOWMAN:
+
+							break;
+						default:
+							break;
+					}
+
+					if (monster != null)
+					{
+						((ICustomMonster) monster).setArena(this);
+						double xd = r.nextDouble() / 10;
+						double zd = r.nextDouble() / 10;
+
+						Location l = new Location(this.middle.getWorld(), spawnPoint.getPosition().getBlockX() + xd, spawnPoint.getPosition().getBlockY(), spawnPoint.getPosition().getBlockZ() + zd);
+
+						monster.getBukkitEntity().teleport(l);
+						monsters.put(monster.getBukkitEntity().getUniqueId(), monster);
+						mcWorld.addEntity(monster, SpawnReason.CUSTOM);
+					}
 				}
 			}
 			i.remove();
@@ -193,25 +191,26 @@ public class ZombieArena extends Arena
 		// y = ax² + bx + c
 		// y = (25x² + 205x + 330)/28
 		// y = 25x²/28 + 205x/28 + 165x/14
-		
-		int x = wave%10;
-		float a = 25/28;
-		float b = 205/28;
-		float c = 165/14;
-		
-		return (int)Math.floor(a*x*x + b*x + c);
-		
-		/*int amount = this.zombieStartAmount;
-		int increase = this.zombieAmountIncrease;
-		int virtualWave = wave%10;
-		
-		amount += virtualWave*(virtualWave - 1)/2;
-		// ^^ Siffertriangel, -1 betyder att det startar på 0, /2 betyder att det är en triangel.
-		
-		amount += virtualWave*increase;
-		// ^^ det ökar också med "increase" på varje wave
-		
-		return amount;*/
+
+		int x = wave % 10;
+		float a = 25 / 28;
+		float b = 205 / 28;
+		float c = 165 / 14;
+
+		return (int) Math.floor(a * x * x + b * x + c);
+
+		/*
+		 * int amount = this.zombieStartAmount; int increase =
+		 * this.zombieAmountIncrease; int virtualWave = wave%10;
+		 * 
+		 * amount += virtualWave*(virtualWave - 1)/2; // ^^ Siffertriangel, -1
+		 * betyder att det startar på 0, /2 betyder att det är en triangel.
+		 * 
+		 * amount += virtualWave*increase; // ^^ det ökar också med "increase"
+		 * på varje wave
+		 * 
+		 * return amount;
+		 */
 	}
 
 	public int getCurrentWave()
@@ -223,34 +222,33 @@ public class ZombieArena extends Arena
 	public void SendWave(int wave)
 	{
 		int spawnPointsSize = this.getSpawnPointManager().getSpawnPoints().size();
-		
+
 		int amount = getZombieSpawnAmount(wave);
-		
+
 		zombiesToSpawn = 0;
 		skeletonsToSpawn = 0;
 		villagersToSpawn = 0;
-		
+
 		if (currentWave > 10)
 		{
-			skeletonsToSpawn = amount/20;
+			skeletonsToSpawn = amount / 20;
 			villagersToSpawn = amount - skeletonsToSpawn;
 		}
 		else if (currentWave >= 5)
 		{
-			skeletonsToSpawn = amount/40;
-			villagersToSpawn = amount/20;
+			skeletonsToSpawn = amount / 40;
+			villagersToSpawn = amount / 20;
 			zombiesToSpawn = amount - skeletonsToSpawn - villagersToSpawn;
 		}
 		else
 		{
 			zombiesToSpawn = amount;
 		}
-		
-		
+
 		for (int i = 0; i < zombieGroups; i++)
 		{
-			int groupAmount = amount / zombieGroups + ((i <= amount % zombieGroups)? 1:0);
-			
+			int groupAmount = amount / zombieGroups + ((i <= amount % zombieGroups) ? 1 : 0);
+
 			if (spawnPointsSize > 0)
 				SpawnMonsterGroup(this.getSpawnPointManager().getRandomMonsterSpawnPoint(), groupAmount);
 			else
@@ -381,8 +379,8 @@ public class ZombieArena extends Arena
 
 		if (this.monsters.size() < 10 && this.ticksSinceLastWave >= 20 * 20 && this.ticksUntilNextWave == -1)
 		{
-			this.ResetSpectators();//>.<
-			this.ticksUntilNextWave = 30 * 20;//>.<
+			this.ResetSpectators();// >.<
+			this.ticksUntilNextWave = 30 * 20;// >.<
 			this.ResetSpectators();
 			this.Broadcast("Below 10 zombies left, prepare for the next wave in 30 seconds!");
 		}

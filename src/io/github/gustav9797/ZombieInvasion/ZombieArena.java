@@ -164,6 +164,9 @@ public class ZombieArena extends Arena
 							villagersToSpawn--;
 						}
 						break;
+					case SNOWMAN:
+						
+						break;
 					default:
 						break;
 				}
@@ -373,9 +376,9 @@ public class ZombieArena extends Arena
 		if (this.monsters.size() < 10 && this.ticksSinceLastWave >= 20 * 20 && this.ticksUntilNextWave == -1)
 		{
 			this.ResetSpectators();//>.<
-			this.ticksUntilNextWave = 60 * 20;//>.<
+			this.ticksUntilNextWave = 30 * 20;//>.<
 			this.ResetSpectators();
-			this.Broadcast("Below 20 zombies left, prepare for the next wave in 3 seconds!");
+			this.Broadcast("Below 10 zombies left, prepare for the next wave in 30 seconds!");
 		}
 	}
 

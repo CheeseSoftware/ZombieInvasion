@@ -660,6 +660,9 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		//Bukkit.getServer().getPlayer("gustav9797").sendMessage("spawnreason " + event.getSpawnReason().toString() + " type " + event.getEntityType().toString());
 		if(event.getSpawnReason() == SpawnReason.CUSTOM)
 			return;
+		else if (event.getSpawnReason() == SpawnReason.BUILD_SNOWMAN)
+			return;
+		
 		if (event.getSpawnReason() == SpawnReason.SPAWNER_EGG)
 		{
 			event.setCancelled(true);

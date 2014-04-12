@@ -2,7 +2,6 @@ package io.github.gustav9797.ZombieInvasion.Entity;
 
 import io.github.gustav9797.ZombieInvasion.Arena;
 import io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalBreakBlock;
-import io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalFindBreakBlock;
 import io.github.gustav9797.ZombieInvasion.PathfinderGoal.PathfinderGoalWalkToTile;
 
 import java.lang.reflect.Field;
@@ -173,7 +172,7 @@ public class EntityBlockBreakingVillager extends EntityVillager implements ICust
 			
 			if (e instanceof Player)
 			{
-				this.enderTeleportTo(e.locX, e.locY, e.locZ);
+				this.teleportTo(((Player)e).getLocation(), true);//this.enderTeleportTo(e.locX, e.locY, e.locZ);
 				((Player)e).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 60, 1));
 				
 				((Player)e).playSound(((Player) e).getLocation(), Sound.GHAST_SCREAM, 1, 0.125F);

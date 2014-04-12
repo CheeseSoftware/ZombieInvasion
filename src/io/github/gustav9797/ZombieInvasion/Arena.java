@@ -16,6 +16,7 @@ import org.bukkit.World;
 import org.bukkit.block.BlockState;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -329,7 +330,9 @@ public abstract class Arena implements Listener
 			if (!player.isDead())
 			{
 				player.teleport(spawnLocation);
-				player.setHealth((float) player.getMaxHealth());
+				player.resetMaxHealth();
+				Damageable p = player;
+				player.setHealth(p.getMaxHealth());//player.setHealth((float) player.getMaxHealth());
 			}
 		}
 	}

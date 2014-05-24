@@ -6,7 +6,7 @@ import io.github.gustav9797.ZombieInvasion.Entity.EntityBlockBreakingZombie;
 import io.github.gustav9797.ZombieInvasion.Entity.ICustomMonster;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FilenameFilter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,8 +27,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.craftbukkit.v1_7_R2.CraftWorld;
 import org.bukkit.entity.EntityType;
@@ -71,7 +69,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 	Random r = new Random();
 	Map<String, Arena> arenas;
 	Lobby lobby;
-	File configFile;
+	//File configFile;
 	File schematicsDirectory;
 	public static IOstEconomy economyPlugin;
 
@@ -82,7 +80,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		ConfigurationSerialization.registerClass(PotionRegion.class, "PotionRegion");
 		ConfigurationSerialization.registerClass(SpawnPoint.class, "SpawnPoint");
 
-		this.configFile = new File(this.getDataFolder() + File.separator + "config.yml");
+		//this.configFile = new File(this.getDataFolder() + File.separator + "config.yml");
 		this.schematicsDirectory = new File(this.getDataFolder() + File.separator + "schematics");
 		this.entityTypes = new LinkedList<CustomEntityType>();
 
@@ -103,7 +101,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		if (!schematicsDirectory.exists())
 			schematicsDirectory.mkdir();
 
-		if (!configFile.exists())
+		/*if (!configFile.exists())
 		{
 			try
 			{
@@ -114,7 +112,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 				e.printStackTrace();
 			}
 			this.SaveConfig();
-		}
+		}*/
 		this.Load();
 		getServer().getPluginManager().registerEvents(this, this);
 	}
@@ -142,7 +140,15 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		if (sender instanceof Player)
 		{
 			Player player = (Player) sender;
-			if (cmd.getName().equals("createarena"))
+			if(cmd.getName().equals("listarenas"))
+			{
+				String output = "";
+				for(Arena a : this.arenas.values())
+					output += a.name + ", ";
+				player.sendMessage("Arenas: " + output);
+				return true;
+			}
+			else if (cmd.getName().equals("createarena"))
 			{
 				if (args.length > 0)
 				{
@@ -551,7 +557,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 
 	public void SaveConfig()
 	{
-		YamlConfiguration config = new YamlConfiguration();
+		/*YamlConfiguration config = new YamlConfiguration();
 		List<String> temp = new LinkedList<String>();
 		for (Arena a : arenas.values())
 			temp.add(a.name);
@@ -563,12 +569,12 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		catch (IOException e)
 		{
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	public void LoadConfig()
 	{
-		YamlConfiguration config = new YamlConfiguration();
+		/*YamlConfiguration config = new YamlConfiguration();
 		try
 		{
 			config.load(configFile);
@@ -577,6 +583,7 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 		{
 			e.printStackTrace();
 		}
+		
 		@SuppressWarnings("unchecked")
 		List<String> temp = (List<String>) config.getList("zombiearenas");
 		for (String arena : temp)
@@ -584,6 +591,25 @@ public final class ZombieInvasion extends JavaPlugin implements Listener
 			ZombieArena a = new ZombieArena(arena, lobby);
 			a.Load();
 			arenas.put(arena, a);
+		}*/
+		
+		File file = new File("./plugins/ZombieInvasion");
+		String[] directories = file.list(new FilenameFilter() {
+		  @Override
+		  public boolean accept(File current, String name) {
+		    return new File(current, name).isDirectory() && !name.equals("schematics");
+		  }
+		});
+		
+		for(String directory : directories)
+		{
+			File arenafile = new File("./plugins/ZombieInvasion/" + directory + "/config.yml");
+			if(arenafile.exists())
+			{
+				ZombieArena a = new ZombieArena(directory, lobby);
+				a.Load();
+				arenas.put(directory, a);
+			}
 		}
 	}
 

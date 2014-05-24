@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -177,15 +178,21 @@ public class Lobby implements Listener
 	{
 		for (Vector l : this.signs)
 		{
-			Sign sign = (Sign) this.location.getWorld().getBlockAt(l.toLocation(this.location.getWorld())).getState();
-			String arenaName = sign.getLine(1);
-			if (this.arenas.containsKey(arenaName))
+			BlockState state = this.location.getWorld().getBlockAt(l.toLocation(this.location.getWorld())).getState();
+			if (state instanceof Sign)
 			{
-				Arena arena = arenas.get(arenaName);
-				sign.setLine(2, "Players: " + arena.players.size());
-				sign.setLine(3, "Arena: " + arena.name);
-				sign.update();
+				Sign sign = (Sign) state;
+				String arenaName = sign.getLine(1);
+				if (this.arenas.containsKey(arenaName))
+				{
+					Arena arena = arenas.get(arenaName);
+					sign.setLine(2, "Players: " + arena.players.size());
+					sign.setLine(3, "Arena: " + arena.name);
+					sign.update();
+				}
 			}
+			else
+				plugin.getServer().getLogger().warning("Block at " + l.toString() + " is not a sign!");
 		}
 	}
 
@@ -252,7 +259,7 @@ public class Lobby implements Listener
 	{
 		this.UpdateSigns();
 	}
-	
+
 	public void onPlayerJoin(PlayerJoinEvent event)
 	{
 		this.UpdateSigns();

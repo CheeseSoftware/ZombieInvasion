@@ -3,6 +3,10 @@ main: io.github.gustav9797.ZombieInvasion.ZombieInvasion
 version: 0.1
 softdepend: [OstEconomyPlugin, WorldEdit]
 commands:
+   listarenas:
+      description: Lists the loaded arenas.
+      permission: zombieinvasion.listarenas
+      permission-message: You don't have zombieinvasion.listarenas
    createarena:
       description: Creates an arena.
       permission: zombieinvasion.createarena
